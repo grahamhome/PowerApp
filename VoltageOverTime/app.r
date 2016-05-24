@@ -31,5 +31,6 @@ server <- function(input, output) {
 }
 
 #Start the app
-shinyApp(ui=ui, server=server)
+app <- shinyApp(ui=ui, server=server)
+runApp(app, port=5678)
 
