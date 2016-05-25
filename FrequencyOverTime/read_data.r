@@ -4,6 +4,8 @@ library(manipulate)
 library(compare)
 library(animation)
 library(scales)
+library(reshape2)
+library(plotly)
 
 #Change the frequency column of bus_locs with the frequencies for a given time 
 # must (assign function return to bus_locs)
@@ -15,7 +17,6 @@ update_freq <- function(time){
   bus_locs$Frequency <- as.numeric(as.character(bus_locs$Frequency))
   bus_locs
 }
-
 #Change the voltage column of bus_locs with the frequencies for a given time
 # must (assign function return to bus_locs)
 update_volt <- function(time){
@@ -26,6 +27,7 @@ update_volt <- function(time){
   bus_locs$Voltage <- as.numeric(as.character(bus_locs$Voltage))
   bus_locs
 } 
+
 
 #get covariance matrix of the frequency values, starting from whatever the previous time (curr_sf)
 # was to whatever "time" is. 
@@ -47,7 +49,6 @@ get_covbus_freq <- function(time) {
   assign("curr_sf",time,envir = .GlobalEnv)
   assign("Sf",Sf,envir = .GlobalEnv)
 }
-
 #get covariance matrix of the voltage values, starting from whatever the previous time (curr_sv)
 # was to whatever "time" is. 
 get_covbus_volt <- function(time) {
@@ -78,10 +79,10 @@ loads <- read.csv("data/tenn150_loads.csv")
 generators <- read.csv("data/tenn150_generators.csv")
 linesb <- read.csv("data/tenn150_lines.csv")
 trans <- read.csv("data/tenn150_transformers.csv")
-#V <- read.csv("tenn150gmd_bus_voltage.csv")
-#F <- read.csv("tenn150gmd_bus_frequency.csv")
-V <- read.csv("data/tenn150ts_bus_voltage.csv")
-F <- read.csv("data/tenn150ts_bus_frequency.csv")
+V <- read.csv("data/tenn150gmd_bus_voltage.csv")
+F <- read.csv("data/tenn150gmd_bus_frequency.csv")
+#V <- read.csv("tenn150ts_bus_voltage.csv")
+#F <- read.csv("tenn150ts_bus_frequency.csv")
 
 bn <- buses$Bus.Name
 bn <- gsub(" ",".",bn)
@@ -132,11 +133,12 @@ cn <- gsub("Latitude[.]y","To.Latitude",cn)
 cn <- gsub("Longitude[.]y","To.Longitude",cn)
 colnames(linesb) <- cn
 linesb$Variance <- 0
+linesb$Line.id <- seq_len(nrow(linesb))
 #trans <- merge(trans,bus_locs[,c("Bus.Num","Latitude","Longitude")], by.x = "From.Bus.Num", by.y = "Bus.Num")
 #trans <- merge(trans,bus_locs[,c("Bus.Num","Latitude","Longitude")], by.x = "To.Bus.Num", by.y = "Bus.Num")
 #Create the map to use as the background for the ggplot
 mapten <- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), 
-                  zoom = 6, maptype = "roadmap", scale = 2)
+                zoom = 6, maptype = "roadmap", scale = 2)
 g <- ggmap(mapten)+ scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) + scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
 #Set up the variables for the voltage covariance matrix
 Xv <- as.matrix(V[,-1])
@@ -149,28 +151,23 @@ Sf <- cov(Xf[1:2,])
 curr_sf <- 3
 xfbar <- colMeans(Xf[1:2,])
 
+#This finds the min/max covariances over the whole dataset, for labeling purposes
 mincovf <- 1
 maxcovf <- 0
-for (t in 3:3606) {
+for (t in 3:845) {
   get_covbus_freq(t)
   mincovf <- ifelse(min(Sf[,])<mincovf,min(Sf[,]),mincovf)
   maxcovf <- ifelse(max(Sf[,])>maxcovf,max(Sf[,]),maxcovf)
 }
 mincovv <- 1
 maxcovv <- 0
-for (t in 3:3606) {
+for (t in 3:845) {
   get_covbus_volt(t)
   mincovv <- ifelse(min(Sv[,])<mincovv,min(Sv[,]),mincovv)
   maxcovv <- ifelse(max(Sv[,])>maxcovv,max(Sv[,]),maxcovv)
 }
 
-#}
-# create_freqvideo(1,3606,"freq_by_time_1to3606_mapconnected_ts_colscale.mp4")
-# create_voltvideo(1000,1200,"voltmap_1000to1200_ts_colscale_covlinecolors2.mp4")
-# create_voltvideo(1,3605,"voltmap_1to3605_ts_colscale_covlinecolors2.mp4")
-# create_freqvideo(1,3605,"freqmap_1to3605_ts_colscale_covlinecolors.mp4")
 
-#This finds the min/max covariances over the whole dataset, for labeling purposes
 
 #covariance matrix of the voltage values
 #get_covbus_volt <- function(time,S) {
@@ -206,6 +203,111 @@ update_busline_freqcov <- function(time){
   linesb
 }
 
+#return g (a ggmap object) with each point (representing each bus) colored according to the 
+# voltage at time t
+plotmapvolt <- function(t){
+  # g <- ggmap(mapten)+
+  #  scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +
+  #   scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
+  #color_vals_freq <- rescale(c(min(F[,-1]),60.05,60.1,60.15,max(F[,-1])))
+  #color_vals_volt <- rescale(c(min(V[,-1]),0.25,0.5,0.75,1,max(V[,-1])))
+  bus_locs <- update_volt(t)
+  linesb <- update_busline_voltcov(t)
+  #Below is for the TS dataset
+  #color_vals_volt <- as.numeric(sapply( c(mincovv,2,4,6,(maxcovv-0.4)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  #Below is for the GMD dataset
+  color_vals_volt <- as.numeric(sapply( c(mincovv,1.5,3,4,(maxcovv-0.2)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
+    scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_volt,limits=c(0,maxcovv)) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 2, shape = 21) +
+    scale_fill_gradientn("Voltage",colours = c("red","white","blue"),limits=c(min(V[,-1]),max(V[,-1]))) +
+    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Voltage at Time",atop(.(V[t,1]),""))))
+  g
+}
+#return g (a ggmap object) with each point (representing each bus) colored according to the 
+# frequency at time t
+plotmapfreq <- function(t){
+  bus_locs <- update_freq(t)
+  linesb <- update_busline_freqcov(t)
+  #Below is for the TS dataset
+  #color_vals_freq <- as.numeric(sapply( c(mincovf,0.2,0.4,0.6,(maxcovf-0.08)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  #Below is for the GMD dataset
+  color_vals_freq <- as.numeric(sapply( c(mincovf,50,100,150,200,(maxcovf-5)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
+    scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_freq,limits=c(0,maxcovf)) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 2, shape = 21) +
+    scale_fill_gradientn("Frequency",colours = c("blue","white","red"),limits=c(min(F[,-1]),max(F[,-1]))) +
+    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Frequency at Time",atop(.(F[t,1]),""))))
+  g
+}
+
+get_plotlyvoltmap <- function(t){
+  bus_locs <- update_volt(t)
+  linesb <- update_busline_voltcov(t)
+  m <- list(
+    colorbar=list(title="Voltage of Bus"),
+    size=7,opacity=0.8,symbol="square"
+  )
+  ge <- list(
+    scope = 'usa',
+    projection = list(type = 'albers usa'),
+    showland = TRUE,
+    landcolor = toRGB("gray95"),
+    subunitcolor = toRGB("gray85"),
+    countrycolor = toRGB("gray85"),
+    countrywidth = 0.5,
+    subunitwidth = 0.5
+  )
+  p <- plot_ly(bus_locs,lat=Latitude,lon=Longitude,text=Bus.Name,color=Voltage,
+          type='scattergeo',locationmode='USA-tennessee',mode='markers',
+          marker=m) %>% 
+    add_trace(lon=list(From.Longitude,To.Longitude),lat=list(From.Latitude,To.Latitude),
+              group=Line.id, data = linesb,
+              mode = 'lines',line = list(width = 1, color = Variance),
+              type='scattergeo', locationmode = 'USA-states') %>%
+    layout(title = 'Voltage of Buses', geo = ge)
+  p
+}
+
+get_plotlyfreqmap <- function(t){
+  bus_locs <- update_freq(t)
+  linesb <- update_busline_freqcov(t)
+  m <- list(
+    colorbar=list(title="Frequency of Bus"),
+    size=8,opacity=1,symbol="square"
+  )
+  ge <- list(
+    scope = 'usa',
+    projection = list(type = 'albers usa'),
+    showland = TRUE,
+    landcolor = toRGB("gray95"),
+    subunitcolor = toRGB("gray85"),
+    countrycolor = toRGB("gray85"),
+    countrywidth = 0.5,
+    subunitwidth = 0.5
+  )
+  p <- plot_ly(bus_locs,lat=Latitude,lon=Longitude,text=Bus.Name,color=Frequency,
+               type='scattergeo',locationmode='USA-tennessee',mode='markers',
+               marker=m) %>% 
+    add_trace(lon=list(From.Longitude,To.Longitude),lat=list(From.Latitude,To.Latitude),
+              group=Line.id, data = linesb,
+              mode = 'lines',line = list(width = 1, color = Variance),
+              type='scattergeo', locationmode = 'USA-states') %>%
+    layout(title = 'Frequency of Buses', geo = ge, legend=list(x=.8, y=0))
+  p
+}
+
+
+findvolt_greatest_outlier_station <- function(time){
+  curr_volts <- as.matrix(t(V[time,-1]))
+  colnames(curr_volts) <- "voltage"
+  ordered_volts <- order(curr_volts)
+  top10stations <- curr_volts[ordered_volts[1:10],]
+  dv <- dist(curr_volts)
+}
+
 #make a ggmap object, and create+save a .mp4 file with a given name for the frequency of the
 # buses over the specified time period (from start-stop)
 create_freqvideo <- function(start,stop,vidtitle){
@@ -229,49 +331,12 @@ create_voltvideo <- function(start,stop,vidtitle){
   },video.name = vidtitle)
 }
 
-
-#Attempt to print ggmaps fast enough for real-time updates. 
-#Right now it's too slow, but is that because of creating the graphs or printing them?
-#Creating all the graphs in the series before we print any of them should answer that.
-plotmapvolt <- function(t1, t2){
-  x11()
-
-  gList = list() # @Jake: I think this is how I would make a list...
-
-  for (t in t1:t2) {
-  	bus_locs <- update_volt(t)
-  	linesb <- update_busline_voltcov(t)
-  	color_vals_volt <- as.numeric(sapply( c(mincovv,2,4,6,(maxcovv-0.4)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
-  	g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
-   	 scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_volt,limits=c(0,maxcovv)) +
-   	 geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 2, shape = 21) +
-  	  scale_fill_gradientn("Voltage",colours = c("blue","white","red"),limits=c(min(V[,-1]),max(V[,-1]))) +
-   	 theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
-    	ggtitle(V[t,1])
-
- 	print(g)			#Jake: Here I want to push g onto my list instead of printing it
- 	#Sys.sleep(.09)
-  }
-
-  # @Jake: Then here I would loop through my list and print each ggmap object with the Sys.sleep(.09) delay used above.
-}
-
-#Returns a single plot for a given time value
-plotmapvoltsingle <- function(t){
-  bus_locs <- update_volt(t)
-  linesb <- update_busline_voltcov(t)
-  color_vals_volt <- as.numeric(sapply( c(mincovv,2,4,6,(maxcovv-0.4)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
-  g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
-   scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_volt,limits=c(0,maxcovv)) +
-   geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 2, shape = 21) +
-   scale_fill_gradientn("Voltage",colours = c("blue","white","red"),limits=c(min(V[,-1]),max(V[,-1]))) +
-   theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
-   ggtitle(V[t,1])
-  g
-}
-
 #plot the a line graph of each bus from {start} to {stop} of the voltage
 plotvoltage <- function(start,stop,plotname){
+ # Vmelt <- melt(V[1:10,], id="Time")
+ # p <- ggplot(Vmelt,aes(x=Time,y=value,colour=variable,group=variable)) +
+ #   geom_line() +
+#    theme(legend.position="none")
   par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
   start <- ifelse(missing(start),1,start)
   stop <- ifelse(missing(stop),nrow(V),stop)
@@ -311,25 +376,8 @@ plotfrequency <- function(start,stop,plotname){
   legend("topright", inset=c(-0.2,-0.15),legend = 1:n,col = colors, lty=linetype,cex=0.8)
 }
 
-#return g (a ggmap object) with each point (representing each bus) colored according to the 
-# frequency at time t
-plotmapfreq <- function(t){
-  bus_locs <- update_freq(t)
-  linesb <- update_busline_freqcov(t)
-  color_vals_freq <- as.numeric(sapply( c(mincovf,0.2,0.4,0.6,(maxcovf-0.08)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
-  g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
-    scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_freq,limits=c(0,maxcovf)) +
-    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 2, shape = 21) +
-    scale_fill_gradientn("Frequency",colours = c("blue","white","red"),limits=c(min(F[,-1]),max(F[,-1]))) +
-    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(F[t,1])
-  g
-}
 
-#x11()
-#plot(plotmapfreq(1))
-#Sys.sleep(10)
-#dev.off()
+
 
 #g <- ggmap(mapten)
 #g <- g+ geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency), size = 2, shape = 21) 

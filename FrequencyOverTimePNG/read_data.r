@@ -73,14 +73,14 @@ get_covbus_volt <- function(time) {
 }
 
 #init_environ <- function(){
-buses <- read.csv("Data/tenn150_buses.csv")
-substat <- read.csv("Data/tenn150_substations.csv")
-loads <- read.csv("Data/tenn150_loads.csv")
-generators <- read.csv("Data/tenn150_generators.csv")
-linesb <- read.csv("Data/tenn150_lines.csv")
-trans <- read.csv("Data/tenn150_transformers.csv")
-V <- read.csv("Data/tenn150gmd_bus_voltage.csv")
-F <- read.csv("Data/tenn150gmd_bus_frequency.csv")
+buses <- read.csv("data/tenn150_buses.csv")
+substat <- read.csv("data/tenn150_substations.csv")
+loads <- read.csv("data/tenn150_loads.csv")
+generators <- read.csv("data/tenn150_generators.csv")
+linesb <- read.csv("data/tenn150_lines.csv")
+trans <- read.csv("data/tenn150_transformers.csv")
+V <- read.csv("data/tenn150gmd_bus_voltage.csv")
+F <- read.csv("data/tenn150gmd_bus_frequency.csv")
 #V <- read.csv("tenn150ts_bus_voltage.csv")
 #F <- read.csv("tenn150ts_bus_frequency.csv")
 
@@ -203,6 +203,11 @@ update_busline_freqcov <- function(time){
   linesb
 }
 
+#Given a plot and a time value, creates an appropriately-sized PNG of the plot named with the time value.
+plotpng <- function(g, t) {
+  ggsave(file=paste("img/", t, ".png", sep=""), plot=g, width=10, height=4, units="in")
+}
+
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # voltage at time t
 plotmapvolt <- function(t){
@@ -221,7 +226,7 @@ plotmapvolt <- function(t){
     scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_volt,limits=c(0,maxcovv)) +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 2, shape = 21) +
     scale_fill_gradientn("Voltage",colours = c("red","white","blue"),limits=c(min(V[,-1]),max(V[,-1]))) +
-    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(V[t,1]),""))))
   g
 }
@@ -238,9 +243,27 @@ plotmapfreq <- function(t){
     scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_freq,limits=c(0,maxcovf)) +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 2, shape = 21) +
     scale_fill_gradientn("Frequency",colours = c("blue","white","red"),limits=c(min(F[,-1]),max(F[,-1]))) +
-    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(F[t,1]),""))))
   g
+}
+
+#creates a png of a map with each point (representing each bus) colored according to the 
+# frequency at time t
+png_plotmapfreq <- function(t){
+  bus_locs <- update_freq(t)
+  linesb <- update_busline_freqcov(t)
+  #Below is for the TS dataset
+  #color_vals_freq <- as.numeric(sapply( c(mincovf,0.2,0.4,0.6,(maxcovf-0.08)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  #Below is for the GMD dataset
+  color_vals_freq <- as.numeric(sapply( c(mincovf,50,100,150,200,(maxcovf-5)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
+    scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_freq,limits=c(0,maxcovf)) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 2, shape = 21) +
+    scale_fill_gradientn("Frequency",colours = c("blue","white","red"),limits=c(min(F[,-1]),max(F[,-1]))) +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Frequency at Time",atop(.(F[t,1]),""))))
+  ggsave(file=paste("img/", t, ".png", sep=""), width=10, height=4, units="in")
 }
 
 get_plotlyvoltmap <- function(t){

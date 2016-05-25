@@ -31,7 +31,7 @@ server <- function(input, output) {
     for (t in input$time[[1]]:input$time[[2]]) {
       mapList[[(t+1)-input$time[[1]]]] <- get_plotlyfreqmap(t)
     }
-    print(mapList) #It doesn't work without this, but I have no idea why.
+    mapList
   })
 
   #Index for map list
