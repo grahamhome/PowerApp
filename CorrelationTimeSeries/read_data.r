@@ -6,7 +6,7 @@ library(animation)
 library(scales)
 library(reshape2)
 library(plotly)
-
+library(ggcorrplot)
 #Change the frequency column of bus_locs with the frequencies for a given time 
 # must (assign function return to bus_locs)
 update_freq <- function(time){
@@ -71,97 +71,130 @@ get_covbus_volt <- function(time) {
   assign("curr_sv",time,envir = .GlobalEnv)
   assign("Sv",Sv,envir = .GlobalEnv)
 }
-
-#init_environ <- function(){
-buses <- read.csv("data/tenn150_buses.csv")
-substat <- read.csv("data/tenn150_substations.csv")
-loads <- read.csv("data/tenn150_loads.csv")
-generators <- read.csv("data/tenn150_generators.csv")
-linesb <- read.csv("data/tenn150_lines.csv")
-trans <- read.csv("data/tenn150_transformers.csv")
-V <- read.csv("data/tenn150gmd_bus_voltage.csv")
-F <- read.csv("data/tenn150gmd_bus_frequency.csv")
-#V <- read.csv("tenn150ts_bus_voltage.csv")
-#F <- read.csv("tenn150ts_bus_frequency.csv")
-
-bn <- buses$Bus.Name
-bn <- gsub(" ",".",bn)
-buses$Bus.Name <- bn
-
-bn <- linesb$To.Bus.Name
-bn <- gsub(" ",".",bn)
-linesb$To.Bus.Name <- bn
-bn <- linesb$From.Bus.Name
-bn <- gsub(" ",".",bn)
-linesb$From.Bus.Name <- bn
-
-sub_buses <- merge(buses,substat,by = "Sub.ID")
-
-#replace names in Frequency table with just bus names 
-cn <- colnames(F[,-1])
-cn <- gsub("Bus[.]","",cn)
-cn <- gsub("[.]Frequency","",cn)
-cn <- gsub("[.][.]",".",cn)
-cn <- gsub("Gallatin[.]TN[.]","Gallatin.(TN)",cn)
-colnames(F) <- c("Time",cn)
-#replace names in Voltage table with just bus names 
-cn <- colnames(V[,-1])
-cn <- gsub("Bus[.]","",cn)
-cn <- gsub("[.]V[.]pu","",cn)
-cn <- gsub("[.][.]",".",cn)
-cn <- gsub("Gallatin[.]TN[.]","Gallatin.(TN)",cn)
-colnames(V) <- c("Time",cn)
-
-#Set up dataframe with each bus name, bus number, the name of the substation it's at,
-# the lat/long of the station, the frequency (at time=0), and the voltage (at time=0)
-bus_locs <- data.frame(sub_buses$Bus.Num,sub_buses$Bus.Name,sub_buses$Sub.Name.x,sub_buses$Latitude,sub_buses$Longitude,"Frequency","Voltage")
-colnames(bus_locs) <- c("Bus.Num","Bus.Name","Sub.Name", "Latitude","Longitude","Frequency","Voltage")
-bus_locs$Frequency <- bus_locs$Voltage <- 0 
-
-#Add the frequency values from time t=0 to bus_locs dataframe
-bus_locs <- update_freq(1)
-#Add the voltage values from time t=0 to bus_locs dataframe
-bus_locs <- update_volt(1)
-
-#Add the from/to bus latitudes/longitudes to the line data
-linesb <- merge(linesb,bus_locs[,c("Bus.Num","Latitude","Longitude")], by.x = "From.Bus.Num", by.y = "Bus.Num")
-linesb <- merge(linesb,bus_locs[,c("Bus.Num","Latitude","Longitude")], by.x = "To.Bus.Num", by.y = "Bus.Num")
-cn <- colnames(linesb)
-cn <- gsub("Latitude[.]x","From.Latitude",cn)
-cn <- gsub("Longitude[.]x","From.Longitude",cn)
-cn <- gsub("Latitude[.]y","To.Latitude",cn)
-cn <- gsub("Longitude[.]y","To.Longitude",cn)
-colnames(linesb) <- cn
-linesb$Variance <- 0
-linesb$Line.id <- seq_len(nrow(linesb))
-#trans <- merge(trans,bus_locs[,c("Bus.Num","Latitude","Longitude")], by.x = "From.Bus.Num", by.y = "Bus.Num")
-#trans <- merge(trans,bus_locs[,c("Bus.Num","Latitude","Longitude")], by.x = "To.Bus.Num", by.y = "Bus.Num")
-#Create the map to use as the background for the ggplot
-mapten <- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), 
-                zoom = 6, maptype = "roadmap", scale = 2)
-g <- ggmap(mapten)+ scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) + scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
-#Set up the variables for the voltage covariance matrix
-Xv <- as.matrix(V[,-1])
-Sv <- cov(Xv[1:2,])
-curr_sv <- 3
-xvbar <- colMeans(Xv[1:2,])
-#Set up these variables for the frequency covariance matrix
-Xf <- as.matrix(F[,-1])
-Sf <- cov(Xf[1:2,])
-curr_sf <- 3
-xfbar <- colMeans(Xf[1:2,])
-
+buses <- substat <- loads <- generators <- linesb <- trans <- V <- F <- sub_buses <- bus_locs <- data.frame()
+Xv <- Xf <- Sv <- Sf <-xvbar <- xfbar <-mapten <- g <- NULL
+mincovf <- maxcovf <- mincovv <- mincovv <- curr_sf <- curr_sv <- 0
+init_environ <- function(ds){
+  buses <- substat <- loads <- generators <- linesb <- trans <- V <- F <- sub_buses <- bus_locs <- data.frame()
+  Xv <- Xf <- Sv <- Sf <-xvbar <- xfbar <- NULL
+  mincovf <- maxcovf <- mincovv <- mincovv <- curr_sf <- curr_sv <- 0
+  buses <- read.csv("tenn150_buses.csv")
+  substat <- read.csv("tenn150_substations.csv")
+  loads <- read.csv("tenn150_loads.csv")
+  generators <- read.csv("tenn150_generators.csv")
+  linesb <- read.csv("tenn150_lines.csv")
+  trans <- read.csv("tenn150_transformers.csv")
+  if (ds=="gmd") {
+    V <- read.csv("tenn150gmd_bus_voltage.csv")
+    F <- read.csv("tenn150gmd_bus_frequency.csv")
+  } else{
+    V <- read.csv("tenn150ts_bus_voltage.csv")
+    F <- read.csv("tenn150ts_bus_frequency.csv")
+  }
+  
+  bn <- buses$Bus.Name
+  bn <- gsub(" ",".",bn)
+  buses$Bus.Name <- bn
+  
+  bn <- linesb$To.Bus.Name
+  bn <- gsub(" ",".",bn)
+  linesb$To.Bus.Name <- bn
+  bn <- linesb$From.Bus.Name
+  bn <- gsub(" ",".",bn)
+  linesb$From.Bus.Name <- bn
+  
+  sub_buses <- merge(buses,substat,by = "Sub.ID")
+  
+  #replace names in Frequency table with just bus names 
+  cn <- colnames(F[,-1])
+  cn <- gsub("Bus[.]","",cn)
+  cn <- gsub("[.]Frequency","",cn)
+  cn <- gsub("[.][.]",".",cn)
+  cn <- gsub("Gallatin[.]TN[.]","Gallatin.(TN)",cn)
+  colnames(F) <- c("Time",cn)
+  #replace names in Voltage table with just bus names 
+  cn <- colnames(V[,-1])
+  cn <- gsub("Bus[.]","",cn)
+  cn <- gsub("[.]V[.]pu","",cn)
+  cn <- gsub("[.][.]",".",cn)
+  cn <- gsub("Gallatin[.]TN[.]","Gallatin.(TN)",cn)
+  colnames(V) <- c("Time",cn)
+  
+  #Set up dataframe with each bus name, bus number, the name of the substation it's at,
+  # the lat/long of the station, the frequency (at time=0), and the voltage (at time=0)
+  bus_locs <- data.frame(sub_buses$Bus.Num,sub_buses$Bus.Name,sub_buses$Sub.Name.x,sub_buses$Latitude,sub_buses$Longitude,"Frequency","Voltage")
+  colnames(bus_locs) <- c("Bus.Num","Bus.Name","Sub.Name", "Latitude","Longitude","Frequency","Voltage")
+  bus_locs$Frequency <- bus_locs$Voltage <- 0 
+  
+  
+  
+  #Add the from/to bus latitudes/longitudes to the line data
+  linesb <- merge(linesb,bus_locs[,c("Bus.Num","Latitude","Longitude")], by.x = "From.Bus.Num", by.y = "Bus.Num")
+  linesb <- merge(linesb,bus_locs[,c("Bus.Num","Latitude","Longitude")], by.x = "To.Bus.Num", by.y = "Bus.Num")
+  cn <- colnames(linesb)
+  cn <- gsub("Latitude[.]x","From.Latitude",cn)
+  cn <- gsub("Longitude[.]x","From.Longitude",cn)
+  cn <- gsub("Latitude[.]y","To.Latitude",cn)
+  cn <- gsub("Longitude[.]y","To.Longitude",cn)
+  colnames(linesb) <- cn
+  linesb$Variance <- 0
+  linesb$Line.id <- seq_len(nrow(linesb))
+  #trans <- merge(trans,bus_locs[,c("Bus.Num","Latitude","Longitude")], by.x = "From.Bus.Num", by.y = "Bus.Num")
+  #trans <- merge(trans,bus_locs[,c("Bus.Num","Latitude","Longitude")], by.x = "To.Bus.Num", by.y = "Bus.Num")
+  #Create the map to use as the background for the ggplot
+  mapten <- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), 
+                    zoom = 6, maptype = "roadmap", scale = 2)
+  g <- ggmap(mapten)+ scale_x_continuous(limits = c(-90.6, -81.3), expand = c(0, 0)) + scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
+  #Set up the variables for the voltage covariance matrix
+  Xv <- as.matrix(V[,-1])
+  Sv <- cov(Xv[1:2,])
+  curr_sv <- 3
+  xvbar <- colMeans(Xv[1:2,])
+  #Set up these variables for the frequency covariance matrix
+  Xf <- as.matrix(F[,-1])
+  Sf <- cov(Xf[1:2,])
+  curr_sf <- 3
+  xfbar <- colMeans(Xf[1:2,])
+  assign("mapten",mapten,envir = .GlobalEnv)
+  assign("g",g,envir = .GlobalEnv)
+  assign("V",V,envir = .GlobalEnv)
+  assign("F",F,envir = .GlobalEnv)
+  assign("Xv",Xv,envir = .GlobalEnv)
+  assign("Xf",Xf,envir = .GlobalEnv)
+  assign("xvbar",xvbar,envir = .GlobalEnv)
+  assign("curr_sv",curr_sv,envir = .GlobalEnv)
+  assign("Sv",Sv,envir = .GlobalEnv)
+  assign("xfbar",xfbar,envir = .GlobalEnv)
+  assign("curr_sf",curr_sf,envir = .GlobalEnv)
+  assign("Sf",Sf,envir = .GlobalEnv)
+  assign("generators",generators,envir = .GlobalEnv)
+  assign("loads",loads,envir = .GlobalEnv)
+  assign("linesb",linesb,envir = .GlobalEnv)
+  assign("substat",substat,envir = .GlobalEnv)
+  assign("buses",buses,envir = .GlobalEnv)
+  assign("sub_buses",sub_buses,envir = .GlobalEnv)
+  assign("trans",trans,envir = .GlobalEnv)
+  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  #Add the frequency values from time t=0 to bus_locs dataframe
+  bus_locs <- update_freq(1)
+  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  #Add the voltage values from time t=0 to bus_locs dataframe
+  bus_locs <- update_volt(1)
+  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  
+}
+init_environ("ts")
 #This finds the min/max covariances over the whole dataset, for labeling purposes
 mincovf <- 1
 maxcovf <- 0
-for (t in 3:845) {
+for (t in 3:nrow(F)) {
   get_covbus_freq(t)
   mincovf <- ifelse(min(Sf[,])<mincovf,min(Sf[,]),mincovf)
   maxcovf <- ifelse(max(Sf[,])>maxcovf,max(Sf[,]),maxcovf)
 }
 mincovv <- 1
 maxcovv <- 0
-for (t in 3:845) {
+for (t in 3:nrow(V)) {
   get_covbus_volt(t)
   mincovv <- ifelse(min(Sv[,])<mincovv,min(Sv[,]),mincovv)
   maxcovv <- ifelse(max(Sv[,])>maxcovv,max(Sv[,]),maxcovv)
@@ -399,6 +432,17 @@ plotfrequency <- function(start,stop,plotname){
   legend("topright", inset=c(-0.2,-0.15),legend = 1:n,col = colors, lty=linetype,cex=0.8)
 }
 
+get_corrplotvolt <- function(t){
+  bus_locs <- update_volt(t)
+  get_covbus_volt(t)
+  ggcorrplot(cov2cor(Sv))
+}
+
+get_corrplotfreq <- function(t){
+  bus_locs <- update_freq(t)
+  get_covbus_freq(t)
+  ggcorrplot(cov2cor(Sf))
+}
 
 
 
