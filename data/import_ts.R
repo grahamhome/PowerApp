@@ -1,15 +1,16 @@
 library(ggmap)
 
 #reads in all the data from the csv files
-get_csvdata_ts <- function(){
-  buses <<- read.csv("rawdata/tenn150_buses.csv")
-  substat <<- read.csv("rawdata/tenn150_substations.csv")
-  loads <<- read.csv("rawdata/tenn150_loads.csv")
-  generators <<- read.csv("rawdata/tenn150_generators.csv")
-  linesb <<- read.csv("rawdata/tenn150_lines.csv")
-  trans <<- read.csv("rawdata/tenn150_transformers.csv")
-  Volt <<- read.csv("rawdata/tenn150ts_bus_voltage.csv")
-  Freq <<- read.csv("rawdata/tenn150ts_bus_frequency.csv")
+#dpath is the path to the data folder (in case we are calling this from somewhere outside of the data folder)
+get_csvdata_ts <- function(dpath){
+  buses <<- read.csv(paste(dpath,"rawdata/tenn150_buses.csv",sep = ""))
+  substat <<- read.csv(paste(dpath,"rawdata/tenn150_substations.csv",sep = ""))
+  loads <<- read.csv(paste(dpath,"rawdata/tenn150_loads.csv",sep = ""))
+  generators <<- read.csv(paste(dpath,"rawdata/tenn150_generators.csv",sep = ""))
+  linesb <<- read.csv(paste(dpath,"rawdata/tenn150_lines.csv",sep = ""))
+  trans <<- read.csv(paste(dpath,"rawdata/tenn150_transformers.csv",sep = ""))
+  Volt <<- read.csv(paste(dpath,"rawdata/tenn150ts_bus_voltage.csv",sep = ""))
+  Freq <<- read.csv(paste(dpath,"rawdata/tenn150ts_bus_frequency.csv",sep = ""))
 }
 #Cleans up the names for various parts of the data so that it all matches up
 clean_names_ts  <- function(){
