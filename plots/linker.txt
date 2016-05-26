@@ -1,5 +1,3 @@
-#This file contains import and display links for plot generation methods.
-#Links specify which import method and which display method to use
-#with a given plot generation method.
-#Links must be written one per line in the following format:
-#<method_name>:<input_name>:<display_name>
+plot.r:dont_read_data.r,read_data.r:display.r
+map.r:read_data.r,dont_read_data.r:display.r
+thing.r:dont_read_data.r:display.r
