@@ -2,7 +2,7 @@
 #This is for the gmd data
 #dpath: path to the data folder (should end with '/'; i.e. ../data/)
 get_gmd_data <- function(dpath){
-  source(paste(dpath,"import_ts.R",sep = ""))
+  source(paste(dpath,"import_gmd.R",sep = ""))
   get_csvdata_gmd(dpath)
   clean_names_gmd()
   get_merged_data_gmd()

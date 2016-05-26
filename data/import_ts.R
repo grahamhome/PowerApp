@@ -88,8 +88,15 @@ get_covvariance_data_ts  <- function(){
 
 
 
-
-
+import_ts <- function(){
+#import_ts <- function(dpath){
+  #source(paste(dpath,"import_ts.R",sep = ""))
+  get_csvdata_ts("")
+  clean_names_ts()
+  get_merged_data_ts()
+  get_covvariance_data_ts()
+  get_map_data_ts()
+}
 
 
 

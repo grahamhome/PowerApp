@@ -87,10 +87,15 @@ get_covvariance_data_gmd <- function(){
 }
 
 
-
-
-
-
+import_gmd <- function(){
+#get_gmd_data <- function(dpath){
+ # source(paste(dpath,"import_gmd.R",sep = ""))
+  get_csvdata_gmd("")
+  clean_names_gmd()
+  get_merged_data_gmd()
+  get_covvariance_data_gmd()
+  get_map_data_gmd()
+}
 
 
 
