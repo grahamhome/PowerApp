@@ -7,7 +7,7 @@ source(file="read_data.r")
 #UI (webpage) is defined here - inputs and outputs
 ui <- fluidPage(
 
-  titlePanel("Changes in Bus Voltage Over Time"),
+  titlePanel("Correlation of Bus Voltages"),
 
   imageOutput("plot", height="600px", width="1500px"),
 
@@ -34,7 +34,7 @@ server <- function(input, output) {
   	end <- input$time[[2]]
     for (t in start:end) {
     	if (!file.exists(paste("img/", t, ".png", sep=""))) {
-    		plotpng(plotmapvolt(t), t)
+    		plotpng(get_corrplotvolt(t), t)
       		#png_plotmapfreq(t)
       	}
     }

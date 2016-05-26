@@ -78,18 +78,18 @@ init_environ <- function(ds){
   buses <- substat <- loads <- generators <- linesb <- trans <- V <- F <- sub_buses <- bus_locs <- data.frame()
   Xv <- Xf <- Sv <- Sf <-xvbar <- xfbar <- NULL
   mincovf <- maxcovf <- mincovv <- mincovv <- curr_sf <- curr_sv <- 0
-  buses <- read.csv("tenn150_buses.csv")
-  substat <- read.csv("tenn150_substations.csv")
-  loads <- read.csv("tenn150_loads.csv")
-  generators <- read.csv("tenn150_generators.csv")
-  linesb <- read.csv("tenn150_lines.csv")
-  trans <- read.csv("tenn150_transformers.csv")
+  buses <- read.csv("data/tenn150_buses.csv")
+  substat <- read.csv("data/tenn150_substations.csv")
+  loads <- read.csv("data/tenn150_loads.csv")
+  generators <- read.csv("data/tenn150_generators.csv")
+  linesb <- read.csv("data/tenn150_lines.csv")
+  trans <- read.csv("data/tenn150_transformers.csv")
   if (ds=="gmd") {
-    V <- read.csv("tenn150gmd_bus_voltage.csv")
-    F <- read.csv("tenn150gmd_bus_frequency.csv")
+    V <- read.csv("data/tenn150gmd_bus_voltage.csv")
+    F <- read.csv("data/tenn150gmd_bus_frequency.csv")
   } else{
-    V <- read.csv("tenn150ts_bus_voltage.csv")
-    F <- read.csv("tenn150ts_bus_frequency.csv")
+    V <- read.csv("data/tenn150ts_bus_voltage.csv")
+    F <- read.csv("data/tenn150ts_bus_frequency.csv")
   }
   
   bn <- buses$Bus.Name
@@ -435,7 +435,8 @@ plotfrequency <- function(start,stop,plotname){
 get_corrplotvolt <- function(t){
   bus_locs <- update_volt(t)
   get_covbus_volt(t)
-  ggcorrplot(cov2cor(Sv))
+  g <- ggcorrplot(cov2cor(Sv))
+  g
 }
 
 get_corrplotfreq <- function(t){
