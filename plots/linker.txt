@@ -1,3 +1,0 @@
-plot.r:dont_read_data.r,read_data.r:display.r
-map.r:read_data.r,dont_read_data.r:display.r
-thing.r:dont_read_data.r:display.r

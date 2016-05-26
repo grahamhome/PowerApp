@@ -12,6 +12,9 @@ progress$stage <- 1
 #Reactive values for user's chosen files
 files <- reactiveValues()
 
+#Reactive values for user's selected plot type
+plots <- reactiveValues()
+
 #Data file selection utility function - returns filenames of all data import files.
 getDataFileNames <- function() {
 	print("getting file names")
@@ -21,6 +24,21 @@ getDataFileNames <- function() {
 #Returns the names of the plot files compatible with the dataset selected by the user
 getCompatiblePlots <- function() {
 	eval(parse(text=gsub(".r", "_plots()", files$data)))
+}
+
+#Returns the names of the plot functions defined in the plot file selected by the user.
+getPlotFunctions <- function() {
+	functions <- ls.str(plots$env, "function")
+	prefix <- "plot_"	#Functions that return a plot begin with this
+	plotFunctions <- list()
+	i <- 1
+	for (f in functions) {
+		if (substring(f, 1, nchar(prefix)) == prefix) {
+			plotFunctions[i] = f
+			i <- i + 1
+		}
+	}
+	plotFunctions
 }
 
 #App UI is defined here - inputs & outputs
@@ -93,7 +111,10 @@ server <- function(input, output, session) {
   						actionLink("back", "Previous", icon=icon("arrow-left"))
   					),
   					column(10,
-  						imageOutput("plot", height="600px", width="1500px")
+  						tabsetPanel(	#TODO: Get these tabs to work!
+  							tabPanel("Tab One", imageOutput("plot", height="600px", width="1500px")),
+  							tabPanel("Tab Two", imageOutput("plot2", height="600px", width="1500px"))
+  						)
   					)
   				),
   				fluidRow(
@@ -129,8 +150,11 @@ server <- function(input, output, session) {
 	observeEvent(input$selectPlot, {
 		#Switch to display activity
 		progress$stage <- 4
-		#Import plot function set chosen by user
-		source(file=paste("plots/", input$plottype, sep=""))
+
+		#Create new environment for plot functions
+		plots$env <- new.env()
+		#Import plot functions from file chosen by user into new environment
+		sys.source(file=paste("plots/", input$plottype, sep=""), envir=plots$env)
 		#Store name of plot function file
 		files$plot <- input$plottype
 	})

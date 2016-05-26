@@ -9,7 +9,7 @@ choose_data <- function() {
 }
 
 choose_data_plots <- function() {
-	c("map.r", "linear.r")
+	c("map.r", "linear.r", "read_data.r")
 }
 
 #Module UI is defined here - inputs and outputs
