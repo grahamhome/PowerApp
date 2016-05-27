@@ -1,6 +1,4 @@
 This is the top-level directory of the Power Viewer application.
-It contains the main app and several helper apps.
+It contains the main app (app.r), which is used to run the application.
 All sub-directories have their own readme files which explain 
-their function.
-
-The Power Viewer application is run with app.r.
+their purpose.
