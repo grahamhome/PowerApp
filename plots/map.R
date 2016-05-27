@@ -121,14 +121,15 @@ plot_mapvolt <- function(t){
   #color_vals_volt <- rescale(c(min(V[,-1]),0.25,0.5,0.75,1,max(V[,-1])))
   update_volt(t)
   linesb <- get_busline_voltcov(t)
+  color_vals_volt <- as.numeric(sapply(  c(mincovf,(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   #Below is for the TS dataset
-  color_vals_volt <- as.numeric(sapply( c(mincovv,2,4,6,(maxcovv-0.4)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  #color_vals_volt <- as.numeric(sapply( c(mincovv,2,4,6,(maxcovv-0.4)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   #Below is for the GMD dataset
   #color_vals_volt <- as.numeric(sapply( c(mincovv,1.5,3,4,(maxcovv-0.2)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
-    scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_volt,limits=c(0,maxcovv)) +
-    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 2, shape = 21) +
-    scale_fill_gradientn("Voltage",colours = c("red","white","blue"),limits=c(min(Volt[,-1]),max(Volt[,-1]))) +
+    scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_volt,limits=c(mincovv,maxcovv)) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 3, shape = 21) +
+    scale_fill_gradientn("Voltage",colours = c("orange","green","blue","red"),limits=c(min(Volt[,-1]),max(Volt[,-1]))) +
     theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
@@ -138,14 +139,15 @@ plot_mapvolt <- function(t){
 plot_mapfreq <- function(t){
   update_freq(t)
   linesb <- get_busline_freqcov(t)
+  color_vals_freq <- as.numeric(sapply( c((mincovf+0.1),(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   #Below is for the TS dataset
-  color_vals_freq <- as.numeric(sapply( c(mincovf,0.2,0.4,0.6,(maxcovf-0.08)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  #color_vals_freq <- as.numeric(sapply( c(mincovf,0.2,0.4,0.6,(maxcovf-0.08)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   #Below is for the GMD dataset
   #color_vals_freq <- as.numeric(sapply( c(mincovf,50,100,150,200,(maxcovf-5)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
-    scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_freq,limits=c(0,maxcovf)) +
-    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 2, shape = 21) +
-    scale_fill_gradientn("Frequency",colours = c("blue","white","red"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
+    scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_freq,limits=c(mincovf,maxcovf)) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 3, shape = 21) +
+    scale_fill_gradientn("Frequency",colours = c("yellow","orange","blue","green"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
     theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
