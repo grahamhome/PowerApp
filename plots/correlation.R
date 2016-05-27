@@ -1,6 +1,6 @@
 library(ggcorrplot)
 
-source("../data/import_gmd.R")
+source("data/import_gmd.R")
 import_data()
 
 correlation_names <- function(){

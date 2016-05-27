@@ -1,7 +1,7 @@
 library(ggplot2)
 library(ggmap)
 library(outliers)
-source("../data/import_ts.R")
+source("data/import_ts.R")
 import_data()
 
 map_names <- function(){

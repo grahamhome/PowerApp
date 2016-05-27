@@ -5,52 +5,60 @@
 library(shiny)
 library(shinythemes)
 
+#Import UI generation functions
+source("ui/intro.r")
+source("ui/dataPicker.r")
+source("ui/plotPicker.r")
+source("displays/timeSeriesDisplay.r")
+
+#Import file importing tools
+source("utils/fileImportTools.r")
+
 #Reactive values for user's progress
 progress <- reactiveValues()
 progress$stage <- 1
 
 #Reactive values for user's chosen files
 files <- reactiveValues()
-
-#Reactive values for user's selected plot type
-plots <- reactiveValues()
+files$imports <- list() #List of import files names linked to environments
+files$plots <- list() #List of plot files linked to environments
 
 #App UI is defined here - inputs & outputs
 ui <- fluidPage(
 	theme=shinytheme("spacelab"),	#Space is cool
 
-	includeCSS("style.css"), #Stylesheet for custom divs and other elements
+	includeCSS("styles/blue.css"), #Stylesheet for custom divs and other elements
 
-  	uiOutput("content")
+  	uiOutput("content") #All UI elements go here
 )
 
 #R functionality is defined here - how inputs affect outputs
 server <- function(input, output, session) {
 
-	#Content window changes state based on user activity
+	#Window changes state based on user activity
 	output$content <- renderUI({
 
 		#Intro screen
 		if (progress$stage == 1) {
-			makeIntro()
+			intro()
   		# Dataset picker
 		} else if (progress$stage == 2) {
-			makeDataChooser()
+			dataSelection()
   		#Plot type picker	
 		} else if (progress$stage == 3) {
-			print("making plot chooser")
-			makePlotChooser()
+			plotSelection()
   		#Plot display
 		} else if (progress$stage == 4) {
-			makePlotDisplay()
+			timeSeriesDisplay()				#TODO: add logic to pick display based on plot type
 		}
 	})
 
-	#Plot window
+	#Plot window is rendered using currently active plotting function
 	output$plot <- renderPlot({
-		functs <- getPlotFunctions()
-		eval(parse(text=paste(functs[[1]], "()", sep="")))
+		eval(parse(text="plot_mapvolt(1)"), envir=files$selectedImport)	#TODO: Make reactive based on selected plot functions
 	})
+
+	#System actions to prepare for activity transitions TODO: combine with UI rendering logic, use generic "next" button for all screens
 
 	#When "Start" button is clicked
 	observeEvent(input$start, {
@@ -60,27 +68,28 @@ server <- function(input, output, session) {
 
 	#When "Import Data" button is clicked
 	observeEvent(input$selectData, {
+		#Store the environment of the user's data choice
+		files$selectedImport <- files$imports[[input$dataset]]
+		#Import dataset chosen by user
+		eval(parse(text="import_data()"), envir=files$imports[[input$dataset]])
+		print("imported dataset")
+		#Load compatible plot names
+		getCompatiblePlots()				#TODO: Figure out how to call this on app start instead of here
 		#Switch to plot picker activity.
 		progress$stage <- 3
-		#Import dataset chosen by user
-		source(file=paste("data/", input$dataset, sep=""))
-		eval(parse(text=gsub(".r", "()", input$dataset)))
-		#Store name of data import file
-		files$data <- input$dataset
 
 	})
 
 	#When "Select Plot" button is clicked
 	observeEvent(input$selectPlot, {
+		#Store the user's plot choice
+		files$selectedPlot <- input$plottype
+		#Import the selected plot file into the selected dataset environment
+		#Get filenames of supported plots
+		print(input$plottype)
+		sys.source(file=paste("plots/", input$plottype, sep=""), envir=files$selectedImport)
 		#Switch to display activity
 		progress$stage <- 4
-
-		#Create new environment for plot functions
-		plots$env <- new.env()
-		#Import plot functions from file chosen by user into new environment
-		sys.source(file=paste("plots/", input$plottype, sep=""), envir=plots$env)
-		#Store name of plot function file
-		files$plot <- input$plottype
 	})
 
 	#When the "Back" button is clicked
@@ -92,142 +101,9 @@ server <- function(input, output, session) {
 	})
 }
 
-#UI functions - generate different windows
-#Introduction screen
-makeIntro <- function() {
-	fixedPanel(class="mainwindow_inactive",
-		fixedPanel(class="popup",
-
-			fluidRow(
-		  		column(8, offset=2,
-		  			h1("Welcome to Power Viewer!", class="windowtitle")
-		  		)
-		  	),
-		  	fluidRow(
-				column(12,
-		  			h3("Power Viewer is a tool for viewing power grid data with a library of plotting methods.
-		  				The next two screens will allow you to choose from the available data sets and plot styles.
-		  				Ready to begin?", style="line-height:150%; text-align:center")
-		  		)
-			),
-			actionButton("start", "Start", class="next")
-		)
-	)
-}
-
-#Data set chooser
-makeDataChooser <- function() {
-	fixedPanel(class="mainwindow_inactive",
-		fixedPanel(class="popup",
-			fluidRow(
-				column(2,
-					actionLink("back", "", icon=icon("arrow-left", "fa-2x"), class="icon")
-				),
-				column(8,
-					h1("Data Set", class="windowtitle")
-				)
-			),
-			fluidRow(
-				column(8, offset=2,
-					h3("Select a data set:"),
-					br(),
-					selectInput("dataset", "", getDataFileNames())
-				)
-			),
-			actionButton("selectData", "Import Data", class="next")
-		)
-	)
-}
-
-#Plot type chooser
-makePlotChooser <- function() {
-	fixedPanel(class="mainwindow_inactive",
-		fixedPanel(class="popup",
-			fluidRow(
-				column(2,
-					actionLink("back", "", icon=icon("arrow-left", "fa-2x"), class="icon")
-				),
-				column(8,
-					h1("Plot Type", class="windowtitle")
-				)
-			),
-			fluidRow(
-				column(8, offset=2,
-					h3("Select a plot type:"),
-					br(),
-					selectInput("plottype", "Plot Type", getCompatiblePlots())
-				)
-			),
-			actionButton("selectPlot", "Select Plot", class="next")
-		)
-	)
-}
-
-#Plot display window
-makePlotDisplay <- function() {
-	fixedPanel(class="mainwindow",
-		fluidRow(
-			column(2,
-				actionLink("back", "", icon=icon("arrow-left", "fa-2x"), class="icon")
-			),
-			column(8,
-				h1("Plot", class="windowtitle") #TODO: Replace with a reactive title based on plot type & data set
-			)
-		),
-		fluidRow(
-			column(1,
-				p("Function"),
-				p("List"),
-				p("Here")
-			),
-			column(11,
-				#do.call(tabsetPanel, makeFunctionTabs()), #This breaks my back button...but why?!?!?!
-				sliderInput("time", "Time range to examine",  min = 1, max = 100, value = 1, width = "100%"), #TODO: set max/min reactively
-				br(),
-				column(4, offset=4,
-					div(style="text-align:center", actionLink("play", "", icon=icon("play", "fa-2x"), class="icon"))
-				)
-			)
-		)
-	)
-}
-
-#Data file selection utility function - returns filenames of all data import files.
-getDataFileNames <- function() {
-	print("getting file names")
-	files <- list.files(path="data/", pattern="*.r")
-}
-
-#Returns the names of the plot files compatible with the dataset selected by the user
-getCompatiblePlots <- function() {
-	eval(parse(text=gsub(".r", "_plots()", files$data)))
-}
-
-#Returns the names of the plot functions defined in the plot file selected by the user.
-getPlotFunctions <- function() {
-	functions <- ls.str(plots$env, "function")
-	prefix <- "plot_"	#Functions that return a plot begin with this
-	plotFunctions <- list()
-	i <- 1
-	for (f in functions) {
-		if (substring(f, 1, nchar(prefix)) == prefix) {
-			plotFunctions[i] = f
-			i <- i + 1
-		}
-	}
-	plotFunctions
-}
-
-#Returns a list of tabs, one for each available plot function.
-makeFunctionTabs <- function() {
-	tabs <- list()
-	functs <- getPlotFunctions()
-	for (i in 1:length(functs)) {
-		tabs[[i]] = tabPanel(title=functs[[i]], value=i, plotOutput("plot", height="400px", width="100%")) #TODO: Size reactively based on window size
-	}
-	tabs
-}
-
+#Import data and plot files once when app starts
+isolate(getDataFiles())
+isolate(getPlotFiles())
 
 #Start the app
 mainApp <- shinyApp(ui=ui, server=server)
