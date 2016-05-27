@@ -1,11 +1,18 @@
 
 
-source("../data/init_data.R")
-get_ts_data("../data/")
+source("../data/import_ts.R")
+#get_ts_data("../data/")
+import_ts()
 
+linear_names <- function(){
+  n <- list(linear="Linear",
+            plot_voltage="Voltage",
+            plot_frequency="Frequency")
+  n
+}
 
 #plot the a line graph of each bus from {start} to {stop} of the voltage
-plotvoltage <- function(start,stop,plotname){
+plot_voltage <- function(start,stop,plotname){
   # Vmelt <- melt(V[1:10,], id="Time")
   # p <- ggplot(Vmelt,aes(x=Time,y=value,colour=variable,group=variable)) +
   #   geom_line() +
@@ -29,7 +36,7 @@ plotvoltage <- function(start,stop,plotname){
   legend("topright", inset=c(-0.2,-0.15),legend = 1:n,col = colors, lty=linetype,cex=0.8)
 }
 #plot the a line graph of each bus from {start} to {stop} of the voltage
-plotfrequency <- function(start,stop,plotname){
+plot_frequency <- function(start,stop,plotname){
   par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
   start <- ifelse(missing(start),1,start)
   stop <- ifelse(missing(stop),nrow(F),stop)

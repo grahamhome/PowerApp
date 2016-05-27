@@ -4,6 +4,12 @@ library(outliers)
 source("../data/init_data.R")
 get_ts_data("../data/")
 
+map_names <- function(){
+  n <- list(map="Map",
+            plot_mapvolt="Voltage",
+            plot_mapfreq="Frequency")
+  n
+}
 
 update_covbus_freq <- function(time) {
   if (curr_sf<time&&curr_sf>2) {
@@ -107,7 +113,7 @@ update_volt <- function(time){
 
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # voltage at time t
-plotmapvolt <- function(t){
+plot_mapvolt <- function(t){
   # g <- ggmap(mapten)+
   #  scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +
   #   scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
@@ -129,7 +135,7 @@ plotmapvolt <- function(t){
 }
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # frequency at time t
-plotmapfreq <- function(t){
+plot_mapfreq <- function(t){
   update_freq(t)
   linesb <- get_busline_freqcov(t)
   #Below is for the TS dataset
