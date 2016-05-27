@@ -3,6 +3,13 @@ library(ggcorrplot)
 source("../data/init_data.R")
 get_ts_data("../data/")
 
+correlation_names <- function(){
+  n <- list(correlation="Correlation",
+            plot_corrvolt="Voltage",
+            plot_corrfreq="Frequency")
+  n
+}
+
 update_covmat_freq <- function(time) {
   if (curr_sf<time&&curr_sf>2) {
     cf <- curr_sf
@@ -81,13 +88,13 @@ update_busloc_volt <- function(time){
 } 
 
 
-get_corrplotvolt <- function(t){
+plot_corrvolt <- function(t){
   update_busloc_volt(t)
   update_covmat_volt(t)
   ggcorrplot(cov2cor(Sv))
 }
 
-get_corrplotfreq <- function(t){
+plot_corrfreq <- function(t){
   update_busloc_freq(t)
   update_covmat_freq(t)
   ggcorrplot(cov2cor(Sf),tl.cex = 4.5,hc.order = TRUE,colors = c("blue","black","white"))

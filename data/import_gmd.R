@@ -86,8 +86,8 @@ get_covvariance_data_gmd <- function(){
   xfbar <<- colMeans(Xf[1:2,])
 }
 
-
-import_gmd <- function(){
+#Calls the functions to get the data
+import_data <- function(){
 #get_gmd_data <- function(dpath){
  # source(paste(dpath,"import_gmd.R",sep = ""))
   get_csvdata_gmd("")
@@ -96,10 +96,15 @@ import_gmd <- function(){
   get_covvariance_data_gmd()
   get_map_data_gmd()
 }
+#Returns a list of the plots that this data can be used to create
+use_plots <- function(){
+  list('linear.R','map.R','heatmap.R','correlation.R')
+}
 
-
-
-
+import_gmd_names <- function(){
+  n <- list(import_gmd="Solar Flare")
+  n
+}
 
 
 
