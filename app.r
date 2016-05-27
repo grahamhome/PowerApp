@@ -46,6 +46,12 @@ server <- function(input, output, session) {
 		}
 	})
 
+	#Plot window
+	output$plot <- renderPlot({
+		functs <- getPlotFunctions()
+		eval(parse(text=paste(functs[[1]], "()", sep="")))
+	})
+
 	#When "Start" button is clicked
 	observeEvent(input$start, {
 		#Switch to dataset picker activity
@@ -175,7 +181,7 @@ makePlotDisplay <- function() {
 				p("Here")
 			),
 			column(11,
-				#do.call(tabsetPanel, makeFunctionTabs()),
+				#do.call(tabsetPanel, makeFunctionTabs()), #This breaks my back button...but why?!?!?!
 				sliderInput("time", "Time range to examine",  min = 1, max = 100, value = 1, width = "100%"), #TODO: set max/min reactively
 				br(),
 				column(4, offset=4,
@@ -217,7 +223,7 @@ makeFunctionTabs <- function() {
 	tabs <- list()
 	functs <- getPlotFunctions()
 	for (i in 1:length(functs)) {
-		tabs[[i]] = tabPanel(title=functs[[i]], value=i, imageOutput("plot", height="400px", width="100%")) #TODO: Size reactively based on window size
+		tabs[[i]] = tabPanel(title=functs[[i]], value=i, plotOutput("plot", height="400px", width="100%")) #TODO: Size reactively based on window size
 	}
 	tabs
 }
