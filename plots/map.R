@@ -1,8 +1,8 @@
 library(ggplot2)
 library(ggmap)
 library(outliers)
-source("../data/init_data.R")
-get_ts_data("../data/")
+source("../data/import_ts.R")
+import_data()
 
 map_names <- function(){
   n <- list(map="Map",
@@ -122,9 +122,9 @@ plot_mapvolt <- function(t){
   update_volt(t)
   linesb <- get_busline_voltcov(t)
   #Below is for the TS dataset
-  #color_vals_volt <- as.numeric(sapply( c(mincovv,2,4,6,(maxcovv-0.4)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  color_vals_volt <- as.numeric(sapply( c(mincovv,2,4,6,(maxcovv-0.4)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   #Below is for the GMD dataset
-  color_vals_volt <- as.numeric(sapply( c(mincovv,1.5,3,4,(maxcovv-0.2)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  #color_vals_volt <- as.numeric(sapply( c(mincovv,1.5,3,4,(maxcovv-0.2)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
     scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_volt,limits=c(0,maxcovv)) +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 2, shape = 21) +
@@ -139,9 +139,9 @@ plot_mapfreq <- function(t){
   update_freq(t)
   linesb <- get_busline_freqcov(t)
   #Below is for the TS dataset
-  #color_vals_freq <- as.numeric(sapply( c(mincovf,0.2,0.4,0.6,(maxcovf-0.08)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  color_vals_freq <- as.numeric(sapply( c(mincovf,0.2,0.4,0.6,(maxcovf-0.08)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   #Below is for the GMD dataset
-  color_vals_freq <- as.numeric(sapply( c(mincovf,50,100,150,200,(maxcovf-5)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+  #color_vals_freq <- as.numeric(sapply( c(mincovf,50,100,150,200,(maxcovf-5)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
     scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_freq,limits=c(0,maxcovf)) +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 2, shape = 21) +

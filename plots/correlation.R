@@ -1,7 +1,7 @@
 library(ggcorrplot)
 
-source("../data/init_data.R")
-get_ts_data("../data/")
+source("../data/import_gmd.R")
+import_data()
 
 correlation_names <- function(){
   n <- list(correlation="Correlation",
@@ -91,14 +91,18 @@ update_busloc_volt <- function(time){
 plot_corrvolt <- function(t){
   update_busloc_volt(t)
   update_covmat_volt(t)
-  ggcorrplot(cov2cor(Sv))
+  ggcorrplot(cov2cor(Sv),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
 }
 
 plot_corrfreq <- function(t){
   update_busloc_freq(t)
   update_covmat_freq(t)
-  ggcorrplot(cov2cor(Sf),tl.cex = 4.5,hc.order = TRUE,colors = c("blue","black","white"))
+  ggcorrplot(cov2cor(Sf),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
 }
 
+for (t in 10:50) {
+  print(plot_corrfreq(1))
+  Sys.sleep(0.1)
+}
 
 
