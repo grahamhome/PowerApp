@@ -2,7 +2,7 @@
 
 source("../data/import_ts.R")
 #get_ts_data("../data/")
-import_ts()
+import_data()
 
 linear_names <- function(){
   n <- list(linear="Linear",
@@ -19,18 +19,18 @@ plot_voltage <- function(start,stop,plotname){
   #    theme(legend.position="none")
   par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
   start <- ifelse(missing(start),1,start)
-  stop <- ifelse(missing(stop),nrow(V),stop)
-  xrange <- range(V[start:stop,1])
-  yrange <- range(V[start:stop,-1])
+  stop <- ifelse(missing(stop),nrow(Volt),stop)
+  xrange <- range(Volt[start:stop,1])
+  yrange <- range(Volt[start:stop,-1])
   plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Voltage")
   num_sig_bus <- 0
-  n <- ncol(V)-1
+  n <- ncol(Volt)-1
   colors <- rainbow(n)
   linetype <- c(1:n)
-  plotchar <- colnames(V[,-1])
+  plotchar <- colnames(Volt[,-1])
   for (z in 2:n){
-    bus <- V[start:stop,z]
-    lines(y=bus,x=V[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
+    bus <- Volt[start:stop,z]
+    lines(y=bus,x=Volt[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
   }
   title(plotname)
   legend("topright", inset=c(-0.2,-0.15),legend = 1:n,col = colors, lty=linetype,cex=0.8)
@@ -39,18 +39,18 @@ plot_voltage <- function(start,stop,plotname){
 plot_frequency <- function(start,stop,plotname){
   par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
   start <- ifelse(missing(start),1,start)
-  stop <- ifelse(missing(stop),nrow(F),stop)
-  xrange <- range(F[start:stop,1])
-  yrange <- range(F[start:stop,-1])
+  stop <- ifelse(missing(stop),nrow(Freq),stop)
+  xrange <- range(Freq[start:stop,1])
+  yrange <- range(Freq[start:stop,-1])
   plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Frequency")
   num_sig_bus <- 0
-  n <- ncol(F)-1
+  n <- ncol(Freq)-1
   colors <- rainbow(n)
   linetype <- c(1:n)
-  plotchar <- colnames(F[,-1])
+  plotchar <- colnames(Freq[,-1])
   for (z in 2:n){
-    bus <- F[start:stop,z]
-    lines(y=bus,x=F[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
+    bus <- Freq[start:stop,z]
+    lines(y=bus,x=Freq[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
   }
   title(plotname)
   legend("topright", inset=c(-0.2,-0.15),legend = 1:n,col = colors, lty=linetype,cex=0.8)

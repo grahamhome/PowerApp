@@ -1,8 +1,8 @@
 library(ggplot2)
 library(ggmap)
 
-source("../data/init_data.R")
-get_ts_data("../data/")
+source("../data/import_ts.R")
+import_data()
 
 heatmap_names <- function(){
   n <- list(heatmap="Heat Map",
@@ -109,7 +109,8 @@ update_volt <- function(time){
   bus_locs$Voltage <- as.numeric(as.character(bus_locs$Voltage))
   assign("bus_locs",bus_locs,envir = .GlobalEnv)
 } 
-
+update_volt(1)
+update_freq(1)
 
 
 plot_heatmapvolt <- function(t){
