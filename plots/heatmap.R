@@ -2,7 +2,7 @@ library(ggplot2)
 library(ggmap)
 
 source("../data/import_gmd.R")
-import_data()
+source("data/import_ts.R")
 
 heatmap_names <- function(){
   n <- list(heatmap="Heat Map",
