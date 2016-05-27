@@ -1,7 +1,7 @@
 library(ggplot2)
 library(ggmap)
 
-source("../data/import_ts.R")
+source("../data/import_gmd.R")
 import_data()
 
 heatmap_names <- function(){
@@ -11,7 +11,8 @@ heatmap_names <- function(){
   n
 }
 
-
+#update covariance matrix of the frequency values, starting from whatever the previous time (curr_sf)
+# was to whatever "time" is. 
 update_covbus_freq <- function(time) {
   if (curr_sf<time&&curr_sf>2) {
     cf <- curr_sf
@@ -31,7 +32,7 @@ update_covbus_freq <- function(time) {
   assign("curr_sf",time,envir = .GlobalEnv)
   assign("Sf",Sf,envir = .GlobalEnv)
 }
-#get covariance matrix of the voltage values, starting from whatever the previous time (curr_sv)
+#update covariance matrix of the voltage values, starting from whatever the previous time (curr_sv)
 # was to whatever "time" is. 
 update_covbus_volt <- function(time) {
   #This is in case we call this function on a timepoint before the last one we left off at; if that is the case we want to make sure the loop
@@ -90,6 +91,12 @@ get_busline_freqcov <- function(time){
   linesb
 }
 
+get_corr_neighbors_volt <- function(){
+  update_covbus_volt(time)
+  for (x in 1:nrow(bus_locs)) {
+    
+  }
+}
 
 #Change the frequency column of bus_locs with the frequencies for a given time 
 update_freq <- function(time){
@@ -122,15 +129,16 @@ plot_heatmapvolt <- function(t){
   #   stat_summary_2d(fun=median, binwidth = c(.45, .45),alpha = 1)+
   #    scale_fill_gradientn(name = "Voltage",colours = c('yellow','orange','brown'),space = "Lab") + 
   g <- g+
-    geom_tile(data = bus_locs, aes(x=Longitude,y=Latitude,alpha=Voltage),fill='red')+
+    #geom_tile(data = bus_locs, aes(x=Longitude,y=Latitude,alpha=Voltage),fill='red')+
     #stat_density2d(data = bus_locs, aes(x=Longitude,y=Latitude,fill= bus_locs$Voltage,alpha = ..level..),geom = 'polygon')+
     #scale_fill_gradientn("Voltage Density", colours = c('yellow','red','brown'),limits=c(min(Volt[,-1]),max(Volt[,-1]))) + 
     #scale_alpha(name="Density")+
-    #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Voltage)) +
-   # scale_colour_gradientn("Bus Voltage",colours = c("red","white","blue"),limits=c(min(Volt[,-1]),max(Volt[,-1]))) +
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Voltage),size=25,alpha=0.25,shape=16) +
+    #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
+    scale_colour_gradientn("Bus Voltage",colours = c("yellow","orange","blue","green"),limits=c(min(Volt[,-1]),max(Volt[,-1]))) +
     labs(x = "Longitude", y = "Latitude") +
     #coord_map()+
-    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
@@ -139,15 +147,21 @@ plot_heatmapfreq <- function(t){
   update_freq(t)
   linesb <- get_busline_freqcov(t)
   g <- g+ 
-    #geom_density_2d(data = bus_locs, aes(x=Longitude,y=Latitude,fill= bus_locs$Frequency))+
+    #geom_density_2d(data = bus_locs, aes(x=Longitude,y=Latitude,fill= Frequency))+
     #stat_density_2d(data = bus_locs, aes(x=Longitude,y=Latitude,fill= bus_locs$Frequency,alpha = ..level..),geom = 'polygon')+
     #scale_fill_gradientn("Frequency Density", colours = c('white','red','brown'),limits=c(min(Freq[,-1]),max(Freq[,-1]))) + 
     #scale_alpha(name="Density")+
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Frequency)) +
-    scale_colour_gradientn("Bus Frequency",colours = c("blue","white","red"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Frequency),size=25,alpha=0.25,shape=16) +
+    #geom_raster(bus_locs,aes(x=Longitude,y=Latitude,fill=Frequency))+
+    scale_colour_gradientn("Bus Frequency",colours = c("black","orange","blue"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
     labs(x = "Longitude", y = "Latitude") +
-    coord_map()+
+    #coord_map()+
     theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
+
+
+       
+       
+       
