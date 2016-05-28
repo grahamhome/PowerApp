@@ -5,9 +5,9 @@ source("data/import_ts.R")
 import_data()
 
 fnames <- function(){
-  n <- list(linear="Linear",
-            plot_voltage="Voltage",
-            plot_frequency="Frequency")
+  n <- list(Linear="linear",
+            Voltage="plot_voltage",
+            Frequency="plot_frequency")
   n
 }
 

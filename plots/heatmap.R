@@ -5,9 +5,9 @@ source("data/import_ts.R")
 import_data()
 
 fnames <- function(){
-  n <- list(heatmap="Heat Map",
-            plot_heatmapvolt="Voltage",
-            plot_heatmapfreq="Frequency")
+  n <- list("Heat Map"=heatmap,
+            Voltage="plot_heatmapvolt",
+            Frequency="plot_heatmapfreq")
   n
 }
 
@@ -130,7 +130,7 @@ plot_heatmapvolt <- function(t){
    # scale_colour_gradientn("Bus Voltage",colours = c("red","white","blue"),limits=c(min(Volt[,-1]),max(Volt[,-1]))) +
     labs(x = "Longitude", y = "Latitude") +
     #coord_map()+
-    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
@@ -147,7 +147,7 @@ plot_heatmapfreq <- function(t){
     scale_colour_gradientn("Bus Frequency",colours = c("blue","white","red"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
     labs(x = "Longitude", y = "Latitude") +
     coord_map()+
-    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
