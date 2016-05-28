@@ -1,5 +1,5 @@
 #Data selection activity
-dataSelection <- function() {
+dataPicker <- function() {
 	fixedPanel(class="mainwindow_inactive",
 		fixedPanel(class="popup",
 			fluidRow(
@@ -14,10 +14,10 @@ dataSelection <- function() {
 				column(8, offset=2,
 					h3("Select a data set:"),
 					br(),
-					selectInput("dataset", "", names(files$imports))
+					selectInput("data", "", names(modules$data))
 				)
 			),
-			actionButton("selectData", "Import Data", class="next")
+			actionButton("forward", "Import Data", class="next")
 		)
 	)
 }

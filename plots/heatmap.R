@@ -4,7 +4,7 @@ library(ggmap)
 source("data/import_ts.R")
 import_data()
 
-heatmap_names <- function(){
+fnames <- function(){
   n <- list(heatmap="Heat Map",
             plot_heatmapvolt="Voltage",
             plot_heatmapfreq="Frequency")

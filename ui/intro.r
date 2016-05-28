@@ -1,5 +1,6 @@
 #Introduction screen
 intro <- function() {
+	print("intro is being called")
 	fixedPanel(class="mainwindow_inactive",
 		fixedPanel(class="popup",
 
@@ -15,7 +16,7 @@ intro <- function() {
 		  				Ready to begin?", style="line-height:150%; text-align:center")
 		  		)
 			),
-			actionButton("start", "Start", class="next")
+			actionButton("forward", "Start", class="next")
 		)
 	)
 }

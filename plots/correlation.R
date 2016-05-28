@@ -3,10 +3,10 @@ library(ggcorrplot)
 source("data/import_gmd.R")
 import_data()
 
-correlation_names <- function(){
-  n <- list(correlation="Correlation",
-            plot_corrvolt="Voltage",
-            plot_corrfreq="Frequency")
+fnames <- function(){
+  n <- list(Correlation="correlation",
+            Voltage="plot_corrvolt",
+            Frequency="plot_corrfreq")
   n
 }
 
@@ -99,10 +99,4 @@ plot_corrfreq <- function(t){
   update_covmat_freq(t)
   ggcorrplot(cov2cor(Sf),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
 }
-
-for (t in 10:50) {
-  print(plot_corrfreq(1))
-  Sys.sleep(0.1)
-}
-
 

@@ -1,5 +1,5 @@
 #Plot selection activity 
-plotSelection <- function() {
+plotPicker <- function() {
 	fixedPanel(class="mainwindow_inactive",
 		fixedPanel(class="popup",
 			fluidRow(
@@ -14,10 +14,10 @@ plotSelection <- function() {
 				column(8, offset=2,
 					h3("Select a plot type:"),
 					br(),
-					selectInput("plottype", "Plot Type", files$plotNames)
+					selectInput("plot", "Plot Type", modules$plotNames)
 				)
 			),
-			actionButton("selectPlot", "Select Plot", class="next")
+			actionButton("forward", "Select Plot", class="next")
 		)
 	)
 }

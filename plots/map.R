@@ -4,10 +4,10 @@ library(outliers)
 source("data/import_ts.R")
 import_data()
 
-map_names <- function(){
-  n <- list(map="Map",
-            plot_mapvolt="Voltage",
-            plot_mapfreq="Frequency")
+fnames <- function(){
+  n <- list(Map="map",
+            Voltage="plot_mapvolt",
+            Frequency="plot_mapfreq")
   n
 }
 
