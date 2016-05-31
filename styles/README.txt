@@ -1,0 +1,1 @@
+This directory has style. Specifically, it has the custom style created for Power Viewer application windows.

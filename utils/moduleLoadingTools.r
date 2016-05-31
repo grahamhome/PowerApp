@@ -13,7 +13,7 @@ loadDataModules <- function() {
 		#Import data
 		eval(parse(text="import_data()"), envir=env)
 		#Get the module's proper name
-		name <- eval(parse(text="name()"), envir=env)[[1]]
+		name <- eval(parse(text="name()"), envir=env)
 		#Store module filename under proper name
 		modules$data[[name]] <- filename
 		#Get the list of compatible plot modules
