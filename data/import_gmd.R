@@ -102,7 +102,7 @@ use_plots <- function(){
 }
 
 name <- function(){
-  n <- list(import_gmd="Solar Flare")
+  n <- "Solar Flare"
   n
 }
 

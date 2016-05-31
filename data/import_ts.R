@@ -104,7 +104,7 @@ use_plots <- function(){
 }
 
 name <- function(){
-  n <- list(import_ts="Line and Generator Down")
+  n <- "Line and Generator Down"
   n
 }
 

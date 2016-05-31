@@ -104,7 +104,7 @@ use_plots <- function(){
 }
 
 name <- function(){
-  n <- list(import_tenn="Unknown Issue")
+  n <- "Unknown Issue"
   n
 }
 

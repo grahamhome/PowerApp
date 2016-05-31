@@ -6,7 +6,7 @@ fnames <- function(){
 }
 
 #plot the a line graph of each bus from {start} to {stop} of the voltage
-plot_voltage <- function(start,stop,plotname){
+plot_voltage <- function(start,stop){
   # Vmelt <- melt(V[1:10,], id="Time")
   # p <- ggplot(Vmelt,aes(x=Time,y=value,colour=variable,group=variable)) +
   #   geom_line() +
@@ -26,11 +26,11 @@ plot_voltage <- function(start,stop,plotname){
     bus <- Volt[start:stop,z]
     lines(y=bus,x=Volt[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
   }
-  title(plotname)
+  title(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   legend("topright", inset=c(-0.2,-0.15),legend = 1:n,col = colors, lty=linetype,cex=0.8)
 }
 #plot the a line graph of each bus from {start} to {stop} of the voltage
-plot_frequency <- function(start,stop,plotname){
+plot_frequency <- function(start,stop){
   par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
   start <- ifelse(missing(start),1,start)
   stop <- ifelse(missing(stop),nrow(Freq),stop)
@@ -46,6 +46,6 @@ plot_frequency <- function(start,stop,plotname){
     bus <- Freq[start:stop,z]
     lines(y=bus,x=Freq[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
   }
-  title(plotname)
+  title(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   legend("topright", inset=c(-0.2,-0.15),legend = 1:n,col = colors, lty=linetype,cex=0.8)
 }
