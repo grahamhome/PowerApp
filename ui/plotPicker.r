@@ -14,7 +14,7 @@ plotPicker <- function() {
 				column(8, offset=2,
 					h3("Select a plot type:"),
 					br(),
-					selectInput("plot", "", modules$plotNames)
+					selectInput("plot", "Plot Type", modules$plotNames)
 				)
 			),
 			actionButton("forward", "Select Plot", class="next")
