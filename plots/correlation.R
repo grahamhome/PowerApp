@@ -100,9 +100,3 @@ plot_corrfreq <- function(t){
   ggcorrplot(cov2cor(Sf),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
 }
 
-for (t in 10:50) {
-  print(plot_corrfreq(1))
-  Sys.sleep(0.1)
-}
-
-

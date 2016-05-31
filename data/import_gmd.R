@@ -101,7 +101,7 @@ use_plots <- function(){
   list('linear.R','map.R','heatmap.R','correlation.R')
 }
 
-import_gmd_names <- function(){
+name <- function(){
   n <- list(import_gmd="Solar Flare")
   n
 }

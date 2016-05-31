@@ -1,109 +1,114 @@
-#Main app of PowerViewer application.
+#PowerViewer: A tool for visualizing power grid data.
 #Author: Graham Home <grahamhome333@gmail.com>
 
 #Dependencies
 library(shiny)
 library(shinythemes)
 
-#Import UI generation functions
-source("ui/intro.r")
-source("ui/dataPicker.r")
-source("ui/plotPicker.r")
-source("displays/timeSeriesDisplay.r")
+#Basic imports needed for the app to function
+baseImports <- function() {
 
-#Import file importing tools
-source("utils/fileImportTools.r")
+	#Import UI render functions
+	source("ui/intro.r")
+	source("ui/dataPicker.r")
+	source("ui/plotPicker.r")
+	source("ui/displayPicker.r")
 
-#Reactive values for user's progress
-progress <- reactiveValues()
-progress$stage <- 1
+	#Import module loading tools
+	source("utils/moduleLoadingTools.r")
+}
+baseImports()
 
-#Reactive values for user's chosen files
-files <- reactiveValues()
-files$imports <- list() #List of import files names linked to environments
-files$plots <- list() #List of plot files linked to environments
+#Reactive values for modules. Modules are function collections for collecting, plotting or displaying data
+modules <- reactiveValues()
+modules$data <- list() 		#List of import module proper names mapped to filenames
+modules$displays <- list() 	#List of display module proper names linked to list(filename, plots). plots = compatible plot module filenames
+modules$compatPlots <- list() #Set of plot modules compatible with the available data import modules. Maps module filenames to proper names.
+modules$compatDisplays <- list()
 
-#App UI is defined here - inputs & outputs
+#Initialize module reactive values once on app startup
+isolate(loadModules())
+
+#Reactive value for current UI function 
+window <- reactiveValues()
+window$content <- "intro()" #Name of the current user interface function
+
+#Application UI function
 ui <- fluidPage(
-	theme=shinytheme("spacelab"),	#Space is cool
 
+	theme=shinytheme("spacelab"),
 	includeCSS("styles/blue.css"), #Stylesheet for custom divs and other elements
-
-  	uiOutput("content") #All UI elements go here
+  	uiOutput("content") #All UI elements are rendered reactively
 )
 
-#R functionality is defined here - how inputs affect outputs
+#R functionality
 server <- function(input, output, session) {
+	#Run the current UI function
+	output$content <- renderUI({ eval(parse(text=window$content)) })
 
-	#Window changes state based on user activity
-	output$content <- renderUI({
+	#Respond to button presses by changing UI function
 
-		#Intro screen
-		if (progress$stage == 1) {
-			intro()
-  		# Dataset picker
-		} else if (progress$stage == 2) {
-			dataSelection()
-  		#Plot type picker	
-		} else if (progress$stage == 3) {
-			plotSelection()
-  		#Plot display
-		} else if (progress$stage == 4) {
-			timeSeriesDisplay()				#TODO: add logic to pick display based on plot type
+	#"Next" button
+	observeEvent(input$forward, {
+		if (window$content == "intro()") {
+			#Switch to data picker activity
+			window$content <- "dataPicker()" 
+		} else if (window$content == "dataPicker()") {
+			#Import data module chosen by user and switch to plot picker activity.
+			source(paste("data/", input$data, sep=""))#modules$data[[input$data]][[1]], sep=""))
+			print("imported dataset")
+			#Update compatible plots list now that a dataset has been selected
+			updateCompatiblePlots()
+			window$content <- "plotPicker()"
+		} else if (window$content == "plotPicker()") {
+			#Import plot module chosen by user
+			source(paste("plots/", input$plot, sep=""))
+			#Set "selected plot" variable
+			modules$selectedPlot <- input$plot
+
+			#Update display list
+			updateCompatibleDisplays()
+
+			#TODO: add display picker activity here for plots with >1 compatible display
+			#In the meantime, the application will simply choose the first compatible display in the list
+			if (length(modules$compatDisplays) == 1) {
+				#Set "selected display" variable
+				modules$selectedDisplay <- modules$compatDisplays[[1]]
+				#Import display module
+				source(paste("displays/", modules$selectedDisplay, sep=""))
+				#Launch display activity
+				window$content <- gsub("[.]r", 'UI("display")', modules$selectedDisplay)
+				print(gsub("[.]r", "", modules$selectedDisplay))
+				callModule(eval(parse(text=gsub("[.]r", "", modules$selectedDisplay))), "display")
+
+
+			} else {
+				#Launch display chooser activity
+				window$content <- "displayPicker()"
+			}
+		} else if (window$content == "displayPicker()") {
+			#Set "selected display" variable
+			modules$selectedDisplay <- input$display
+			#Import display module
+			source(paste("displays/", modules$selectedDisplay, sep=""))
+			#Launch display activity
+			window$content <- gsub("[.]r", 'UI("display")', modules$selectedDisplay)
+			print(gsub("[.]r", "", modules$selectedDisplay))
+			callModule(eval(parse(text=gsub("[.]r", "", modules$selectedDisplay))), "display")
 		}
 	})
 
-	#Plot window is rendered using currently active plotting function
-	output$plot <- renderPlot({
-		eval(parse(text="plot_mapvolt(1)"), envir=files$selectedImport)	#TODO: Make reactive based on selected plot functions
-	})
-
-	#System actions to prepare for activity transitions TODO: combine with UI rendering logic, use generic "next" button for all screens
-
-	#When "Start" button is clicked
-	observeEvent(input$start, {
-		#Switch to dataset picker activity
-		progress$stage <- 2
-	})
-
-	#When "Import Data" button is clicked
-	observeEvent(input$selectData, {
-		#Store the environment of the user's data choice
-		files$selectedImport <- files$imports[[input$dataset]]
-		#Import dataset chosen by user
-		eval(parse(text="import_data()"), envir=files$imports[[input$dataset]])
-		print("imported dataset")
-		#Load compatible plot names
-		getCompatiblePlots()				#TODO: Figure out how to call this on app start instead of here
-		#Switch to plot picker activity.
-		progress$stage <- 3
-
-	})
-
-	#When "Select Plot" button is clicked
-	observeEvent(input$selectPlot, {
-		#Store the user's plot choice
-		files$selectedPlot <- input$plottype
-		#Import the selected plot file into the selected dataset environment
-		#Get filenames of supported plots
-		print(input$plottype)
-		sys.source(file=paste("plots/", input$plottype, sep=""), envir=files$selectedImport)
-		#Switch to display activity
-		progress$stage <- 4
-	})
-
-	#When the "Back" button is clicked
+	#"Back" button
 	observeEvent(input$back, {
-		print(progress$stage)
-		if (progress$stage > 0) {	#Just in case I forget and put it on the home page by mistake
-			progress$stage <- progress$stage-1
+		if (window$content == "dataPicker()") {
+			window$content <- "intro()"
+		} else if (window$content == "plotPicker()") {
+			window$content <- "dataPicker()" 
+		} else {
+			window$content <- "plotPicker()" #TODO: Delete environment and start over?
 		}
 	})
 }
-
-#Import data and plot files once when app starts
-isolate(getDataFiles())
-isolate(getPlotFiles())
 
 #Start the app
 mainApp <- shinyApp(ui=ui, server=server)

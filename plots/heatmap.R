@@ -5,13 +5,6 @@ library(raster)
 library(akima)
 library(sp)
 
-<<<<<<< HEAD
-source("data/import_ts.R")
-import_data()
-=======
-source("../data/import_gmd.R")
-source("data/import_ts.R")
->>>>>>> a3ba410e750c3a5997bad82fbd54dad3d7a83982
 
 fnames <- function(){
   n <- list(Heatmap="heatmap",
@@ -133,6 +126,7 @@ update_freq(1)
 
 plot_heatmapvolt<- function(t){
   update_volt(t)
+<<<<<<< HEAD
   xmn <- min(bus_locs$Longitude)
   xmx <- max(bus_locs$Longitude)
   ymn <- min(bus_locs$Latitude)
@@ -153,11 +147,29 @@ plot_heatmapvolt<- function(t){
                         size = 0) +  ## size = 0 to remove the polygon outlines
     scale_fill_gradientn("Voltage",colours = topo.colors(255),limits=c(min(Volt[,-1]),max(Volt[,-1])))+
     theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+=======
+  linesb <- get_busline_voltcov(t)
+  #  g <- g %+% bus_locs + aes(x=Longitude,y=Latitude,z=Voltage) +
+  #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,z=Voltage)) +
+  #   stat_summary_2d(fun=median, binwidth = c(.45, .45),alpha = 1)+
+  #    scale_fill_gradientn(name = "Voltage",colours = c('yellow','orange','brown'),space = "Lab") + 
+  g <- g+
+    geom_tile(data = bus_locs, aes(x=Longitude,y=Latitude,alpha=Voltage),fill='red')+
+    #stat_density2d(data = bus_locs, aes(x=Longitude,y=Latitude,fill= bus_locs$Voltage,alpha = ..level..),geom = 'polygon')+
+    #scale_fill_gradientn("Voltage Density", colours = c('yellow','red','brown'),limits=c(min(Volt[,-1]),max(Volt[,-1]))) + 
+    #scale_alpha(name="Density")+
+    #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Voltage)) +
+   # scale_colour_gradientn("Bus Voltage",colours = c("red","white","blue"),limits=c(min(Volt[,-1]),max(Volt[,-1]))) +
+    labs(x = "Longitude", y = "Latitude") +
+    #coord_map()+
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+>>>>>>> version-2
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
 plot_heatmapfreq<- function(t){
   update_freq(t)
+<<<<<<< HEAD
   xmn <- min(bus_locs$Longitude)
   xmx <- max(bus_locs$Longitude)
   ymn <- min(bus_locs$Latitude)
@@ -177,6 +189,19 @@ plot_heatmapfreq<- function(t){
     #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
     scale_fill_gradientn("Frequency",colours = c("green","blue","orange","yellow"),limits=c(min(Freq[,-1]),max(Freq[,-1])))+
     theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+=======
+  linesb <- get_busline_freqcov(t)
+  g <- g+ 
+    #geom_density_2d(data = bus_locs, aes(x=Longitude,y=Latitude,fill= bus_locs$Frequency))+
+    #stat_density_2d(data = bus_locs, aes(x=Longitude,y=Latitude,fill= bus_locs$Frequency,alpha = ..level..),geom = 'polygon')+
+    #scale_fill_gradientn("Frequency Density", colours = c('white','red','brown'),limits=c(min(Freq[,-1]),max(Freq[,-1]))) + 
+    #scale_alpha(name="Density")+
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Frequency)) +
+    scale_colour_gradientn("Bus Frequency",colours = c("blue","white","red"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
+    labs(x = "Longitude", y = "Latitude") +
+    coord_map()+
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+>>>>>>> version-2
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }

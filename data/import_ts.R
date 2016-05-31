@@ -103,7 +103,7 @@ use_plots <- function(){
   list('linear.R','map.R','heatmap.R','correlation.R')
 }
 
-import_ts_names <- function(){
+name <- function(){
   n <- list(import_ts="Line and Generator Down")
   n
 }
