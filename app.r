@@ -56,6 +56,8 @@ server <- function(input, output, session) {
 		} else if (window$content == "dataPicker()") {
 			#Import data module chosen by user and switch to plot picker activity.
 			source(paste("data/", input$data, sep=""))#modules$data[[input$data]][[1]], sep=""))
+			#Import the data
+			import_data()
 			print("imported dataset")
 			#Update compatible plots list now that a dataset has been selected
 			updateCompatiblePlots()
