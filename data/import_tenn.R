@@ -103,12 +103,14 @@ use_plots <- function(){
   list('linear.R','map.R','heatmap.R','correlation.R','bar.R')
 }
 
-import_tenn_names <- function(){
+name <- function(){
   n <- list(import_tenn="Unknown Issue")
   n
 }
 
-
+n_samples <- function(){
+  nrow(Freq)
+}
 
 
 

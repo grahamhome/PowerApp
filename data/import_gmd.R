@@ -106,7 +106,9 @@ name <- function(){
   n
 }
 
-
+n_samples <- function(){
+  nrow(Freq)
+}
 
 
 #This finds the min/max covariances over the whole dataset, for labeling purposes
