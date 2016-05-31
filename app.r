@@ -12,6 +12,7 @@ baseImports <- function() {
 	source("ui/intro.r")
 	source("ui/dataPicker.r")
 	source("ui/plotPicker.r")
+	source("ui/display.r")
 	source("displays/timeSeriesDisplay.r")
 
 	#Import module loading tools
@@ -61,7 +62,9 @@ server <- function(input, output, session) {
 		} else if (window$content == "plotPicker()") {
 			#Import plot module chosen by user and switch to display activity.
 			source(paste("plots/", input$plot, sep=""))
-			window$content <- "timeSeriesDisplay(input, output, session)" #TODO: Choose display reactively by checking plots lists of display modules
+			window$content <- "display()"
+			callModule(timeSeriesDisplay, "tsDisplay")
+			#window$content <- "timeSeriesDisplay(input, output, session)" #TODO: Choose display reactively by checking plots lists of display modules
 		} 
 	})
 
