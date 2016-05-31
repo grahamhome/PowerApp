@@ -145,7 +145,7 @@ plot_heatmapvolt<- function(t){
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
     scale_fill_gradientn("Voltage",colours = topo.colors(255),limits=c(min(Volt[,-1]),max(Volt[,-1])))+
-    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
@@ -169,7 +169,7 @@ plot_heatmapfreq<- function(t){
                         size = 0) +  ## size = 0 to remove the polygon outlines
     #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
     scale_fill_gradientn("Frequency",colours = c("green","blue","orange","yellow"),limits=c(min(Freq[,-1]),max(Freq[,-1])))+
-    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
