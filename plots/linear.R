@@ -4,10 +4,10 @@ source("../data/import_ts.R")
 #get_ts_data("../data/")
 import_data()
 
-linear_names <- function(){
-  n <- list(linear="Linear",
-            plot_voltage="Voltage",
-            plot_frequency="Frequency")
+fnames <- function(){
+  n <- list(Linear="linear",
+            Voltage="plot_voltage",
+            Frequecy="plot_frequency")
   n
 }
 

@@ -91,7 +91,7 @@ get_covvariance_data_tenn  <- function(){
 import_data <- function(){
   #import_ts <- function(dpath){
   #source(paste(dpath,"import_ts.R",sep = ""))
-  get_csvdata_tenn("../data/")
+  get_csvdata_tenn("data/")
   clean_names_tenn()
   get_merged_data_tenn()
   get_covvariance_data_tenn()

@@ -1,13 +1,17 @@
 library(ggplot2)
 library(ggmap)
+library(rgdal)
+library(raster)
+library(akima)
+library(sp)
 
-source("../data/import_gmd.R")
+source("data/import_ts.R")
 import_data()
 
-heatmap_names <- function(){
-  n <- list(heatmap="Heat Map",
-            plot_heatmapvolt="Voltage",
-            plot_heatmapfreq="Frequency")
+fnames <- function(){
+  n <- list(Heatmap="heatmap",
+            Voltage="plot_heatmapvolt",
+            Frequency="plot_heatmapfreq")
   n
 }
 
@@ -91,9 +95,10 @@ get_busline_freqcov <- function(time){
   linesb
 }
 
-get_corr_neighbors_volt <- function(){
-  update_covbus_volt(time)
+get_corr_neighbors_volt <- function(time){
+  linesb <-get_busline_voltcov(time)
   for (x in 1:nrow(bus_locs)) {
+    curr_row <- bus_locs[x,]
     
   }
 }
@@ -120,48 +125,136 @@ update_volt(1)
 update_freq(1)
 
 
-plot_heatmapvolt <- function(t){
-  #g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
+
+plot_heatmapvolt<- function(t){
   update_volt(t)
-  linesb <- get_busline_voltcov(t)
-  #  g <- g %+% bus_locs + aes(x=Longitude,y=Latitude,z=Voltage) +
-  #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,z=Voltage)) +
-  #   stat_summary_2d(fun=median, binwidth = c(.45, .45),alpha = 1)+
-  #    scale_fill_gradientn(name = "Voltage",colours = c('yellow','orange','brown'),space = "Lab") + 
-  g <- g+
-    #geom_tile(data = bus_locs, aes(x=Longitude,y=Latitude,alpha=Voltage),fill='red')+
-    #stat_density2d(data = bus_locs, aes(x=Longitude,y=Latitude,fill= bus_locs$Voltage,alpha = ..level..),geom = 'polygon')+
-    #scale_fill_gradientn("Voltage Density", colours = c('yellow','red','brown'),limits=c(min(Volt[,-1]),max(Volt[,-1]))) + 
-    #scale_alpha(name="Density")+
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Voltage),size=25,alpha=0.25,shape=16) +
-    #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
-    scale_colour_gradientn("Bus Voltage",colours = c("yellow","orange","blue","green"),limits=c(min(Volt[,-1]),max(Volt[,-1]))) +
-    labs(x = "Longitude", y = "Latitude") +
-    #coord_map()+
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
+                        xo=seq(xmn,xmx, by=0.1),
+                        yo=seq(ymn,ymx, by=0.1))
+  r <- raster(intp_coords)
+  
+  rtp <- rasterToPolygons(r)
+  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+  
+  rtpFort <- fortify(rtp, data = rtp@data)
+  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  g <- g + geom_polygon(data = rtpFortMer, 
+                        aes(x = long, y = lat, group = group, fill = layer), 
+                        alpha = 0.5, 
+                        size = 0) +  ## size = 0 to remove the polygon outlines
+    scale_fill_gradientn("Voltage",colours = topo.colors(255),limits=c(min(Volt[,-1]),max(Volt[,-1])))+
+    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
-plot_heatmapfreq <- function(t){
-  #  g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
+plot_heatmapfreq<- function(t){
   update_freq(t)
-  linesb <- get_busline_freqcov(t)
-  g <- g+ 
-    #geom_density_2d(data = bus_locs, aes(x=Longitude,y=Latitude,fill= Frequency))+
-    #stat_density_2d(data = bus_locs, aes(x=Longitude,y=Latitude,fill= bus_locs$Frequency,alpha = ..level..),geom = 'polygon')+
-    #scale_fill_gradientn("Frequency Density", colours = c('white','red','brown'),limits=c(min(Freq[,-1]),max(Freq[,-1]))) + 
-    #scale_alpha(name="Density")+
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Frequency),size=25,alpha=0.25,shape=16) +
-    #geom_raster(bus_locs,aes(x=Longitude,y=Latitude,fill=Frequency))+
-    scale_colour_gradientn("Bus Frequency",colours = c("black","orange","blue"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
-    labs(x = "Longitude", y = "Latitude") +
-    #coord_map()+
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
+                        xo=seq(xmn,xmx, by=0.1),
+                        yo=seq(ymn,ymx, by=0.1))
+  r <- raster(intp_coords)
+  rtp <- rasterToPolygons(r)
+  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+  rtpFort <- fortify(rtp, data = rtp@data)
+  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  g <- g + geom_polygon(data = rtpFortMer, 
+                        aes(x = long, y = lat, group = group, fill = layer), 
+                        alpha = 0.5, 
+                        size = 0) +  ## size = 0 to remove the polygon outlines
+    #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
+    scale_fill_gradientn("Frequency",colours = c("green","blue","orange","yellow"),limits=c(min(Freq[,-1]),max(Freq[,-1])))+
     theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
 
 
-       
-       
-       
+#rtp <- rasterToPolygons(x)
+#rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+#rtpFort <- fortify(rtp, data = rtp@data)
+#rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')
+#g <- g+ geom_polygon(data = rtpFortMer, aes(x = long, y = lat, group = group, fill = layer), 
+ #                    alpha = 0.5, 
+  #                   size = 0) +  ## size = 0 to remove the polygon outlines
+  #scale_fill_gradientn(colours = topo.colors(255))
+#pts <- subset(bus_locs,select=c("Longitude","Latitude","Voltage"))
+#coordinates(pts) = c("Longitude","Latitude")
+#rvolt <- rasterFromXYZ(pts)
+#colnames(pts) <- c('x','y','z')
+#e <- extent(pts[,1:2])
+#r <- raster(e,ncol=100,nrow=2)
+#x <- rasterize(pts[, 1:2], r, pts[,3], fun=mean)
+
+#r <- rasterize(pts[,pts$Longitude:pts$Latitude],pts$Voltage,fun=mean)
+#rst <- vect2rast(obj = pts)
+
+#kr = autoKrige(Voltage~1, meuse, meuse.grid)
+#dat = as.data.frame(kr$krige_output)
+
+#ggplot(aes(x = x, y = y, fill = var1.pred), data = dat) + 
+#  geom_tile() + 
+#  scale_fill_continuous(low = "white", high = muted("blue"))
+
+
+#loadMeuse()
+#bb = bbox(meuse)
+#grd = spsample(meuse, type = "regular", n = 4000)
+#mn_value = sapply(1:length(grd), function(pt) {
+#  d = spDistsN1(meuse, grd[pt,])
+#  return(mean(meuse[d < 1000,]$cadmium))
+#})
+
+
+
+#update_volt(100)
+#xmn <- min(bus_locs$Longitude)
+#xmx <- max(bus_locs$Longitude)
+#ymn <- min(bus_locs$Latitude)
+#ymx <- max(bus_locs$Latitude)
+#intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
+#                   xo=seq(xmn,xmx, by=0.1),
+#                   yo=seq(ymn,ymx, by=0.1))
+#r <- raster(intp_coords)
+
+#rtp <- rasterToPolygons(r)
+#rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+
+#rtpFort <- fortify(rtp, data = rtp@data)
+#rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+#g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
+#g <- g + geom_polygon(data = rtpFortMer, 
+#                       aes(x = long, y = lat, group = group, fill = layer), 
+#                       alpha = 0.5, 
+#                       size = 0) +  ## size = 0 to remove the polygon outlines
+#  scale_fill_gradientn(colours = topo.colors(255))
+#g
+#plot(bus_locs$Latitude ~ bus_locs$Longitude, data = bus_locs, pch = 3, cex = 0.5,
+ #    xlab = "Longitude", ylab = "Latitude")
+#image(intp_coords, add=TRUE, col = rainbow(100, alpha = 1))
+#data4 <- data.frame(expand.grid(X=intp_coords$x, Y=intp_coords$y), z=c(intp_coords$z))
+#a<-data.frame(cbind(data4$X, data4$Y))
+#coordinates(a) = ~X1 + X2
+#proj4string(a) <-CRS("+proj=utm +zone=10 +datum=WGS84")
+# use spTransform now
+#a1 <- spTransform(a,CRS("+proj=longlat"))
+# inspect output
+#head(coordinates(a1)) 
+# insert lat-longs back into data
+#data4$long <-  a1$X1
+#data4$lat <-   a1$X2
+#data4 <- na.omit(data4)
+#ggplot(data4) + 
+#  geom_tile(aes(X, Y, fill=z)) + 
+#  scale_fill_gradient(low="white", high="black", space = "Lab") + 
+#  coord_fixed(ratio = 1)
+
+
+

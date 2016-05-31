@@ -4,10 +4,12 @@ library(outliers)
 source("../data/import_ts.R")
 import_data()
 
-map_names <- function(){
-  n <- list(map="Map",
-            plot_mapvolt="Voltage",
-            plot_mapfreq="Frequency")
+fnames <- function(){
+  n <- list(Map="map",
+            Voltage="plot_mapvolt",
+            Frequency="plot_mapfreq",
+            Voltage_Large="plots_mapvolt_large",
+            Frequency_Large="plots_mapfreq_large")
   n
 }
 
@@ -128,7 +130,7 @@ plot_mapvolt <- function(t){
   #color_vals_volt <- as.numeric(sapply( c(mincovv,1.5,3,4,(maxcovv-0.2)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
     scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_volt,limits=c(mincovv,maxcovv)) +
-    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 3, shape = 21) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 4, shape = 21) +
     scale_fill_gradientn("Voltage",colours = c("orange","green","blue","red"),limits=c(min(Volt[,-1]),max(Volt[,-1]))) +
     theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
@@ -146,8 +148,35 @@ plot_mapfreq <- function(t){
   #color_vals_freq <- as.numeric(sapply( c(mincovf,50,100,150,200,(maxcovf-5)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Variance),show.legend = TRUE) +
     scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_freq,limits=c(mincovf,maxcovf)) +
-    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 3, shape = 21) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 4, shape = 21) +
     scale_fill_gradientn("Frequency",colours = c("yellow","orange","blue","green"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
+    theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+  g
+}
+
+plot_mapvolt_large <- function(t){
+  #g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
+  update_volt(t)
+  linesb <- get_busline_voltcov(t)
+  g <- g+
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Voltage,group=Sub.Name),size=25,alpha=0.25,shape=16) +
+    #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
+    scale_colour_gradientn("Bus Voltage",colours = c("yellow","orange","blue","green"),limits=c(min(Volt[,-1]),max(Volt[,-1]))) +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+  g
+}
+plot_mapfreq_large <- function(t){
+  #  g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
+  update_freq(t)
+  linesb <- get_busline_freqcov(t)
+  g <- g+ 
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Frequency,group=Sub.Name),size=25,alpha=0.25,shape=16) +
+    #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
+    scale_colour_gradientn("Bus Frequency",colours = c("green","blue","orange","yellow"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
+    labs(x = "Longitude", y = "Latitude") +
     theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g

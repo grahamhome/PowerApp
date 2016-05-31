@@ -3,10 +3,10 @@ library(ggcorrplot)
 source("../data/import_gmd.R")
 import_data()
 
-correlation_names <- function(){
-  n <- list(correlation="Correlation",
-            plot_corrvolt="Voltage",
-            plot_corrfreq="Frequency")
+fnames <- function(){
+  n <- list(Correlation="correlation",
+            Voltage="plot_corrvolt",
+            Frequency="plot_corrfreq")
   n
 }
 
