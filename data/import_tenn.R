@@ -108,7 +108,7 @@ name <- function(){
   n
 }
 
-n_samples <- function(){
+nsamples <- function(){
   nrow(Freq)
 }
 

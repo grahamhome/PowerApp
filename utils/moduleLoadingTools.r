@@ -58,7 +58,6 @@ updateCompatibleDisplays <- function() {
 	#Remove all displays not compatible with selected plot module
 	for (name in names(modules$displays)) {
 		if((modules$selectedPlot) %in% modules$displays[name][[1]][[2]]) {
-			print(paste("Plot match with", name))
 			#Map display module proper name to filename in compatible displays list
 			modules$compatDisplays[name] <- modules$displays[name][[1]]
 		}
@@ -87,5 +86,4 @@ loadDisplayModules <- function() {
 loadModules <- function() {
 	loadDataModules()
 	loadDisplayModules()
-	print("All imports finished")
 }

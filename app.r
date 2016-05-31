@@ -58,7 +58,6 @@ server <- function(input, output, session) {
 			source(paste("data/", input$data, sep=""))#modules$data[[input$data]][[1]], sep=""))
 			#Import the data
 			import_data()
-			print("imported dataset")
 			#Update compatible plots list now that a dataset has been selected
 			updateCompatiblePlots()
 			window$content <- "plotPicker()"
@@ -80,7 +79,6 @@ server <- function(input, output, session) {
 				source(paste("displays/", modules$selectedDisplay, sep=""))
 				#Launch display activity
 				window$content <- gsub("[.]r", 'UI("display")', modules$selectedDisplay)
-				print(gsub("[.]r", "", modules$selectedDisplay))
 				callModule(eval(parse(text=gsub("[.]r", "", modules$selectedDisplay))), "display")
 
 
@@ -95,7 +93,6 @@ server <- function(input, output, session) {
 			source(paste("displays/", modules$selectedDisplay, sep=""))
 			#Launch display activity
 			window$content <- gsub("[.]r", 'UI("display")', modules$selectedDisplay)
-			print(gsub("[.]r", "", modules$selectedDisplay))
 			callModule(eval(parse(text=gsub("[.]r", "", modules$selectedDisplay))), "display")
 		}
 	})

@@ -42,7 +42,6 @@ timeSeriesDisplayUI <- function(id) {
 
 #Server logic
 timeSeriesDisplay <- function(input, output, session) {
-	print("TS Display is being called")
 	output$plot <- renderPlot(eval(parse(text=paste(input$activeMethod, "(", input$time, ")", sep=""))))
 	return
 }
