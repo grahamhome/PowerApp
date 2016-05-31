@@ -1,6 +1,6 @@
 
 
-source("../data/import_ts.R")
+source("data/import_ts.R")
 #get_ts_data("../data/")
 import_data()
 

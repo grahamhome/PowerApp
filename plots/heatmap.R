@@ -5,8 +5,13 @@ library(raster)
 library(akima)
 library(sp)
 
+<<<<<<< HEAD
 source("data/import_ts.R")
 import_data()
+=======
+source("../data/import_gmd.R")
+source("data/import_ts.R")
+>>>>>>> a3ba410e750c3a5997bad82fbd54dad3d7a83982
 
 fnames <- function(){
   n <- list(Heatmap="heatmap",
