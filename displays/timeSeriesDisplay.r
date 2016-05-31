@@ -1,4 +1,4 @@
-#A Shiny module which creates a window for displaying time series plots.
+#A Shiny plugin which creates a window for displaying time series plots.
 #Created by Graham Home <grahamhome333@gmail.com>
 
 #Proper Name
@@ -6,7 +6,7 @@ name <- function() {
 	"Time Series Display"
 }
 
-#Compatible plot modules
+#Compatible plot plugins
 use_plots <- function() {
 	list('linear.R','map.R','heatmap.R','correlation.R')
 }

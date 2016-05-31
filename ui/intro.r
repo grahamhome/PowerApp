@@ -1,6 +1,5 @@
 #Introduction screen
 intro <- function() {
-	print("intro is being called")
 	fixedPanel(class="mainwindow_inactive",
 		fixedPanel(class="popup",
 

@@ -14,20 +14,20 @@ baseImports <- function() {
 	source("ui/plotPicker.r")
 	source("ui/displayPicker.r")
 
-	#Import module loading tools
-	source("utils/moduleLoadingTools.r")
+	#Import plugin loading tools
+	source("utils/pluginLoadingTools.r")
 }
 baseImports()
 
-#Reactive values for modules. Modules are function collections for collecting, plotting or displaying data
-modules <- reactiveValues()
-modules$data <- list() 		#List of import module proper names mapped to filenames
-modules$displays <- list() 	#List of display module proper names linked to list(filename, plots). plots = compatible plot module filenames
-modules$compatPlots <- list() #Set of plot modules compatible with the available data import modules. Maps module filenames to proper names.
-modules$compatDisplays <- list()
+#Reactive values for plugins. plugins are function collections for collecting, plotting or displaying data
+plugins <- reactiveValues()
+plugins$data <- list() 		#List of import plugin proper names mapped to filenames
+plugins$displays <- list() 	#List of display plugin proper names linked to list(filename, plots). plots = compatible plot plugin filenames
+plugins$compatPlots <- list() #Set of plot plugins compatible with the available data import plugins. Maps plugin filenames to proper names.
+plugins$compatDisplays <- list()
 
-#Initialize module reactive values once on app startup
-isolate(loadModules())
+#Initialize plugin reactive values once on app startup
+isolate(loadplugins())
 
 #Reactive value for current UI function 
 window <- reactiveValues()
@@ -54,32 +54,31 @@ server <- function(input, output, session) {
 			#Switch to data picker activity
 			window$content <- "dataPicker()" 
 		} else if (window$content == "dataPicker()") {
-			#Import data module chosen by user and switch to plot picker activity.
-			source(paste("data/", input$data, sep=""))#modules$data[[input$data]][[1]], sep=""))
+			#Import data plugin chosen by user and switch to plot picker activity.
+			source(paste("data/", input$data, sep=""))#plugins$data[[input$data]][[1]], sep=""))
 			#Import the data
 			import_data()
 			#Update compatible plots list now that a dataset has been selected
 			updateCompatiblePlots()
 			window$content <- "plotPicker()"
 		} else if (window$content == "plotPicker()") {
-			#Import plot module chosen by user
+			#Import plot plugin chosen by user
 			source(paste("plots/", input$plot, sep=""))
 			#Set "selected plot" variable
-			modules$selectedPlot <- input$plot
+			plugins$selectedPlot <- input$plot
 
 			#Update display list
 			updateCompatibleDisplays()
 
-			#TODO: add display picker activity here for plots with >1 compatible display
-			#In the meantime, the application will simply choose the first compatible display in the list
-			if (length(modules$compatDisplays) == 1) {
+			#Switch to display picker activity if the number of compatible displays is >1, otherwise load the compatible display.
+			if (length(plugins$compatDisplays) == 1) {
 				#Set "selected display" variable
-				modules$selectedDisplay <- modules$compatDisplays[[1]]
-				#Import display module
-				source(paste("displays/", modules$selectedDisplay, sep=""))
+				plugins$selectedDisplay <- plugins$compatDisplays[[1]]
+				#Import display plugin
+				source(paste("displays/", plugins$selectedDisplay, sep=""))
 				#Launch display activity
-				window$content <- gsub("[.]r", 'UI("display")', modules$selectedDisplay)
-				callModule(eval(parse(text=gsub("[.]r", "", modules$selectedDisplay))), "display")
+				window$content <- gsub("[.]r", 'UI("display")', plugins$selectedDisplay)
+				callModule(eval(parse(text=gsub("[.]r", "", plugins$selectedDisplay))), "display")
 
 
 			} else {
@@ -88,12 +87,12 @@ server <- function(input, output, session) {
 			}
 		} else if (window$content == "displayPicker()") {
 			#Set "selected display" variable
-			modules$selectedDisplay <- input$display
-			#Import display module
-			source(paste("displays/", modules$selectedDisplay, sep=""))
+			plugins$selectedDisplay <- input$display
+			#Import display plugin
+			source(paste("displays/", plugins$selectedDisplay, sep=""))
 			#Launch display activity
-			window$content <- gsub("[.]r", 'UI("display")', modules$selectedDisplay)
-			callModule(eval(parse(text=gsub("[.]r", "", modules$selectedDisplay))), "display")
+			window$content <- gsub("[.]r", 'UI("display")', plugins$selectedDisplay)
+			callModule(eval(parse(text=gsub("[.]r", "", plugins$selectedDisplay))), "display")
 		}
 	})
 

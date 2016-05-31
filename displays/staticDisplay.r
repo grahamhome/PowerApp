@@ -1,4 +1,4 @@
-#A Shiny module which creates a window for displaying static plots.
+#A Shiny plugin which creates a window for displaying static plots.
 #Created by Graham Home <grahamhome333@gmail.com>
 
 #Proper Names
@@ -6,7 +6,7 @@ name <- function() {
 	"Static Display"
 }
 
-#Compatible plot modules
+#Compatible plot plugins
 use_plots <- function() {
 	list('linear.R')
 }

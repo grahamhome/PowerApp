@@ -14,7 +14,7 @@ dataPicker <- function() {
 				column(8, offset=2,
 					h3("Select a data set:"),
 					br(),
-					selectInput("data", "", modules$data)
+					selectInput("data", "", plugins$data)
 				)
 			),
 			actionButton("forward", "Import Data", class="next")
