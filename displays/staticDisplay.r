@@ -1,14 +1,14 @@
 #A Shiny module which creates a window for displaying static plots.
 #Created by Graham Home <grahamhome333@gmail.com>
 
-#Proper Name
+#Proper Names
 name <- function() {
 	"Static Display"
 }
 
 #Compatible plot modules
 use_plots <- function() {
-	list("'linear.R'")
+	list('linear.R')
 }
 
 #UI function
@@ -38,7 +38,7 @@ staticDisplayUI <- function(id) {
 }
 
 #Server function
-staticDisplay <- function(input, output, session)
+staticDisplay <- function(input, output, session) {
 	output$plot <- renderPlot(eval(parse(text=paste(input$activeMethod, "()", sep=""))))
 	return
 

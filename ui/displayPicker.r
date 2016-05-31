@@ -1,5 +1,5 @@
-#Plot selection activity 
-plotPicker <- function() {
+#Display selection activity 
+displayPicker <- function() {
 	fixedPanel(class="mainwindow_inactive",
 		fixedPanel(class="popup",
 			fluidRow(
@@ -7,18 +7,17 @@ plotPicker <- function() {
 					actionLink("back", "", icon=icon("arrow-left", "fa-2x"), class="icon")
 				),
 				column(8,
-					h1("Plot Type", class="windowtitle")
+					h1("Display", class="windowtitle")
 				)
 			),
 			fluidRow(
 				column(8, offset=2,
 					h3("Select a plot type:"),
 					br(),
-					selectInput("plot", "", modules$compatPlots),
-					p("Plot will take approximately 5 seconds to load after clicking 'Select Plot' button.")
+					selectInput("display", "", modules$compatDisplays)
 				)
 			),
-			actionButton("forward", "Select Plot", class="next")
+			actionButton("forward", "Select Display", class="next")
 		)
 	)
 }

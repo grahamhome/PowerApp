@@ -12,8 +12,7 @@ baseImports <- function() {
 	source("ui/intro.r")
 	source("ui/dataPicker.r")
 	source("ui/plotPicker.r")
-	source("ui/display.r")
-	source("displays/timeSeriesDisplay.r")
+	source("ui/displayPicker.r")
 
 	#Import module loading tools
 	source("utils/moduleLoadingTools.r")
@@ -22,10 +21,10 @@ baseImports()
 
 #Reactive values for modules. Modules are function collections for collecting, plotting or displaying data
 modules <- reactiveValues()
-modules$data <- list() 		#List of import module proper names linked to list(filename, environment, plots). plots = compatible plot module file names
-modules$plots <- list() 	#List of plot module file names linked to list(propername, environment, names). names = function proper names linked to function names.
-modules$displays <- list() 	#List of display module proper names linked to list(filename, environment, plots). plots = compatible plot module function names
-modules$plotNames <- list() #List of plot module proper names mapped to file names
+modules$data <- list() 		#List of import module proper names mapped to filenames
+modules$displays <- list() 	#List of display module proper names linked to list(filename, plots). plots = compatible plot module filenames
+modules$compatPlots <- list() #Set of plot modules compatible with the available data import modules. Maps module filenames to proper names.
+modules$compatDisplays <- list()
 
 #Initialize module reactive values once on app startup
 isolate(loadModules())
@@ -56,16 +55,47 @@ server <- function(input, output, session) {
 			window$content <- "dataPicker()" 
 		} else if (window$content == "dataPicker()") {
 			#Import data module chosen by user and switch to plot picker activity.
-			source(paste("data/", modules$data[[input$data]][[1]], sep=""))
+			source(paste("data/", input$data, sep=""))#modules$data[[input$data]][[1]], sep=""))
 			print("imported dataset")
+			#Update compatible plots list now that a dataset has been selected
+			updateCompatiblePlots()
 			window$content <- "plotPicker()"
 		} else if (window$content == "plotPicker()") {
-			#Import plot module chosen by user and switch to display activity.
+			#Import plot module chosen by user
 			source(paste("plots/", input$plot, sep=""))
-			window$content <- "display()"
-			callModule(timeSeriesDisplay, "tsDisplay")
-			#window$content <- "timeSeriesDisplay(input, output, session)" #TODO: Choose display reactively by checking plots lists of display modules
-		} 
+			#Set "selected plot" variable
+			modules$selectedPlot <- input$plot
+
+			#Update display list
+			updateCompatibleDisplays()
+
+			#TODO: add display picker activity here for plots with >1 compatible display
+			#In the meantime, the application will simply choose the first compatible display in the list
+			if (length(modules$compatDisplays) == 1) {
+				#Set "selected display" variable
+				modules$selectedDisplay <- modules$compatDisplays[[1]]
+				#Import display module
+				source(paste("displays/", modules$selectedDisplay, sep=""))
+				#Launch display activity
+				window$content <- gsub("[.]r", 'UI("display")', modules$selectedDisplay)
+				print(gsub("[.]r", "", modules$selectedDisplay))
+				callModule(eval(parse(text=gsub("[.]r", "", modules$selectedDisplay))), "display")
+
+
+			} else {
+				#Launch display chooser activity
+				window$content <- "displayPicker()"
+			}
+		} else if (window$content == "displayPicker()") {
+			#Set "selected display" variable
+			modules$selectedDisplay <- input$display
+			#Import display module
+			source(paste("displays/", modules$selectedDisplay, sep=""))
+			#Launch display activity
+			window$content <- gsub("[.]r", 'UI("display")', modules$selectedDisplay)
+			print(gsub("[.]r", "", modules$selectedDisplay))
+			callModule(eval(parse(text=gsub("[.]r", "", modules$selectedDisplay))), "display")
+		}
 	})
 
 	#"Back" button

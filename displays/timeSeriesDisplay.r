@@ -8,7 +8,7 @@ name <- function() {
 
 #Compatible plot modules
 use_plots <- function() {
-	list("'linear.R','map.R','heatmap.R','correlation.R'")
+	list('linear.R','map.R','heatmap.R','correlation.R')
 }
 
 #UI
@@ -28,7 +28,6 @@ timeSeriesDisplayUI <- function(id) {
 				column(12,
 
 					plotOutput(ns("plot"), height="400px", width="100%"), #TODO: Size reactively based on window size
-					#output$plot <- renderPlot(eval(parse(text=paste(input$activeMethod, "(", input$time, ")", sep="")))),
 					radioButtons(ns("activeMethod"), "Function:", fnames()[c(2, length(fnames()))], inline=TRUE),
 					sliderInput(ns("time"), "Time range to examine",  min = 1, max = 100, value = 1, width = "100%"), #TODO: set max/min reactively
 					br(),
@@ -41,7 +40,7 @@ timeSeriesDisplayUI <- function(id) {
 	)
 }
 
-#Server logic for this display
+#Server logic
 timeSeriesDisplay <- function(input, output, session) {
 	print("TS Display is being called")
 	output$plot <- renderPlot(eval(parse(text=paste(input$activeMethod, "(", input$time, ")", sep=""))))
