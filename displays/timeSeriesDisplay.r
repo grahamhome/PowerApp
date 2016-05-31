@@ -29,7 +29,7 @@ timeSeriesDisplayUI <- function(id) {
 
 					plotOutput(ns("plot"), height="400px", width="100%"), #TODO: Size reactively based on window size
 					radioButtons(ns("activeMethod"), "Function:", fnames()[c(2, length(fnames()))], inline=TRUE),
-					sliderInput(ns("time"), "Time range to examine",  min = 1, max = 100, value = 1, width = "100%"), #TODO: set max/min reactively
+					sliderInput(ns("time"), "Time range to examine",  min = 1, max = nsamples(), value = 1, width = "100%"), #TODO: set max/min reactively
 					br(),
 					column(4, offset=4,
 						div(style="text-align:center", actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon"))
