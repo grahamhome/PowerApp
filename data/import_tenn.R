@@ -100,11 +100,11 @@ import_data <- function(){
 
 #Returns a list of the plots that this data can be used to create
 use_plots <- function(){
-  list('linear.R','map.R','heatmap.R','correlation.R')
+  list('linear.R','map.R','heatmap.R','correlation.R','bar.R')
 }
 
 import_tenn_names <- function(){
-  n <- list(import_tenn="Line and Generator Down")
+  n <- list(import_tenn="Unknown Issue")
   n
 }
 
