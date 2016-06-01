@@ -15,7 +15,8 @@ baseImports <- function() {
 	source("ui/displayPicker.r")
 
 	#Import plugin loading tools
-	source("utils/pluginLoadingTools.r")
+	source("utils/pluginTools.r")
+	source("utils/moduleTools.r")
 }
 baseImports()
 
@@ -31,7 +32,9 @@ isolate(loadplugins())
 
 #Reactive value for current UI function 
 window <- reactiveValues()
-window$content <- "intro()" #Name of the current user interface function
+window$content <- NULL #Name of the current user interface function
+
+launchUI("intro()")
 
 #Application UI function
 ui <- fluidPage(
@@ -51,8 +54,7 @@ server <- function(input, output, session) {
 	#"Next" button
 	observeEvent(input$forward, {
 		if (window$content == "intro()") {
-			#Switch to data picker activity
-			window$content <- "dataPicker()" 
+			launchUI("dataPicker()")
 		} else if (window$content == "dataPicker()") {
 			#Import data plugin chosen by user and switch to plot picker activity.
 			source(paste("data/", input$data, sep=""))#plugins$data[[input$data]][[1]], sep=""))
@@ -60,7 +62,7 @@ server <- function(input, output, session) {
 			import_data()
 			#Update compatible plots list now that a dataset has been selected
 			updateCompatiblePlots()
-			window$content <- "plotPicker()"
+			launchUI("plotPicker()")
 		} else if (window$content == "plotPicker()") {
 			#Import plot plugin chosen by user
 			source(paste("plots/", input$plot, sep=""))
@@ -77,8 +79,8 @@ server <- function(input, output, session) {
 				#Import display plugin
 				source(paste("displays/", plugins$selectedDisplay, sep=""))
 				#Launch display activity
-				window$content <- gsub("[.]r", 'UI("display")', plugins$selectedDisplay)
-				callModule(eval(parse(text=gsub("[.]r", "", plugins$selectedDisplay))), "display")
+				print(plugins$selectedDisplay)
+				isolate(launchModule(plugins$selectedDisplay))
 
 
 			} else {
@@ -91,8 +93,7 @@ server <- function(input, output, session) {
 			#Import display plugin
 			source(paste("displays/", plugins$selectedDisplay, sep=""))
 			#Launch display activity
-			window$content <- gsub("[.]r", 'UI("display")', plugins$selectedDisplay)
-			callModule(eval(parse(text=gsub("[.]r", "", plugins$selectedDisplay))), "display")
+			isolate(launchModule(plugins$selectedDisplay))
 		}
 	})
 

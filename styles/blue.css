@@ -37,3 +37,7 @@ body {
 .windowtitle {
 	text-align:center;
 }
+.instructions {
+	line-height:150%; 
+	text-align:center;
+}

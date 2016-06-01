@@ -14,7 +14,9 @@ dataPicker <- function() {
 				column(8, offset=2,
 					h3("Select a data set:"),
 					br(),
-					selectInput("data", "", plugins$data)
+					selectInput("data", "", plugins$data),
+					br(),
+					p("Please be patient, data will take approximately 3 seconds to load after clicking 'Import Data'.")
 				)
 			),
 			actionButton("forward", "Import Data", class="next")

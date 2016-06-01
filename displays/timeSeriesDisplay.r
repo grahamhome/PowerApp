@@ -43,6 +43,9 @@ timeSeriesDisplayUI <- function(id) {
 #Server logic
 timeSeriesDisplay <- function(input, output, session) {
 	output$plot <- renderPlot(eval(parse(text=paste(input$activeMethod, "(", input$time, ")", sep=""))))
+	observeEvent(input$back, {
+		launchUI("plotPicker()")
+	})
 	return
 }
 
