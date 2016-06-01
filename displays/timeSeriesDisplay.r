@@ -82,6 +82,9 @@ timeSeriesDisplay <- function(input, output, session) {
 		if (input$start > input$stop) {
 			output$result <- renderText("Invalid range")
 		} else {
+			#Read start and stop values one time only
+			start <- isolate(input$start)
+			stop <- isolate(input$stop)
 			output$result <- renderText("Generating animation...")
 			#Create directory for image files if it does not exist
 			dir.create(file.path("plots/", "img"), showWarnings=FALSE)
@@ -90,7 +93,7 @@ timeSeriesDisplay <- function(input, output, session) {
 			#Create string representing directory 
 			dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
 			#Create any image files that do not yet exist
-			for (t in input$start:input$stop) {
+			for (t in start:stop) {
 				if (!(file.exists(paste(dir, t, ".png", sep="")))) {
 					plotpng(eval(parse(text=paste(input$activeMethod, "(", t, ")", sep=""))), t, dir)
 				}
@@ -100,12 +103,12 @@ timeSeriesDisplay <- function(input, output, session) {
 			output$result <- renderText("")
 			output$image <- renderImage({
 				invalidateLater(100)
-				if ((input$start+counter) >= input$stop) {
+				if ((start+counter) >= stop) {
     				counter <<- 0 # this will restart the animation, or I could turn off the scheduled invalidation to end it
     			} else {
     				counter <<- counter + 1
     			}
- 				list(src = paste(dir, input$start+counter, ".png", sep=""), height="100%", width="100%")
+ 				list(src = paste(dir, start+counter, ".png", sep=""), height="100%", width="100%")
   			}, deleteFile=FALSE)
 		}
 
