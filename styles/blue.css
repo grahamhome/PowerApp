@@ -10,18 +10,18 @@ body {
 	padding:1%;
 }
 .mainwindow {
-	top:6%;
-	bottom:6%;
-	left:3%;
-	right:3%;
+	top:4%;
+	bottom:4%;
+	left:2%;
+	right:2%;
 	background-color:#ffffff;
 	padding:1%;
 }
 .mainwindow_inactive {
-	top:6%;
-	bottom:6%;
-	left:3%;
-	right:3%;
+	top:4%;
+	bottom:4%;
+	left:2%;
+	right:2%;
 	background-color:#c0c0c0;
 	padding:1%;
 }

@@ -14,9 +14,10 @@ baseImports <- function() {
 	source("ui/plotPicker.r")
 	source("ui/displayPicker.r")
 
-	#Import plugin loading tools
+	#Import tools
 	source("utils/pluginTools.r")
 	source("utils/moduleTools.r")
+	source("utils/plotTools.r")
 }
 baseImports()
 

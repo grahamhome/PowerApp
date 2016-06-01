@@ -74,7 +74,7 @@ loadDisplayPlugins <- function() {
 		#Import the file into the new environment
 		sys.source(file=paste("displays/", filename, sep=""), envir=env)
 		#Get the plugin's proper name
-		name <- (eval(parse(text="name()"), envir=env))
+		name <- (eval(parse(text="dispName()"), envir=env))
 		#Get the plugin's compatible plots list
 		supportedPlots <- (eval(parse(text="use_plots()"), envir=env))
 		#Store display plugin proper name mapped to filename and compatible plots list
