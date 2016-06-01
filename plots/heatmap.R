@@ -145,7 +145,7 @@ plot_heatmapvolt<- function(t){
                         aes(x = long, y = lat, group = group, fill = layer), 
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
-    scale_fill_gradientn("Voltage",colours = topo.colors(255),limits=c(min(Volt[,-1]),max(Volt[,-1])))+
+    scale_fill_gradientn("Voltage",colours = c("yellow","orange","red","blue","green"),limits=c(min(Volt[,-1]),max(Volt[,-1])))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g

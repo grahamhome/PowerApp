@@ -1,4 +1,4 @@
-library(gputools)
+#library(gputools)
 
 source("data/import_ts.R")
 import_data()
@@ -48,13 +48,13 @@ plot_dendfreq <- function(t){
 }
 
 
-gpc <- gpuDistClust(b$Voltage)
+# gpc <- gpuDistClust(b$Voltage)
 
-mycl <- cutree(gphc, h=max(gphc$height/1.5))
-clusterCols <- rainbow(length(unique(mycl)))
-myClusterSideBar <- clusterCols[mycl]
-myheatcol <- rev(col(75))
-heatmap(as.matrix(b), main="Hierarchical Cluster", Rowv=as.dendrogram(gphc), Colv=NA, dendrogram="row", scale="row", col=myheatcol, density.info="none", trace="none", RowSideColors= myClusterSideBar)
+# mycl <- cutree(gphc, h=max(gphc$height/1.5))
+# clusterCols <- rainbow(length(unique(mycl)))
+# myClusterSideBar <- clusterCols[mycl]
+# myheatcol <- rev(col(75))
+# heatmap(as.matrix(b), main="Hierarchical Cluster", Rowv=as.dendrogram(gphc), Colv=NA, dendrogram="row", scale="row", col=myheatcol, density.info="none", trace="none", RowSideColors= myClusterSideBar)
 
 
 
