@@ -5,7 +5,8 @@ library(raster)
 library(akima)
 library(sp)
 
-
+source("data/import_ts.R")
+import_data()
 fnames <- function(){
   n <- list(Heatmap="heatmap",
             Voltage="plot_heatmapvolt",
@@ -131,8 +132,8 @@ plot_heatmapvolt<- function(t){
   ymn <- min(bus_locs$Latitude)
   ymx <- max(bus_locs$Latitude)
   intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
-                        xo=seq(xmn,xmx, by=0.1),
-                        yo=seq(ymn,ymx, by=0.1))
+                        xo=seq(xmn,xmx, by=0.05),
+                        yo=seq(ymn,ymx, by=0.05))
   r <- raster(intp_coords)
   
   rtp <- rasterToPolygons(r)
@@ -156,8 +157,8 @@ plot_heatmapfreq<- function(t){
   ymn <- min(bus_locs$Latitude)
   ymx <- max(bus_locs$Latitude)
   intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
-                        xo=seq(xmn,xmx, by=0.1),
-                        yo=seq(ymn,ymx, by=0.1))
+                        xo=seq(xmn,xmx, by=0.05),
+                        yo=seq(ymn,ymx, by=0.05))
   r <- raster(intp_coords)
   rtp <- rasterToPolygons(r)
   rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
@@ -168,13 +169,34 @@ plot_heatmapfreq<- function(t){
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
     #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
-    scale_fill_gradientn("Frequency",colours = c("green","blue","orange","yellow"),limits=c(min(Freq[,-1]),max(Freq[,-1])))+
+    scale_fill_gradientn("Frequency",colours = c("green","blue","red","orange","yellow"),limits=c(min(Freq[,-1]),max(Freq[,-1])))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
 
-
+#make a ggmap object, and create+save a .mp4 file with a given name for the frequency of the
+# buses over the specified time period (from start-stop)
+create_freqvideo <- function(start,stop,vidtitle){
+  
+  saveVideo({
+    ani.options(interval = 0.05)
+    for (t in start:stop) {
+      suppressMessages(print(plot_heatmapfreq(t)))
+    }
+  },video.name = vidtitle)
+}
+#make a ggmap object, and create+save a .mp4 file with a given name for the voltage of the
+# buses over the specified time period (from start-stop)
+create_voltvideo <- function(start,stop,vidtitle){
+  g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
+  saveVideo({
+    ani.options(interval = 0.05)
+    for (t in start:stop) {
+      suppressMessages(print(plot_heatmapfreq(t)))
+    }
+  },video.name = vidtitle)
+}
 #rtp <- rasterToPolygons(x)
 #rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
 #rtpFort <- fortify(rtp, data = rtp@data)

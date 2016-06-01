@@ -32,70 +32,52 @@ plot_barvolt <- function(time){
   update_volt(time)
   b <- subset(bus_locs, select = c("Bus.Name","Voltage"))
   b$group<-0
-  b$group[b$Voltage >1] <- -1
-  b$group[b$Voltage <1] <- 1
+  b$group[b$Voltage >1] <- 1
+  b$group[b$Voltage <1] <- -1
   p <- ggplot(b, aes(x=Bus.Name,y=(Voltage-1),fill=factor(group))) +
     geom_bar(stat = "identity",position='identity')+
     #scale_fill_gradient2(low="red",mid = 'black',high = 'blue',midpoint = 0)+
-    scale_fill_manual(values=c("-1"="red","0"="grey","1"="blue"),drop=FALSE, 
-                      labels=c("Voltage > 1","Voltage = 1",
-                               "Voltage < 1"),
-                      name="") +
     theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 4))+
-    ylim((min(b$Voltage)-1),(max(b$Voltage)-1))+
-    #ylim(-1,1)+
+    #ylim((min(b$Voltage)-1),(max(b$Voltage)-1))+
+    ylim(-1,1)+
     ylab("Voltage")+
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[time,1]),""))))
-    
+  if(unique(b$group)==0){
+    p<- p+ scale_fill_manual(values=c("0"="grey50"),drop=FALSE, 
+                             labels=c("Voltage=1"),
+                             name="") 
+  } else{
+    p<- p+ scale_fill_manual(values=c("-1"="blue","1"="red","0"="grey50"),
+                             labels=c("Voltage < 1",
+                                      "Voltage > 1","Voltage=1"),
+                             name="") 
+  }
   p
 }
 plot_barfreq <- function(time){
   update_freq(time)
   b <- subset(bus_locs,select = c("Bus.Name","Frequency"))
   b$group<-0
-  b$group[b$Frequency >60] <- -1
-  b$group[b$Frequency <60] <- 1
+  b$group[b$Frequency >60] <- 1
+  b$group[b$Frequency <60] <- -1
   p <- ggplot(b, aes(x=Bus.Name,y=(Frequency-60),fill=factor(group))) +
     geom_bar(stat = "identity",position='identity')+
     theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 4))+
     #ylim((min(b$Frequency)-60),(max(b$Frequency)-60))+
+    ylim(-1,1)+
     ylab("Frequency difference from 60")+
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[time,1]),""))))
-  if (length(unique(b$group))==1) {
-    if (unique(b$group) == -1) {
-      p <- p+scale_fill_manual(values=c("red"), 
-                               labels=c("Frequency > 60"),
-                               name="")
-    } else if(unique(b$group) == 1){
-      p <- p+scale_fill_manual(values=c("blue"), 
-                               labels=c("Frequency < 60"),
-                               name="")
-    } else{
-      p <- p+scale_fill_manual(values=c("grey"), 
-                               labels=c("Frequency = 60"),
-                               name="")
-    }
-  } else if (length(unique(b$group))==2) {
-    if (unique(b$group) == c(-1,0)) {
-      p <- p+scale_fill_manual(values=c("red","grey"), 
-                               labels=c("Frequency > 60","Frequency = 60"),
-                               name="")
-    } else if (unique(b$group) == c(0,1)) {
-      p <- p+scale_fill_manual(values=c("grey","blue"), 
-                               labels=c("Frequency = 60","Frequency < 60"),
-                               name="")
-    } else if (unique(b$group) == c(-1,1)) {
-      p <- p+scale_fill_manual(values=c("red","blue"), 
-                               labels=c("Frequency > 60","Frequency < 60"),
-                               name="")
-    } else{
-      print("shouldn't happen")
-    }
+  if(unique(b$group)==0){
+    p<- p+ scale_fill_manual(values=c("0"="grey50"),
+                             labels=c("Frequency=60"),
+                             name="") 
   } else{
-    p <- p+scale_fill_manual(values=c("red","grey","blue"), 
-                             labels=c("Frequency > 60","Frequency = 60","Frequency < 60"),
-                             name="")
+    p<- p+ scale_fill_manual(values=c("-1"="blue","1"="red","0"="grey50"),drop=FALSE, 
+                             labels=c("Frequency > 60",
+                                      "Frequency < 60","Frequency=60"),
+                             name="") 
   }
+  
   p
 }
 

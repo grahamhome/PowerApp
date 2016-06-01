@@ -1,3 +1,4 @@
+library(reshape)
 fnames <- function(){
   n <- list(Linear="linear",
             Voltage="plot_voltage",
@@ -7,16 +8,18 @@ fnames <- function(){
 
 #plot the a line graph of each bus from {start} to {stop} of the voltage
 plot_voltage <- function(start,stop){
-  # Vmelt <- melt(V[1:10,], id="Time")
-  # p <- ggplot(Vmelt,aes(x=Time,y=value,colour=variable,group=variable)) +
-  #   geom_line() +
-  #    theme(legend.position="none")
+  #Vmelt <- melt(Volt[1:1000,], id="Time")
+  #p <- ggplot(Vmelt,aes(x=Time,y=value,colour=variable,group=variable)) +
+  #  geom_line() +
+  #  theme(legend.position="right")
+  #p
   par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
   start <- ifelse(missing(start),1,start)
   stop <- ifelse(missing(stop),nrow(Volt),stop)
   xrange <- range(Volt[start:stop,1])
   yrange <- range(Volt[start:stop,-1])
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Voltage")
+  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Voltage",
+       main=paste("Voltage at time",start,"to",stop,sep = " "))
   num_sig_bus <- 0
   n <- ncol(Volt)-1
   colors <- rainbow(n)
@@ -26,7 +29,6 @@ plot_voltage <- function(start,stop){
     bus <- Volt[start:stop,z]
     lines(y=bus,x=Volt[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
   }
-  title(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   legend("topright", inset=c(-0.2,-0.15),legend = 1:n,col = colors, lty=linetype,cex=0.8)
 }
 #plot the a line graph of each bus from {start} to {stop} of the voltage
@@ -36,7 +38,8 @@ plot_frequency <- function(start,stop){
   stop <- ifelse(missing(stop),nrow(Freq),stop)
   xrange <- range(Freq[start:stop,1])
   yrange <- range(Freq[start:stop,-1])
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Frequency")
+  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Frequency",
+       main=paste("Frequency at time",start,"to",stop,sep = " "))
   num_sig_bus <- 0
   n <- ncol(Freq)-1
   colors <- rainbow(n)

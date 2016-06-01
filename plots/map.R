@@ -6,8 +6,8 @@ fnames <- function(){
   n <- list(Map="map",
             Voltage="plot_mapvolt",
             Frequency="plot_mapfreq",
-            Voltage_Large="plots_mapvolt_large",
-            Frequency_Large="plots_mapfreq_large")
+            Voltage_Large="plot_mapvolt_large",
+            Frequency_Large="plot_mapfreq_large")
 
   n
 }
