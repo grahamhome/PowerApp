@@ -8,7 +8,8 @@ dispName <- function() {
 
 #Compatible plot plugins
 use_plots <- function() {
-	list('map.R','heatmap.R','correlation.R')
+	list()
+	#list('map.R','heatmap.R','correlation.R')
 }
 
 #UI

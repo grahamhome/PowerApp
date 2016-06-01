@@ -37,6 +37,13 @@ body {
 .windowtitle {
 	text-align:center;
 }
+.backiconbox {
+	text-align:center;
+}
+.iconbox {
+	text-align:center;
+	padding-top:30%;
+}
 .instructions {
 	line-height:150%; 
 	text-align:center;

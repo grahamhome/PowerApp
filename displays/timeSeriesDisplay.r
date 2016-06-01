@@ -28,9 +28,19 @@ timeSeriesDisplayUI <- function(id) {
 				column(12,
 					uiOutput(ns("pltWin")),
 					radioButtons(ns("activeMethod"), "Function:", fnames()[c(2, length(fnames()))], inline=TRUE),
-					sliderInput(ns("time"), "Sample to examine",  min = 1, max = nsamples(), value = 1, width = "100%"), 
 					fluidRow(
-						column(2, offset=2, style="padding-top:50px",
+						column(1, 
+							div(class="iconbox", actionLink(ns("frameBwd"), "", icon=icon("step-backward", "fa-2x"), class="icon"))
+						),
+						column(10,
+							sliderInput(ns("time"), "Sample to examine",  min = 1, max = nsamples(), value = 1, width = "100%")
+						),
+						column(1,
+							div(class="iconbox", actionLink(ns("frameFwd"), "", icon=icon("step-forward", "fa-2x"), class="icon"))
+						) 
+					),
+					fluidRow(
+						column(2, offset=2, style="padding-top:2%;text-align:right",
 							p("Sample range to animate:")
 						),
 						column(2,
@@ -45,7 +55,7 @@ timeSeriesDisplayUI <- function(id) {
 					),
 					br(),
 					column(4, offset=4,
-						div(style="text-align:center", actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon"))
+						div(class="backiconbox", actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon"))
 					)
 				)
 			)	
@@ -78,7 +88,7 @@ timeSeriesDisplay <- function(input, output, session) {
 	})
 	#Switch to animation display mode
 	observeEvent(input$play, {
-		output$pltWin <- renderUI({imageOutput(ns("image"), height="400px", width="1000px")}) #TODO: Size reactively based on window size
+		output$pltWin <- renderUI({imageOutput(ns("image"), height="400px", width="1000px")}) #TODO: Size reactively based on window size, and center horizontally
 		if (input$start > input$stop) {
 			output$result <- renderText("Invalid range")
 		} else {
@@ -115,6 +125,15 @@ timeSeriesDisplay <- function(input, output, session) {
 		# output$image <- renderImage({
 		# 	list(src = paste("plots/img/plot_mapvolt/Solar Flare/", "1.png", sep=""), height="100%", width="100%")
 		# }, deleteFile=FALSE)
+	})
+
+	#Seek backward one frame
+	observeEvent(input$frameBwd, {
+		updateSliderInput(session, "time", value=input$time-1)
+	})
+	#Seek forward one frame
+	observeEvent(input$frameFwd, {
+		updateSliderInput(session, "time", value=input$time+1)
 	})
 	# observeEvent(input$play, {
 	# 	if (input$start > input$stop) {
