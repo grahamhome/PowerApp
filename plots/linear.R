@@ -14,8 +14,8 @@ plot_voltage <- function(start,stop){
   #  theme(legend.position="right")
   #p
   par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
-  start <- ifelse(missing(start),1,start)
-  stop <- ifelse(missing(stop),nrow(Volt),stop)
+  #start <- ifelse(missing(start),1,start)
+  #stop <- ifelse(missing(stop),nrow(Volt),stop)
   xrange <- range(Volt[start:stop,1])
   yrange <- range(Volt[start:stop,-1])
   plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Voltage",
