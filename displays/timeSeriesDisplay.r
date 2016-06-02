@@ -26,7 +26,8 @@ timeSeriesDisplayUI <- function(id) {
 			),
 			fluidRow(
 				column(12,
-					uiOutput(ns("pltWin")),
+					
+					imageOutput(ns("image"), height="400px", width="1000px"),
 					radioButtons(ns("activeMethod"), "Function:", fnames()[c(2, length(fnames()))], inline=TRUE),
 					fluidRow(
 						column(1, 
@@ -83,12 +84,17 @@ timeSeriesDisplay <- function(input, output, session) {
 	})
 	#Switch to index-based display mode
 	observeEvent(input$time, {
-		output$pltWin <- renderUI({plotOutput(ns("plot"), height="400px", width="1000px")}) #TODO: Size reactively based on window size})
-		output$plot <- renderPlot({eval(parse(text=paste(input$activeMethod, "(", input$time, ")", sep="")))})
+		#Create string representing directory 
+		dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
+		makeFiles(input$time, input$time, dir)
+		output$image <- renderImage({
+			print(paste(dir, input$time, ".png", sep=""))
+			list(src = paste(dir, input$time, ".png", sep=""), height="100%", width="100%")
+		}, deleteFile=FALSE)
+		
 	})
 	#Switch to animation display mode
 	observeEvent(input$play, {
-		output$pltWin <- renderUI({imageOutput(ns("image"), height="400px", width="1000px")}) #TODO: Size reactively based on window size, and center horizontally
 		if (input$start > input$stop) {
 			output$result <- renderText("Invalid range")
 		} else {
@@ -96,23 +102,15 @@ timeSeriesDisplay <- function(input, output, session) {
 			start <- isolate(input$start)
 			stop <- isolate(input$stop)
 			output$result <- renderText("Generating animation...")
-			#Create directory for image files if it does not exist
-			dir.create(file.path("plots/", "img"), showWarnings=FALSE)
-			dir.create(file.path("plots/img/", input$activeMethod), showWarnings=FALSE)
-			dir.create(file.path(paste("plots/img/", input$activeMethod, sep=""), name()), showWarnings=FALSE)
 			#Create string representing directory 
 			dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
-			#Create any image files that do not yet exist
-			for (t in start:stop) {
-				if (!(file.exists(paste(dir, t, ".png", sep="")))) {
-					plotpng(eval(parse(text=paste(input$activeMethod, "(", t, ")", sep=""))), t, dir)
-				}
-			}
-			print("all files generated")
+			makeFiles(start, stop, dir)
 			#Play animation
 			output$result <- renderText("")
 			output$image <- renderImage({
-				invalidateLater(100)
+				#if (start != stop) {
+					invalidateLater(100)
+				#}
 				if ((start+counter) >= stop) {
     				counter <<- 0 # this will restart the animation, or I could turn off the scheduled invalidation to end it
     			} else {
@@ -139,5 +137,20 @@ timeSeriesDisplay <- function(input, output, session) {
 			launchUI("displayPicker()")
 		}
 	})
+	makeFiles <- function(start, stop, path) {
+		#Create directory for image files if it does not exist
+		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
+		dir.create(file.path("plots/img/", input$activeMethod), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", input$activeMethod, sep=""), name()), showWarnings=FALSE)
+		#Create any image files that do not yet exist
+		for (t in start:stop) {
+			print(paste(path, t, ".png", sep=""))
+			if (!(file.exists(paste(path, t, ".png", sep="")))) {
+				print("making file")
+				plotpng(eval(parse(text=paste(input$activeMethod, "(", t, ")", sep=""))), t, path)
+			}
+		}
+		print("all files generated")
+	}
 	return
 }

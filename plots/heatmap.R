@@ -153,6 +153,10 @@ plot_heatmapvolt<- function(t){
 
 plot_heatmapfreq<- function(t){
   update_freq(t)
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
   intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
                         xo=seq(xmn,xmx, by=0.05),
                         yo=seq(ymn,ymx, by=0.05))
