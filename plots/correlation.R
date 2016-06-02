@@ -69,7 +69,6 @@ update_busloc_volt <- function(time){
   assign("bus_locs",bus_locs,envir = .GlobalEnv)
 } 
 
-
 plot_corrvolt <- function(t){
   update_busloc_volt(t)
   update_covmat_volt(t)

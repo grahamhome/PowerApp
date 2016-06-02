@@ -146,10 +146,10 @@ plot_mapvolt <- function(t){
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # frequency at time t
 plot_mapfreq <- function(t){
-  if(missing(mincovf) & missing(maxcovf)){
+  if(!exists("mincovf") | !exists("maxcovf")){
     get_minmax_covfreq()
   }
-  if(missing(mincovv) & missing(maxcovv)){
+  if(!exists("mincovv") | !exists("maxcovv")){
     get_minmax_covvolt()
   }
   update_freq(t)
@@ -169,10 +169,10 @@ plot_mapfreq <- function(t){
 }
 
 plot_mapvolt_large <- function(t){
-  if(missing(mincovf) & missing(maxcovf)){
+  if(!exists("mincovf") | !exists("maxcovf")){
     get_minmax_covfreq()
   }
-  if(missing(mincovv) & missing(maxcovv)){
+  if(!exists("mincovv") | !exists("maxcovv")){
     get_minmax_covvolt()
   }
   #g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
@@ -188,10 +188,10 @@ plot_mapvolt_large <- function(t){
   g
 }
 plot_mapfreq_large <- function(t){
-  if(missing(mincovf) & missing(maxcovf)){
+  if(!exists("mincovf") | !exists("maxcovf")){
     get_minmax_covfreq()
   }
-  if(missing(mincovv) & missing(maxcovv)){
+  if(!exists("mincovv") | !exists("maxcovv")){
     get_minmax_covvolt()
   }
   #  g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))

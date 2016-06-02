@@ -35,6 +35,7 @@ isolate(loadplugins())
 window <- reactiveValues()
 window$content <- NULL #Name of the current user interface function
 
+#Start the intro activity when the app starts
 launchUI("intro()")
 
 #Application UI function
@@ -57,8 +58,11 @@ server <- function(input, output, session) {
 		if (window$content == "intro()") {
 			launchUI("dataPicker()")
 		} else if (window$content == "dataPicker()") {
+			#Reset environment
+			rm(list=ls())
+			baseImports()
 			#Import data plugin chosen by user and switch to plot picker activity.
-			source(paste("data/", input$data, sep=""))#plugins$data[[input$data]][[1]], sep=""))
+			source(paste("data/", input$data, sep=""))
 			#Import the data
 			import_data()
 			#Update compatible plots list now that a dataset has been selected
@@ -73,36 +77,35 @@ server <- function(input, output, session) {
 			#Update display list
 			updateCompatibleDisplays()
 
+			#Test
+			print(fnames)
+
 			#Switch to display picker activity if the number of compatible displays is >1, otherwise load the compatible display.
 			if (length(plugins$compatDisplays) == 1) {
+				#Test
+				print("Preparing to launch display module")
 				#Set "selected display" variable
 				plugins$selectedDisplay <- plugins$compatDisplays[[1]]
-				#Import display plugin
-				source(paste("displays/", plugins$selectedDisplay, sep=""))
-				#Launch display activity
-				isolate(launchModule(plugins$selectedDisplay))
+				launchDisplayModule(plugins$selectedDisplay)
+				print("launched display module")
 			} else {
 				#Launch display chooser activity
-				window$content <- "displayPicker()"
+				launchUI("displayPicker()")
 			}
 		} else if (window$content == "displayPicker()") {
 			#Set "selected display" variable
 			plugins$selectedDisplay <- input$display
-			#Import display plugin
-			source(paste("displays/", plugins$selectedDisplay, sep=""))
 			#Launch display activity
-			isolate(launchModule(plugins$selectedDisplay))
+			launchDisplayModule(plugins$selectedDisplay)
 		}
 	})
 
 	#"Back" button
 	observeEvent(input$back, {
 		if (window$content == "dataPicker()") {
-			window$content <- "intro()"
+			launchUI("intro()")
 		} else if (window$content == "plotPicker()") {
-			window$content <- "dataPicker()" 
-		} else {
-			window$content <- "plotPicker()" #TODO: Delete environment and start over?
+			launchUI("dataPicker()") 
 		}
 	})
 }

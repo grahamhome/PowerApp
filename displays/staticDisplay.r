@@ -42,10 +42,18 @@ staticDisplay <- function(input, output, session) {
 	output$plot <- renderPlot({
 		start <- input$time[[1]]
 		stop <- input$time[[2]]
-		print(paste("Start: ", start, " Stop: ", stop, sep=""))
+		print(start)
+		print(stop)
 		eval(parse(text=paste(input$activeMethod, "(", as.numeric(start), ",", as.numeric(stop), ")", sep="")))
-		#eval(parse(text=paste(input$activeMethod, "(", as.numeric(input$time[[1]]), as.numeric(input$time[[2]]), ")", sep="")))
 		})
+	observeEvent(input$back, {
+		#Did the display picker launch?
+		if (length(plugins$compatDisplays) == 1) {
+			launchUI("plotPicker()")
+		} else {
+			launchUI("displayPicker()")
+		}
+	})
 	return
 }
 #TODO: Add real-time animation view back (rolling buffer)

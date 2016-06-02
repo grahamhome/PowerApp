@@ -121,10 +121,6 @@ timeSeriesDisplay <- function(input, output, session) {
  				list(src = paste(dir, start+counter, ".png", sep=""), height="100%", width="100%")
   			}, deleteFile=FALSE)
 		}
-
-		# output$image <- renderImage({
-		# 	list(src = paste("plots/img/plot_mapvolt/Solar Flare/", "1.png", sep=""), height="100%", width="100%")
-		# }, deleteFile=FALSE)
 	})
 
 	#Seek backward one frame
@@ -135,82 +131,13 @@ timeSeriesDisplay <- function(input, output, session) {
 	observeEvent(input$frameFwd, {
 		updateSliderInput(session, "time", value=input$time+1)
 	})
-	# observeEvent(input$play, {
-	# 	if (input$start > input$stop) {
-	# 		output$result <- renderText("Invalid range")
-	# 	} else {
-	# 		output$result <- renderText("Generating animation...")
-	# 		#Create directory for image files if it does not exist
-	# 		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
-	# 		dir.create(file.path("plots/img/", input$activeMethod), showWarnings=FALSE)
-	# 		dir.create(file.path(paste("plots/img/", input$activeMethod, sep=""), name()), showWarnings=FALSE)
-	# 		#Create string representing directory 
-	# 		dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
-	# 		#Create any image files that do not yet exist
-	# 		for (t in input$start:input$stop) {
-	# 			if (!(file.exists(paste(dir, t, ".png", sep="")))) {
-	# 				plotpng(eval(parse(text=paste(input$activeMethod, "(", t, ")", sep=""))), t, dir)
-	# 			}
-	# 		}
-	# 		#Play animation
-	# 		print("all files generated")
-	# 		output$result <- renderText("")
-	# 		for (t in input$start:input$stop) {
-	# 			Sys.sleep(1)
-	# 			print("displaying next image")
-	# 			output$plot <- renderImage({
-	# 				list(src = paste(dir, t, ".png", sep=""), height="100%", width="100%")
-	# 			}, deleteFile=FALSE)
-	# 		}
-	# 	}
-	# })
-
-	# playing <- FALSE #Indicates if an animation is currently playing
-	# output$plotWindow <- renderUI({
-	# 	if (!playing) {
-	# 		plotOutput(ns("plot"))
-	# 	} else {
-	# 		imageOutput(ns("plot"))
-	# 	}
-	# })
-	# if (!playing) {
-	# 	output$plot <- renderPlot(eval(parse(text=paste(activeMethod, "(", input$time, ")", sep=""))))
-	# } else {
-	
-	# 	observeEvent(input$play, {
-	# 		if (!(playing)) {
-	# 			#Create directory for image files if it does not exist
-	# 			dir.create(file.path("plots/", "img"), showWarnings=FALSE)
-	# 			dir.create(file.path("plots/img/", input$activeMethod), showWarnings=FALSE)
-	# 			dir.create(file.path(paste("plots/img/", input$activeMethod, sep=""), name()), showWarnings=FALSE)
-	# 			#Create string representing directory 
-	# 			dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
-	# 			#Create any image files that do not yet exist
-	# 			for (t in input$start:input$stop) {
-	# 				if (!(file.exists(paste(dir, t, ".png", sep="")))) {
-	# 					plotpng(eval(parse(text=paste(input$activeMethod, "(", t, ")", sep=""))), t, dir)
-	# 				}
-	# 			}
-	# 			#Play animation
-	# 			for (t in input$start:input$stop) {
-	# 				output$plot <- renderImage({
-	# 					list(src = paste(dir, t, ".png", sep=""), height="100%", width="100%")
-	# 				}, deleteFile=FALSE)
-	# 				Sys.sleep(0.1)
-	# 			}
-	# 		}
-	# 		playing <<- !(playing)
-	# 	})
-	# }
-	# observeEvent(input$back, {
-	# 	#Did the display picker launch?
-	# 	if (length(plugins$compatDisplays) == 1) {
-	# 		launchUI("plotPicker()")
-	# 	} else {
-	# 		launchUI("displayPicker()")
-	# 	}
-	# })
+	observeEvent(input$back, {
+		#Did the display picker launch?
+		if (length(plugins$compatDisplays) == 1) {
+			launchUI("plotPicker()")
+		} else {
+			launchUI("displayPicker()")
+		}
+	})
 	return
 }
-
-#TODO: Add real-time animation view back (rolling buffer)
