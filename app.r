@@ -40,7 +40,7 @@ window$content <- NULL #Name of the current user interface function
 launchUI("intro()")
 
 #Application UI function
-ui <- fluidPage(
+ui <- fluidPage(title="Power Viewer",
 
 	theme=shinytheme("spacelab"),
 	includeCSS("styles/blue.css"), #Stylesheet for custom divs and other elements

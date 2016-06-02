@@ -19,47 +19,51 @@ timeSeriesDisplayUI <- function(id) {
 	tagList(
 		fixedPanel(class="mainwindow",
 			fluidRow(
-
 				column(2,
 					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon")
 				)
 			),
 			fluidRow(
-				column(12,
-					
-					imageOutput(ns("image"), height="400px", width="1000px"),
-					radioButtons(ns("activeMethod"), "Function:", fnames()[c(2, length(fnames()))], inline=TRUE),
-					fluidRow(
-						column(1, 
-							div(class="iconbox", actionLink(ns("frameBwd"), "", icon=icon("step-backward", "fa-2x"), class="icon"))
-						),
-						column(10,
-							sliderInput(ns("time"), "Sample to examine",  min = 1, max = nsamples(), value = 1, width = "100%")
-						),
-						column(1,
-							div(class="iconbox", actionLink(ns("frameFwd"), "", icon=icon("step-forward", "fa-2x"), class="icon"))
-						) 
-					),
-					fluidRow(
-						column(2, offset=2, style="padding-top:2%;text-align:right",
-							p("Sample range to animate:")
-						),
-						column(2,
-							uiOutput(ns("startContainer"))
-						),
-						column(2, 
-							uiOutput(ns("stopContainer"))
-						),
-						column(2, style="padding-top:50px",
-							textOutput(ns("result"))
-						)
-					),
-					br(),
-					column(4, offset=4,
-						div(class="backiconbox", actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon"))
-					)
+				column(8, offset=2, 
+					imageOutput(ns("image"), height="auto", width="100%")
 				)
-			)	
+			),
+			fluidRow(
+				column(12,
+					radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())], inline=TRUE)
+				)
+			),
+			fluidRow(
+				column(1, 
+					div(class="iconbox", actionLink(ns("frameBwd"), "", icon=icon("step-backward", "fa-2x"), class="icon"))
+				),
+				column(10,
+					sliderInput(ns("time"), "Sample to examine",  min = 1, max = nsamples(), value = 1, width = "100%")
+				),
+				column(1,
+					div(class="iconbox", actionLink(ns("frameFwd"), "", icon=icon("step-forward", "fa-2x"), class="icon"))
+				) 
+			),
+			fluidRow(
+				column(2, offset=2, style="padding-top:2%;text-align:right",
+					p("Sample range to animate:", style="font-weight:bold")
+				),
+				column(2,
+					uiOutput(ns("startContainer"))
+				),
+				column(2, 
+					uiOutput(ns("stopContainer"))
+				),
+				column(2, style="padding-top:50px",
+					textOutput(ns("result"))
+				)
+			),
+			fluidRow(
+				column(4, offset=4,
+					br(),
+					div(class="backiconbox", actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon"))
+				)
+			)
 		)
 	)
 }
@@ -83,7 +87,8 @@ timeSeriesDisplay <- function(input, output, session) {
 		numericInput(ns("stop"), "Stop", value=2, min=1, max=nsamples()) #TODO: set min reactively based on value of "start" (use updateNumericInput)
 	})
 	#Switch to index-based display mode
-	observeEvent(input$time, {
+	observeEvent(c(input$time, input$activeMethod), {
+		print(fnames()[2:length(fnames())])
 		#Create string representing directory 
 		dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
 		makeFiles(input$time, input$time, dir)
@@ -95,7 +100,7 @@ timeSeriesDisplay <- function(input, output, session) {
 	})
 	#Switch to animation display mode
 	observeEvent(input$play, {
-		if (input$start > input$stop) {
+		if ((input$start > input$stop) | (input$start < 1) | (input$stop > nsamples())) {
 			output$result <- renderText("Invalid range")
 		} else {
 			#Read start and stop values one time only
