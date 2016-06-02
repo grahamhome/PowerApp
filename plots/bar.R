@@ -1,7 +1,8 @@
 library(ggplot2)
 
-source("data/import_ts.R")
-import_data()
+
+#source("data/import_ts.R")
+#import_data()
 
 fnames <- function(){
   n <- list("Bar Graph"="bar",
@@ -80,8 +81,4 @@ plot_barfreq <- function(time){
   
   p
 }
-
-
-
-
 

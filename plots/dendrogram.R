@@ -1,7 +1,7 @@
 library(gputools)
-
-source("data/import_ts.R")
-import_data()
+library(dendextend)
+#source("data/import_ts.R")
+#import_data()
 
 fnames <- function(){
   n <- list(Dendrogram="dendrogram",
@@ -32,9 +32,22 @@ update_volt <- function(time){
 plot_dendvolt <- function(t){
   update_volt(t)
   b <- subset(bus_locs, select = c("Bus.Name","Voltage"))
+  b <- b[order(b$Voltage),]
+  
+  highlight <-c(rownames(head(b,5)),rownames(tail(b,5)))
+  
+  ## function to change color etc. of a leaf
+  colorLeafs <- function(x) {
+    if (is.leaf(x) && attr(x, "label") %in% highlight) {
+      attr(x, "nodePar") <- list(lab.col="red", pch=NA)
+    }
+    return(x)
+  }
   gp <- gpuDist(b$Voltage)
   gphc <- gpuHclust(gp)
   gphc$labels <- b$Bus.Name
+  dd <- dendrapply(as.dendrogram(gphc), colorLeafs)
+  
   plot(gphc,cex=0.5,main=paste("Voltage at time",t,sep = " "))
 }
 
@@ -48,13 +61,13 @@ plot_dendfreq <- function(t){
 }
 
 
-gpc <- gpuDistClust(b$Voltage)
+#gpc <- gpuDistClust(b$Voltage)
 
-mycl <- cutree(gphc, h=max(gphc$height/1.5))
-clusterCols <- rainbow(length(unique(mycl)))
-myClusterSideBar <- clusterCols[mycl]
-myheatcol <- rev(col(75))
-heatmap(as.matrix(b), main="Hierarchical Cluster", Rowv=as.dendrogram(gphc), Colv=NA, dendrogram="row", scale="row", col=myheatcol, density.info="none", trace="none", RowSideColors= myClusterSideBar)
+#mycl <- cutree(gphc, h=max(gphc$height/1.5))
+#clusterCols <- rainbow(length(unique(mycl)))
+#myClusterSideBar <- clusterCols[mycl]
+#myheatcol <- rev(col(75))
+#heatmap(as.matrix(b), main="Hierarchical Cluster", Rowv=as.dendrogram(gphc), Colv=NA, dendrogram="row", scale="row", col=myheatcol, density.info="none", trace="none", RowSideColors= myClusterSideBar)
 
 
 
