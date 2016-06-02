@@ -5,8 +5,6 @@ library(raster)
 library(akima)
 library(sp)
 
-source("data/import_ts.R")
-import_data()
 fnames <- function(){
   n <- list(Heatmap="heatmap",
             Voltage="plot_heatmapvolt",

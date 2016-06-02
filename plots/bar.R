@@ -1,8 +1,5 @@
 library(ggplot2)
 
-source("data/import_ts.R")
-import_data()
-
 fnames <- function(){
   n <- list("Bar Graph"="bar",
             Voltage="plot_barvolt",

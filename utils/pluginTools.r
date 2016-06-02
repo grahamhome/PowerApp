@@ -28,6 +28,7 @@ loadDataPlugins <- function() {
 
 #Returns the proper name of the plot plugin with the given filename.
 getPlotName <- function(filename) {
+	print(filename)
 	#Create a new environment
 	env <- new.env()
 	#Import the file into the new environment

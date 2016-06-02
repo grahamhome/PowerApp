@@ -1,8 +1,5 @@
 #library(gputools)
 
-source("data/import_ts.R")
-import_data()
-
 fnames <- function(){
   n <- list(Dendrogram="dendrogram",
             Voltage="plot_dendvolt",
