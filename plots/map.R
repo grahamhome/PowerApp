@@ -117,10 +117,10 @@ update_volt <- function(time){
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # voltage at time t
 plot_mapvolt <- function(t){
-  if(missing(mincovf) & missing(maxcovf)){
+  if(!exists("mincovf") | !exists("maxcovf")){
     get_minmax_covfreq()
   }
-  if(missing(mincovv) & missing(maxcovv)){
+  if(!exists("mincovv") | !exists("maxcovv")){
     get_minmax_covvolt()
   }
   # g <- ggmap(mapten)+

@@ -1,7 +1,5 @@
 
 #library(gputools)
-
-library(gputools)
 library(dendextend)
 
 
@@ -62,8 +60,6 @@ plot_dendfreq <- function(t){
   plot(gphc,cex=0.5,main=paste("Frequency at time",t,sep = " "))
 }
 
-
-<<<<<<< HEAD
 # gpc <- gpuDistClust(b$Voltage)
 
 # mycl <- cutree(gphc, h=max(gphc$height/1.5))
@@ -71,15 +67,6 @@ plot_dendfreq <- function(t){
 # myClusterSideBar <- clusterCols[mycl]
 # myheatcol <- rev(col(75))
 # heatmap(as.matrix(b), main="Hierarchical Cluster", Rowv=as.dendrogram(gphc), Colv=NA, dendrogram="row", scale="row", col=myheatcol, density.info="none", trace="none", RowSideColors= myClusterSideBar)
-=======
-#gpc <- gpuDistClust(b$Voltage)
-
-#mycl <- cutree(gphc, h=max(gphc$height/1.5))
-#clusterCols <- rainbow(length(unique(mycl)))
-#myClusterSideBar <- clusterCols[mycl]
-#myheatcol <- rev(col(75))
-#heatmap(as.matrix(b), main="Hierarchical Cluster", Rowv=as.dendrogram(gphc), Colv=NA, dendrogram="row", scale="row", col=myheatcol, density.info="none", trace="none", RowSideColors= myClusterSideBar)
->>>>>>> outlier_detection
 
 
 
