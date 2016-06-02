@@ -45,7 +45,7 @@ timeSeriesDisplayUI <- function(id) {
 				) 
 			),
 			fluidRow(
-				column(2, offset=2, style="padding-top:2%;text-align:right",
+				column(2, offset=1, style="padding-top:2%;text-align:right",
 					p("Sample range to animate:", style="font-weight:bold")
 				),
 				column(2,
@@ -54,14 +54,19 @@ timeSeriesDisplayUI <- function(id) {
 				column(2, 
 					uiOutput(ns("stopContainer"))
 				),
-				column(2, style="padding-top:50px",
-					textOutput(ns("result"))
+				column(2,
+					selectInput(ns("speed"), "Animation Speed:", choices=list("Half Speed"=0.5, "Normal Speed"=1, "Double Speed"=2), selected=1)
+				)
+			),
+			fluidRow(
+				column(12,
+					div(style="width:100%;margin-right:auto;margin-left:auto;color:red;text-align:center", textOutput(ns("result")))
 				)
 			),
 			fluidRow(
 				column(4, offset=4,
 					br(),
-					div(class="backiconbox", actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon"))
+					div(class="backiconbox", uiOutput(ns("toggle")))
 				)
 			)
 		)
@@ -73,8 +78,21 @@ timeSeriesDisplay <- function(input, output, session) {
 	#Get namespace function
 	ns <- session$ns
 
-	#Create counter variable
+	#Counter variable
 	counter <- 0
+
+	state <- reactiveValues()
+	#Play/pause variable
+	state$playing <- FALSE
+	#Range variables
+	state$start <- 0
+	state$stop <- 0
+	#Speed variable
+	state$speed <- 0
+	#Image directory variable
+	state$dir <- NULL
+
+	output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 
 	#Create range start selector
 	output$startContainer <- renderUI({
@@ -88,41 +106,54 @@ timeSeriesDisplay <- function(input, output, session) {
 	})
 	#Switch to index-based display mode
 	observeEvent(c(input$time, input$activeMethod), {
-		print(fnames()[2:length(fnames())])
-		#Create string representing directory 
-		dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
-		makeFiles(input$time, input$time, dir)
-		output$image <- renderImage({
-			print(paste(dir, input$time, ".png", sep=""))
-			list(src = paste(dir, input$time, ".png", sep=""), height="100%", width="100%")
-		}, deleteFile=FALSE)
-		
+		if (!state$playing) {
+			print(fnames()[2:length(fnames())])
+			#Create string representing directory 
+			dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
+			makeFiles(input$time, input$time, dir)
+			output$image <- renderImage({
+				print(paste(dir, input$time, ".png", sep=""))
+				list(src = paste(dir, input$time, ".png", sep=""), height="100%", width="100%")
+			}, deleteFile=FALSE)
+		}	
 	})
 	#Switch to animation display mode
 	observeEvent(input$play, {
-		if ((input$start > input$stop) | (input$start < 1) | (input$stop > nsamples())) {
-			output$result <- renderText("Invalid range")
+		if (!state$playing) {
+			if ((input$start > input$stop) | (input$start < 1) | (input$stop > nsamples())) {
+				output$result <- renderText("Invalid range")
+			} else {
+				output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("pause", "fa-2x"), class="icon") })
+				output$result <- renderText("")
+				#Read start and stop values one time only
+				state$start <- isolate(input$start)
+				state$stop <- isolate(input$stop)
+				state$speed <- isolate(as.numeric(input$speed))
+				#Create string representing directory 
+				state$dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
+				makeFiles(state$start, state$stop, state$dir)
+				state$playing <- !state$playing
+			}
 		} else {
-			#Read start and stop values one time only
-			start <- isolate(input$start)
-			stop <- isolate(input$stop)
-			output$result <- renderText("Generating animation...")
-			#Create string representing directory 
-			dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
-			makeFiles(start, stop, dir)
-			#Play animation
-			output$result <- renderText("")
+			state$playing <- !state$playing
+			output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
+		}
+		
+	})
+
+	#Play animation
+	observeEvent(state$playing, {
+		if (state$playing) {
 			output$image <- renderImage({
-				#if (start != stop) {
-					invalidateLater(100)
-				#}
-				if ((start+counter) >= stop) {
-    				counter <<- 0 # this will restart the animation, or I could turn off the scheduled invalidation to end it
-    			} else {
-    				counter <<- counter + 1
-    			}
- 				list(src = paste(dir, start+counter, ".png", sep=""), height="100%", width="100%")
-  			}, deleteFile=FALSE)
+				invalidateLater(100*state$speed)
+				if ((state$start+counter) >= state$stop) {
+					counter <<- 0 # this will restart the animation, or I could turn off the scheduled invalidation to end it
+				} else {
+					counter <<- counter + 1
+				}
+				updateSliderInput(session, "time", value=state$start+counter)
+				list(src = paste(state$dir, state$start+counter, ".png", sep=""), height="100%", width="100%")
+			}, deleteFile=FALSE)
 		}
 	})
 
