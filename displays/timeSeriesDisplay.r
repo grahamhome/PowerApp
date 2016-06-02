@@ -107,12 +107,10 @@ timeSeriesDisplay <- function(input, output, session) {
 	#Switch to index-based display mode
 	observeEvent(c(input$time, input$activeMethod), {
 		if (!state$playing) {
-			print(fnames()[2:length(fnames())])
 			#Create string representing directory 
 			dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
 			makeFiles(input$time, input$time, dir)
 			output$image <- renderImage({
-				print(paste(dir, input$time, ".png", sep=""))
 				list(src = paste(dir, input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}	
@@ -180,13 +178,11 @@ timeSeriesDisplay <- function(input, output, session) {
 		dir.create(file.path(paste("plots/img/", input$activeMethod, sep=""), name()), showWarnings=FALSE)
 		#Create any image files that do not yet exist
 		for (t in start:stop) {
-			print(paste(path, t, ".png", sep=""))
 			if (!(file.exists(paste(path, t, ".png", sep="")))) {
-				print("making file")
 				plotpng(eval(parse(text=paste(input$activeMethod, "(", t, ")", sep=""))), t, path)
 			}
 		}
-		print("all files generated")
+		print("All files generated")
 	}
 	return
 }
