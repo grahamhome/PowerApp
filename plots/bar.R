@@ -1,5 +1,6 @@
 library(ggplot2)
 
+
 fnames <- function(){
   n <- list("Bar Graph"="bar",
             Voltage="plot_barvolt",
@@ -77,8 +78,4 @@ plot_barfreq <- function(time){
   
   p
 }
-
-
-
-
 

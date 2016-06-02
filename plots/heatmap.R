@@ -4,6 +4,8 @@ library(rgdal)
 library(raster)
 library(akima)
 library(sp)
+#library(gputools)
+
 
 fnames <- function(){
   n <- list(Heatmap="heatmap",
@@ -57,20 +59,20 @@ update_covbus_volt <- function(time) {
   assign("Sv",Sv,envir = .GlobalEnv)
 }
 
-mincovf <- 1
-maxcovf <- 0
-for (t in 1:nrow(Freq)) {
-  update_covbus_freq(t)
-  mincovf <- ifelse(min(Sf[,])<mincovf,min(Sf[,]),mincovf)
-  maxcovf <- ifelse(max(Sf[,])>maxcovf,max(Sf[,]),maxcovf)
-}
-mincovv <- 1
-maxcovv <- 0
-for (t in 1:nrow(Volt)) {
-  update_covbus_volt(t)
-  mincovv <- ifelse(min(Sv[,])<mincovv,min(Sv[,]),mincovv)
-  maxcovv <- ifelse(max(Sv[,])>maxcovv,max(Sv[,]),maxcovv)
-}
+#mincovf <- 1
+#maxcovf <- 0
+#for (t in 1:nrow(Freq)) {
+#  update_covbus_freq(t)
+#  mincovf <- ifelse(min(Sf[,])<mincovf,min(Sf[,]),mincovf)
+#  maxcovf <- ifelse(max(Sf[,])>maxcovf,max(Sf[,]),maxcovf)
+#}
+#mincovv <- 1
+#maxcovv <- 0
+#for (t in 1:nrow(Volt)) {
+#  update_covbus_volt(t)
+#  mincovv <- ifelse(min(Sv[,])<mincovv,min(Sv[,]),mincovv)
+#  maxcovv <- ifelse(max(Sv[,])>maxcovv,max(Sv[,]),maxcovv)
+#}
 
 
 get_busline_voltcov <- function(time){
@@ -118,8 +120,8 @@ update_volt <- function(time){
   bus_locs$Voltage <- as.numeric(as.character(bus_locs$Voltage))
   assign("bus_locs",bus_locs,envir = .GlobalEnv)
 } 
-update_volt(1)
-update_freq(1)
+#update_volt(1)
+#update_freq(1)
 
 
 
@@ -148,12 +150,9 @@ plot_heatmapvolt<- function(t){
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
+
 plot_heatmapfreq<- function(t){
   update_freq(t)
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
   intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
                         xo=seq(xmn,xmx, by=0.05),
                         yo=seq(ymn,ymx, by=0.05))
@@ -191,10 +190,17 @@ create_voltvideo <- function(start,stop,vidtitle){
   saveVideo({
     ani.options(interval = 0.05)
     for (t in start:stop) {
-      suppressMessages(print(plot_heatmapfreq(t)))
+      suppressMessages(print(plot_heatmapvolt(t)))
     }
   },video.name = vidtitle)
 }
+
+
+#a <- matrix(1,nrow = 4,ncol = 4)
+#b <- matrix(2,nrow=4,ncol=4)
+
+
+
 #rtp <- rasterToPolygons(x)
 #rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
 #rtpFort <- fortify(rtp, data = rtp@data)
