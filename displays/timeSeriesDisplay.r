@@ -29,7 +29,7 @@ timeSeriesDisplayUI <- function(id) {
 				)
 			),
 			fluidRow(
-				column(12,
+				column(4, offset=4,
 					radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())], inline=TRUE)
 				)
 			),
@@ -60,7 +60,7 @@ timeSeriesDisplayUI <- function(id) {
 			),
 			fluidRow(
 				column(12,
-					div(style="width:100%;margin-right:auto;margin-left:auto;color:red;text-align:center", textOutput(ns("result")))
+					div(style="width:100%;color:red;text-align:center", textOutput(ns("result")))
 				)
 			),
 			fluidRow(
