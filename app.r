@@ -21,6 +21,9 @@ baseImports <- function() {
 }
 baseImports()
 
+#Import for testing purposes
+source("displays/timeSeriesDisplay.r")
+
 #Reactive values for plugins. plugins are function collections for collecting, plotting or displaying data
 plugins <- reactiveValues()
 plugins$data <- list() 		#List of import plugin proper names mapped to filenames
@@ -35,6 +38,8 @@ isolate(loadplugins())
 window <- reactiveValues()
 window$content <- NULL #Name of the current user interface function
 
+window$activity <- "selection" #Name of the current activity
+
 launchUI("intro()")
 
 #Application UI function
@@ -42,13 +47,21 @@ ui <- fluidPage(
 
 	theme=shinytheme("spacelab"),
 	includeCSS("styles/blue.css"), #Stylesheet for custom divs and other elements
-  	uiOutput("content") #All UI elements are rendered reactively
+	conditionalPanel(condition='window$activity == "selection"',
+  		uiOutput("content") #All UI elements are rendered reactively
+  	),
+  	conditionalPanel(condition='window$activity == "tsDisplay"',
+  		timeSeriesDisplayUI("display")	
+  	)
 )
 
 #R functionality
 server <- function(input, output, session) {
 	#Run the current UI function
 	output$content <- renderUI({ eval(parse(text=window$content)) })
+
+	#Start by calling display module?
+	callModule(timeSeriesDisplay, "display")
 
 	#Respond to button presses by changing UI function
 
@@ -78,10 +91,12 @@ server <- function(input, output, session) {
 				#Set "selected display" variable
 				plugins$selectedDisplay <- plugins$compatDisplays[[1]]
 				#Import display plugin
-				source(paste("displays/", plugins$selectedDisplay, sep=""))
+				#source(paste("displays/", plugins$selectedDisplay, sep=""))
 				#Launch display activity
-				print(plugins$selectedDisplay)
-				isolate(launchModule(plugins$selectedDisplay))
+				#isolate(launchModule(plugins$selectedDisplay))
+
+				#Show display panel
+				window$activity <- "tsDisplay"
 
 
 			} else {
@@ -92,9 +107,12 @@ server <- function(input, output, session) {
 			#Set "selected display" variable
 			plugins$selectedDisplay <- input$display
 			#Import display plugin
-			source(paste("displays/", plugins$selectedDisplay, sep=""))
+			#source(paste("displays/", plugins$selectedDisplay, sep=""))
 			#Launch display activity
-			isolate(launchModule(plugins$selectedDisplay))
+			#isolate(launchModule(plugins$selectedDisplay))
+
+			#Show display panel
+			window$activity <- "tsDisplay"
 		}
 	})
 
