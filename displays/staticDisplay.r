@@ -42,8 +42,6 @@ staticDisplay <- function(input, output, session) {
 	output$plot <- renderPlot({
 		start <- input$time[[1]]
 		stop <- input$time[[2]]
-		print(start)
-		print(stop)
 		eval(parse(text=paste(input$activeMethod, "(", as.numeric(start), ",", as.numeric(stop), ")", sep="")))
 		})
 	observeEvent(input$back, {

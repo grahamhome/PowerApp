@@ -78,17 +78,11 @@ server <- function(input, output, session) {
 			#Update display list
 			updateCompatibleDisplays()
 
-			#Test
-			print(fnames)
-
 			#Switch to display picker activity if the number of compatible displays is >1, otherwise load the compatible display.
 			if (length(plugins$compatDisplays) == 1) {
-				#Test
-				print("Preparing to launch display module")
 				#Set "selected display" variable
 				plugins$selectedDisplay <- plugins$compatDisplays[[1]]
 				launchDisplayModule(plugins$selectedDisplay)
-				print("launched display module")
 			} else {
 				#Launch display chooser activity
 				launchUI("displayPicker()")
