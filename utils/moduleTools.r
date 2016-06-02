@@ -1,20 +1,13 @@
 #Utility functions for loading modules and UI panes in Power Viewer.
 
-#List of previously launched modules
-modules <- list()
-
 #Launches the Shiny module contained in the named file.
 launchDisplayModule <- function(moduleFilename) {
-	mods <- modules
-	print(mods)
-	print(moduleFilename)
 	#Create a unique ID for the module
 	id <- gsub("[.]r", "", moduleFilename)
 	print(id)
-	if (!(id %in% mods)) {
+	if (!(id %in% plugins$launchedDisplays)) {
 		print("launching module for the first time")
-		mods[length(mods)+1] <- id
-		modules <<- mods
+		plugins$launchedDisplays[[length(plugins$launchedDisplays)+1]] <- id
 		#Import and run selected module						
 		source(paste("displays/", moduleFilename, sep=""))
 		print("sourced module OK")

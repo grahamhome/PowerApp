@@ -26,7 +26,8 @@ plugins <- reactiveValues()
 plugins$data <- list() 		#List of import plugin proper names mapped to filenames
 plugins$displays <- list() 	#List of display plugin proper names linked to list(filename, plots). plots = compatible plot plugin filenames
 plugins$compatPlots <- list() #Set of plot plugins compatible with the available data import plugins. Maps plugin filenames to proper names.
-plugins$compatDisplays <- list()
+plugins$compatDisplays <- list() #Set of display plugins compatible with the selected plot plugin
+plugins$launchedDisplays <- list() #List of display plugins which have previously been launched
 
 #Initialize plugin reactive values once on app startup
 isolate(loadplugins())
