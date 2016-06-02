@@ -21,16 +21,19 @@ staticDisplayUI <- function(id) {
 	tagList(
 		fixedPanel(class="mainwindow",
 			fluidRow(
-
 				column(2,
 					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon")
 				)
 			),
 			fluidRow(
-				column(12,
-					plotOutput(ns("plot"), height="400px", width="1000px"), #TODO: Size reactively based on window size
-					sliderInput(ns("time"), "Sample range to examine",  min = 1, max = nsamples(), value = c(1, 10), width = "100%"),
-					radioButtons(ns("activeMethod"), "Function:", fnames()[c(2, length(fnames()))], inline=TRUE)
+				column(10, offset=1,
+					plotOutput(ns("plot"), height="400px", width="100%") #TODO: Size reactively based on window size
+				)
+			),
+			fluidRow(
+				column(10, offset=1,
+					radioButtons(ns("activeMethod"), "Function:", fnames()[c(2, length(fnames()))], inline=TRUE),
+					sliderInput(ns("time"), "Sample range to examine",  min = 1, max = nsamples(), value = c(1, 10), width = "100%")
 				)
 			)	
 		)
