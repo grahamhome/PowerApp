@@ -10,8 +10,6 @@ loadDataPlugins <- function() {
 		env <- new.env()
 		#Import the plugin into the new environment
 		sys.source(file=paste("data/", filename, sep=""), envir=env)
-		#Import data
-		eval(parse(text="import_data()"), envir=env)
 		#Get the plugin's proper name
 		name <- eval(parse(text="name()"), envir=env)
 		#Store plugin filename under proper name
