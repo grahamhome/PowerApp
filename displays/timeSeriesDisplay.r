@@ -89,8 +89,6 @@ timeSeriesDisplay <- function(input, output, session) {
 	state$stop <- 0
 	#Speed variable
 	state$speed <- 0
-	#Image directory variable
-	state$dir <- NULL
 
 	output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 
@@ -107,11 +105,9 @@ timeSeriesDisplay <- function(input, output, session) {
 	#Switch to index-based display mode
 	observeEvent(c(input$time, input$activeMethod), {
 		if (!state$playing) {
-			#Create string representing directory 
-			dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
-			makeFiles(input$time, input$time, dir)
+			makeFiles(input$time, input$time, input$activeMethod)
 			output$image <- renderImage({
-				list(src = paste(dir, input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}	
 	})
@@ -127,9 +123,7 @@ timeSeriesDisplay <- function(input, output, session) {
 				state$start <- isolate(input$start)
 				state$stop <- isolate(input$stop)
 				state$speed <- isolate(as.numeric(input$speed))
-				#Create string representing directory 
-				state$dir <- paste("plots/img/", input$activeMethod, "/", name(), "/", sep="")
-				makeFiles(state$start, state$stop, state$dir)
+				makeFiles(state$start, state$stop, input$activeMethod)
 				state$playing <- !state$playing
 			}
 		} else {
@@ -150,7 +144,7 @@ timeSeriesDisplay <- function(input, output, session) {
 					counter <<- counter + 1
 				}
 				updateSliderInput(session, "time", value=state$start+counter)
-				list(src = paste(state$dir, state$start+counter, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}
 	})
@@ -171,18 +165,6 @@ timeSeriesDisplay <- function(input, output, session) {
 			launchUI("displayPicker()")
 		}
 	})
-	makeFiles <- function(start, stop, path) {
-		#Create directory for image files if it does not exist
-		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
-		dir.create(file.path("plots/img/", input$activeMethod), showWarnings=FALSE)
-		dir.create(file.path(paste("plots/img/", input$activeMethod, sep=""), name()), showWarnings=FALSE)
-		#Create any image files that do not yet exist
-		for (t in start:stop) {
-			if (!(file.exists(paste(path, t, ".png", sep="")))) {
-				plotpng(eval(parse(text=paste(input$activeMethod, "(", t, ")", sep=""))), t, path)
-			}
-		}
-		print("All files generated")
-	}
+	
 	return
 }

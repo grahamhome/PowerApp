@@ -1,0 +1,7 @@
+Test: Write 30 images to disk.
+Results:
+Basic sequential method: 8.32622228463491 minutes
+Sequential method with PNG device: 2.88573749860128 minutes
+Basic parallel method: 4.73992403348287 minutes
+Parallel method with PNG device: 1.73995466629664 minutes
+Parallel method with PNG device and dependency pre-loading: 1.55165638128916

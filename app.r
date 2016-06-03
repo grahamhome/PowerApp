@@ -18,6 +18,7 @@ baseImports <- function() {
 	source("utils/pluginTools.r")
 	source("utils/moduleTools.r")
 	source("utils/plotTools.r")
+	source("utils/fileTools.r")
 }
 baseImports()
 

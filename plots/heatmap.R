@@ -151,6 +151,35 @@ plot_heatmapvolt<- function(t){
   g
 }
 
+#Test method to see if saving directly to PNG is faster than returning a plot object
+plot_heatmapvolt_png<- function(t, fname){
+  update_volt(t)
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
+                        xo=seq(xmn,xmx, by=0.05),
+                        yo=seq(ymn,ymx, by=0.05))
+  r <- raster(intp_coords)
+  
+  rtp <- rasterToPolygons(r)
+  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+  
+  rtpFort <- fortify(rtp, data = rtp@data)
+  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  g <- g + geom_polygon(data = rtpFortMer, 
+                        aes(x = long, y = lat, group = group, fill = layer), 
+                        alpha = 0.5, 
+                        size = 0) +  ## size = 0 to remove the polygon outlines
+    scale_fill_gradientn("Voltage",colours = c("yellow","orange","red","blue","green"),limits=c(min(Volt[,-1]),max(Volt[,-1])))+
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+  png(filename=fname, width=1000, height=400, units="px")
+  print(g)
+  dev.off()
+}
+
 plot_heatmapfreq<- function(t){
   update_freq(t)
   xmn <- min(bus_locs$Longitude)
