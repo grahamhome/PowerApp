@@ -2,11 +2,18 @@ library(ggplot2)
 library(ggmap)
 library(rgdal)
 library(raster)
+library(rgeos)
 library(akima)
 library(sp)
-#library(gputools)
-
-
+library(gputools)
+library(animation)
+#library(gdata)
+#library(spatstat)
+#library(data.table)
+#library(parallel)
+#library(doParallel)
+source("data/import_tenn.R")
+import_data()
 fnames <- function(){
   n <- list(Heatmap="heatmap",
             Voltage="plot_heatmapvolt",
@@ -135,13 +142,17 @@ plot_heatmapvolt<- function(t){
                         xo=seq(xmn,xmx, by=0.05),
                         yo=seq(ymn,ymx, by=0.05))
   r <- raster(intp_coords)
+  #rtp <- readGDAL("tenn_raster.tif")
   
   rtp <- rasterToPolygons(r)
   rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
-  
   rtpFort <- fortify(rtp, data = rtp@data)
+  #dfr <- as.data.frame(unlist(rtp))
+  #rtpFort <- fortify(as.data.frame(rtp))
   rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
-  g <- g + geom_polygon(data = rtpFortMer, 
+# mrtpfm <- melt(rtpFortMer)
+  g <- g + 
+    geom_polygon(data = rtpFortMer, 
                         aes(x = long, y = lat, group = group, fill = layer), 
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
@@ -153,11 +164,23 @@ plot_heatmapvolt<- function(t){
 
 plot_heatmapfreq<- function(t){
   update_freq(t)
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
   intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
-                        xo=seq(xmn,xmx, by=0.05),
-                        yo=seq(ymn,ymx, by=0.05))
+                        xo=seq(xmn,xmx, by=0.07),
+                        yo=seq(ymn,ymx, by=0.07))
   r <- raster(intp_coords)
+ # r <- disaggregate(r,fact=10)
+  #beginCluster()
+  #rtp <- clusterR(r,rasterToPolygons)
+  #endCluster()
+  #m <- clump(r)
+  #a <- area(r)
+  #rtp <- zonal(a,m,'sum')
   rtp <- rasterToPolygons(r)
+
   rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
   rtpFort <- fortify(rtp, data = rtp@data)
   rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
@@ -166,7 +189,7 @@ plot_heatmapfreq<- function(t){
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
     #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
-    scale_fill_gradientn("Frequency",colours = c("green","blue","red","orange","yellow"),limits=c(min(Freq[,-1]),max(Freq[,-1])))+
+    scale_fill_gradientn("Frequency",colours = c("yellow","orange","red","blue","green"),limits=c(min(Freq[,-1]),max(Freq[,-1])))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
@@ -195,12 +218,48 @@ create_voltvideo <- function(start,stop,vidtitle){
   },video.name = vidtitle)
 }
 
+sgdf_transform = function(sgdf){
+  
+  dim <- sgdf@grid@cells.dim
+  bbox <- sgdf@bbox
+  r <- raster(xmn=bbox[1,1], xmx=bbox[1,2], ymn=bbox[2,1], ymx=bbox[2,2], ncols=dim[1], nrows=dim[2])
+  r <- setValues(r,matrix(sgdf@data$band1, nrow = dim[1], ncol = dim[2]) %>% t()) 
+  data <- rasterToPoints(r) %>% data.table()
+  return(data)
+  
+}
 
-#a <- matrix(1,nrow = 4,ncol = 4)
-#b <- matrix(2,nrow=4,ncol=4)
+#registerDoParallel(cores = 8)
+#tenn <- map_data('USA') %>%data.table()
+#xo=seq(xmn,xmx, by=0.05)
+#yo=seq(ymn,ymx, by=0.05)
+#a <- matrix(xo,ncol = 1)
+#b <- matrix(yo,ncol = 1)
+#d <- matrix(c(xo,yo),ncol = 2)
+#ab <- cbindX(a,b)
+#update_volt(1205)
+#pts <- subset(bus_locs,select=c("Longitude", "Latitude", "Voltage"))
+#colnames(pts) <- c('x','y','z') 
+#pppts <- ppp(x = pts$x,y=pts$y,marks = pts$z,window = owin(xrange = c(xmn,xmx),yrange = c(ymn,ymx)))
+#smp <- Smooth(pppts)
+#r <- raster(smp)
+#rr <- as.data.frame(values(r))
+#writeRaster(r,filename = "tenn_raster.grd",format="raster")
+#system("/usr/bin/gdal_trace_outline tenn_raster.tif -classify -out-cs ll -ogr-out outline_tif.shp",intern = TRUE)
+#system("/usr/bin/gdal_trace_outline tenn_raster.tif -classify -out-cs en -ogr-out outline_tif.shp",intern = TRUE)
+#polyr <- readShapeP('outline_tif.shp', proj4string=CRS("+proj=longlat"))
+#polyr <- readOGR(dsn = "outline_tif.shp",layer = "file")
+#rtp <- readGDAL("tenn_raster.tif")
+#rtp_data <- sgdf_transform(rtp)
 
-
-
+#dfr <- as.data.frame(rtp)
+#system("/usr/bin/ogr2ogr outline_tif -nlt MULTILINESTRING")
+#cpts <- coordinates(pts)
+#image(smp)
+#val <- getValues(r)
+#xy <- as.data.frame(xyFromCell(r,1:ncell(r)))
+#xy <- cbind(xy,val)
+#ggplot(dfr, aes(x=x, y=y, fill=band1)) + geom_raster() + coord_equal()
 #rtp <- rasterToPolygons(x)
 #rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
 #rtpFort <- fortify(rtp, data = rtp@data)

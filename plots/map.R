@@ -2,6 +2,9 @@ library(ggplot2)
 library(ggmap)
 library(outliers)
 
+source("data/import_ts.R")
+import_data()
+
 fnames <- function(){
   n <- list(Map="map",
             Voltage="plot_mapvolt",
@@ -117,10 +120,10 @@ update_volt <- function(time){
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # voltage at time t
 plot_mapvolt <- function(t){
-  if(missing(mincovf) & missing(maxcovf)){
+  if(!exists("mincovf") | !exists("maxcovf")){
     get_minmax_covfreq()
   }
-  if(missing(mincovv) & missing(maxcovv)){
+  if(!exists("mincovv") | !exists("maxcovv")){
     get_minmax_covvolt()
   }
   # g <- ggmap(mapten)+
@@ -146,10 +149,10 @@ plot_mapvolt <- function(t){
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # frequency at time t
 plot_mapfreq <- function(t){
-  if(missing(mincovf) & missing(maxcovf)){
+  if(!exists("mincovf") | !exists("maxcovf")){
     get_minmax_covfreq()
   }
-  if(missing(mincovv) & missing(maxcovv)){
+  if(!exists("mincovv") | !exists("maxcovv")){
     get_minmax_covvolt()
   }
   update_freq(t)
@@ -169,10 +172,10 @@ plot_mapfreq <- function(t){
 }
 
 plot_mapvolt_large <- function(t){
-  if(missing(mincovf) & missing(maxcovf)){
+  if(!exists("mincovf") | !exists("maxcovf")){
     get_minmax_covfreq()
   }
-  if(missing(mincovv) & missing(maxcovv)){
+  if(!exists("mincovv") | !exists("maxcovv")){
     get_minmax_covvolt()
   }
   #g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
@@ -188,22 +191,23 @@ plot_mapvolt_large <- function(t){
   g
 }
 plot_mapfreq_large <- function(t){
-  if(missing(mincovf) & missing(maxcovf)){
+  if(!exists("mincovf") | !exists("maxcovf")){
     get_minmax_covfreq()
   }
-  if(missing(mincovv) & missing(maxcovv)){
+  if(!exists("mincovv") | !exists("maxcovv")){
     get_minmax_covvolt()
   }
   #  g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
   update_freq(t)
   linesb <- get_busline_freqcov(t)
+  color_vals_freq <- as.numeric(sapply( c((mincovf+0.1),(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g+ 
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Frequency,group=Sub.Name),size=25,alpha=0.25,shape=16) +
-    #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=Frequency,group=Sub.Name),size=25,alpha=0.25,shape=16) +
     scale_colour_gradientn("Bus Frequency",colours = c("green","blue","orange","yellow"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
     labs(x = "Longitude", y = "Latitude") +
+    #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,fill=Variance),show.legend = TRUE) +
     #theme(legend.position="bottom",legend.direction="vertical",legend.box="horizontal") +
-    #scale_colour_gradientn("Variance",colours = c("black","blue","red"),breaks=color_vals_freq,limits=c(0,maxcovf)) +
+    #scale_fill_gradientn("Variance",colours = c("green","blue","red","orange","yellow"),breaks=color_vals_freq,limits=c(0,maxcovf)) +
     #geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 2, shape = 21) +
     #scale_fill_gradientn("Frequency",colours = c("blue","white","red"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
