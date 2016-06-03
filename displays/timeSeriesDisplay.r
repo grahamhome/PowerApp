@@ -105,9 +105,9 @@ timeSeriesDisplay <- function(input, output, session) {
 	#Switch to index-based display mode
 	observeEvent(c(input$time, input$activeMethod), {
 		if (!state$playing) {
-			makeFiles(input$time, input$time, input$activeMethod)
+			makeFiles2(input$time, input$time, paste(input$activeMethod, "_png", sep=""))
 			output$image <- renderImage({
-				list(src = paste("plots/img/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", paste(input$activeMethod, "_png", sep=""), "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}	
 	})
@@ -123,7 +123,7 @@ timeSeriesDisplay <- function(input, output, session) {
 				state$start <- isolate(input$start)
 				state$stop <- isolate(input$stop)
 				state$speed <- isolate(as.numeric(input$speed))
-				makeFiles(state$start, state$stop, input$activeMethod)
+				makeFiles2(state$start, state$stop, paste(input$activeMethod, "_png", sep=""))
 				state$playing <- !state$playing
 			}
 		} else {
@@ -136,6 +136,7 @@ timeSeriesDisplay <- function(input, output, session) {
 	#Play animation
 	observeEvent(state$playing, {
 		if (state$playing) {
+			method <- isolate(input$activeMethod)
 			output$image <- renderImage({
 				invalidateLater(100*state$speed)
 				if ((state$start+counter) >= state$stop) {
@@ -144,7 +145,7 @@ timeSeriesDisplay <- function(input, output, session) {
 					counter <<- counter + 1
 				}
 				updateSliderInput(session, "time", value=state$start+counter)
-				list(src = paste("plots/img/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", paste(method, "_png", sep=""), "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}
 	})
