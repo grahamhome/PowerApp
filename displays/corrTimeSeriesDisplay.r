@@ -20,20 +20,12 @@ corrTimeSeriesDisplayUI <- function(id) {
 		fixedPanel(class="mainwindow",
 			fluidRow(
 				column(2,
-					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon")
+					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
+					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())]))
 				),
-				column(10, 
-					h1(name())
-				)
-			),
-			fluidRow(
-				column(8, offset=2, 
+				column(8, 
+					h2(name()),
 					imageOutput(ns("image"), height="auto", width="100%")
-				)
-			),
-			fluidRow(
-				column(4, offset=4,
-					radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())], inline=TRUE)
 				)
 			),
 			fluidRow(
@@ -182,7 +174,7 @@ corrTimeSeriesDisplay <- function(input, output, session) {
 		dir.create(file.path(paste("plots/img/", method, sep=""), name()), showWarnings=FALSE)
 		#Create any image files that do not yet exist
 		output$image <- renderImage({
-			withProgress(message="Creating Plot", detail="Working...", value=0, {
+			withProgress(message="Creating Plot", detail="", value=0, {
 				for (t in start:stop) {
 					if (!(file.exists(paste(path, t, ".png", sep="")))) {
 						plotCorr2png(paste(method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))

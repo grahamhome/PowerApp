@@ -57,6 +57,7 @@ body {
 }
 
 .shiny-progress .progress-text {
-	width:8%;
-	right:46%;
+	width:6%;
+	right:47%;
+	text-align:center;
 }

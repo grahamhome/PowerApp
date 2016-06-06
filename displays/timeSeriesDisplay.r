@@ -28,11 +28,6 @@ timeSeriesDisplayUI <- function(id) {
 					imageOutput(ns("image"), height="auto", width="100%")
 				)
 			),
-			# fluidRow(
-			# 	column(4, offset=4,
-			# 		radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())], inline=TRUE)
-			# 	)
-			# ),
 			fluidRow(
 				column(1, 
 					div(class="iconbox", actionLink(ns("frameBwd"), "", icon=icon("step-backward", "fa-2x"), class="icon"))
