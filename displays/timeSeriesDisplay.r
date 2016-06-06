@@ -179,7 +179,7 @@ timeSeriesDisplay <- function(input, output, session) {
 		dir.create(file.path(paste("plots/img/", method, sep=""), name()), showWarnings=FALSE)
 		#Create any image files that do not yet exist
 		output$image <- renderImage({
-			withProgress(message="Creating Plot", detail="Working...", value=0, {
+			withProgress(message="Creating Plot", detail="", value=0, {
 				for (t in start:stop) {
 					if (!(file.exists(paste(path, t, ".png", sep="")))) {
 						plot2png(paste(method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))
