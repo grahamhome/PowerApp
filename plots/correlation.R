@@ -1,5 +1,8 @@
 library(ggcorrplot)
 
+source("data/import_gmd.R")
+import_data()
+
 fnames <- function(){
   n <- list(Correlation="correlation",
             Voltage="plot_corrvolt",
@@ -82,4 +85,8 @@ plot_corrfreq <- function(t, fname){
   g <- ggcorrplot(cov2cor(Sf),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
   ggsave(file=fname, plot=g, width=10, height=4, units="in")
 }
+
+
+
+
 
