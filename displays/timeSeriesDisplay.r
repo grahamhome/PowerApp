@@ -21,6 +21,9 @@ timeSeriesDisplayUI <- function(id) {
 			fluidRow(
 				column(2,
 					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon")
+				),
+				column(10, 
+					h1(name())
 				)
 			),
 			fluidRow(
