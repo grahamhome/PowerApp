@@ -56,7 +56,6 @@ updateCompatibleDisplays <- function() {
 	#Remove all displays not compatible with selected plot plugin
 	for (name in names(plugins$displays)) {
 		if((plugins$selectedPlot) %in% plugins$displays[name][[1]][[2]]) {
-			print(name)
 			#Map display plugin proper name to filename in compatible displays list
 			plugins$compatDisplays[name] <- plugins$displays[name][[1]]
 		} else {

@@ -4,7 +4,6 @@
 launchDisplayModule <- function(moduleFilename) {
 	#Create a unique ID for the module
 	id <- gsub("[.]r", "", moduleFilename)
-	print(id)
 	if (!(id %in% plugins$launchedDisplays)) {
 		plugins$launchedDisplays[[length(plugins$launchedDisplays)+1]] <- id
 		#Import and run selected module						

@@ -162,6 +162,8 @@ timeSeriesDisplay <- function(input, output, session) {
 		updateSliderInput(session, "time", value=input$time+1)
 	})
 	observeEvent(input$back, {
+		state$playing <- FALSE
+		output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 		#Did the display picker launch?
 		if (length(plugins$compatDisplays) == 1) {
 			launchUI("plotPicker()")
