@@ -42,11 +42,14 @@ plot_boxfreq <- function(time){
 
 plot_boxvolt <- function(time){
   update_volt(time)
-  cv <- melt(Volt[1:time,],id="Time")
-  p <- ggplot(data=cv,aes(x=variable,y=value))+
-    geom_boxplot(aes(group=variable))+
-    theme(legend.position="none",legend.direction="vertical",legend.box="horizontal",
-          axis.text.x=element_text(angle=-90, vjust=0.5,size = 4)) +
+  #cv <- melt(Volt[1:time,],id="Time")
+  cv <- as.data.frame(t(Volt[time,-1]))
+  cv$group <- 0
+  colnames(cv) <- c("Voltage","group")
+  p <- ggplot(data=cv,aes(group,Voltage))+
+    geom_boxplot()+
+    ylim(min(Volt[,-1]),max(Volt[,-1]))+
+    theme(legend.position="none",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[time,1]),""))))
   p
 }
