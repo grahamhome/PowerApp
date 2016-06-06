@@ -1,12 +1,12 @@
 library(ggplot2)
 library(reshape)
+library(data.table)
 fnames <- function(){
   n <- list(Boxplot="boxplot",
             Voltage="plot_boxvolt",
             Frequency="plot_boxfreq")
   n
 }
-
 
 update_freq <- function(time){
   tf <- t(Freq[time,-1])
@@ -27,23 +27,27 @@ update_volt <- function(time){
 } 
 
 
-plot_boxfreq <- function(t){
-  update_freq(t)
-  cf <- Freq[1:t,]
-  p <- ggplot(data=cf,aes(x=Time))+
+plot_boxfreq <- function(time){
+  update_freq(time)
+  cf <- as.data.frame(t(Freq[time,-1]))
+  cf$group <- 0
+  colnames(cf) <- c("Frequency","group")
+  p <- ggplot(data=cf,aes(group,Frequency))+
     geom_boxplot()+
+    ylim(min(Freq[,-1]),max(Freq[,-1]))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[time,1]),""))))
   p
 }
 
-plot_boxvolt <- function(t){
-  update_volt(t)
-  cv <- melt(Volt[1:t,],id="Time")
+plot_boxvolt <- function(time){
+  update_volt(time)
+  cv <- melt(Volt[1:time,],id="Time")
   p <- ggplot(data=cv,aes(x=variable,y=value))+
     geom_boxplot(aes(group=variable))+
-    theme(legend.position="none",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="none",legend.direction="vertical",legend.box="horizontal",
+          axis.text.x=element_text(angle=-90, vjust=0.5,size = 4)) +
+    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[time,1]),""))))
   p
 }
 
