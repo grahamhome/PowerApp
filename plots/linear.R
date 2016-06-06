@@ -49,6 +49,5 @@ plot_frequency <- function(start,stop){
     bus <- Freq[start:stop,z]
     lines(y=bus,x=Freq[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
   }
-  title(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   legend("topright", inset=c(-0.2,-0.15),legend = 1:n,col = colors, lty=linetype,cex=0.8)
 }
