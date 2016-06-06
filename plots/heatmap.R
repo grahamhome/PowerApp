@@ -5,15 +5,13 @@ library(raster)
 library(rgeos)
 library(akima)
 library(sp)
-library(gputools)
+#library(gputools)
 library(animation)
 #library(gdata)
 #library(spatstat)
 #library(data.table)
 #library(parallel)
 #library(doParallel)
-source("data/import_tenn.R")
-import_data()
 fnames <- function(){
   n <- list(Heatmap="heatmap",
             Voltage="plot_heatmapvolt",

@@ -2,9 +2,6 @@ library(ggplot2)
 library(ggmap)
 library(outliers)
 
-source("data/import_ts.R")
-import_data()
-
 fnames <- function(){
   n <- list(Map="map",
             Voltage="plot_mapvolt",

@@ -1,8 +1,6 @@
 
 #library(gputools)
 library(dendextend)
-source("data/import_ts.R")
-import_data()
 
 fnames <- function(){
   n <- list(Dendrogram="dendrogram",

@@ -1,8 +1,5 @@
 library(ggcorrplot)
 
-source("data/import_gmd.R")
-import_data()
-
 fnames <- function(){
   n <- list(Correlation="correlation",
             Voltage="plot_corrvolt",
