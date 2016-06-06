@@ -20,22 +20,19 @@ timeSeriesDisplayUI <- function(id) {
 		fixedPanel(class="mainwindow",
 			fluidRow(
 				column(2,
-					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon")
+					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
+					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())]))
 				),
-				column(10, 
-					h1(name())
-				)
-			),
-			fluidRow(
-				column(8, offset=2, 
+				column(8, 
+					h2(name()),
 					imageOutput(ns("image"), height="auto", width="100%")
 				)
 			),
-			fluidRow(
-				column(4, offset=4,
-					radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())], inline=TRUE)
-				)
-			),
+			# fluidRow(
+			# 	column(4, offset=4,
+			# 		radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())], inline=TRUE)
+			# 	)
+			# ),
 			fluidRow(
 				column(1, 
 					div(class="iconbox", actionLink(ns("frameBwd"), "", icon=icon("step-backward", "fa-2x"), class="icon"))
