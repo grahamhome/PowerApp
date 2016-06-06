@@ -14,9 +14,7 @@ plotPicker <- function() {
 				column(8, offset=2,
 					h3("Select a plot type:"),
 					br(),
-					selectInput("plot", "", plugins$compatPlots),
-					br(),
-					p("Please be patient, plot will take approximately 5 seconds to load after clicking 'Select Plot'.")
+					selectInput("plot", "", plugins$compatPlots)
 				)
 			),
 			actionButton("forward", "Select Plot", class="next")

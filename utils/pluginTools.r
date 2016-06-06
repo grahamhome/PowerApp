@@ -28,7 +28,6 @@ loadDataPlugins <- function() {
 
 #Returns the proper name of the plot plugin with the given filename.
 getPlotName <- function(filename) {
-	print(filename)
 	#Create a new environment
 	env <- new.env()
 	#Import the file into the new environment
@@ -59,6 +58,9 @@ updateCompatibleDisplays <- function() {
 		if((plugins$selectedPlot) %in% plugins$displays[name][[1]][[2]]) {
 			#Map display plugin proper name to filename in compatible displays list
 			plugins$compatDisplays[name] <- plugins$displays[name][[1]]
+		} else {
+			#Remove display plugin from compatible displays list if it is already present
+			plugins$compatDisplays[name] <- NULL
 		}
 	}
 }

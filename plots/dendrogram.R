@@ -1,7 +1,5 @@
 
 #library(gputools)
-
-library(gputools)
 library(dendextend)
 source("data/import_ts.R")
 import_data()
@@ -78,8 +76,6 @@ colorLeafs <- function(x) {
 # myClusterSideBar <- clusterCols[mycl]
 # myheatcol <- rev(col(75))
 # heatmap(as.matrix(b), main="Hierarchical Cluster", Rowv=as.dendrogram(gphc), Colv=NA, dendrogram="row", scale="row", col=myheatcol, density.info="none", trace="none", RowSideColors= myClusterSideBar)
-
-
 
 
 

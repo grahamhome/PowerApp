@@ -18,18 +18,17 @@ baseImports <- function() {
 	source("utils/pluginTools.r")
 	source("utils/moduleTools.r")
 	source("utils/plotTools.r")
+	source("utils/fileTools.r")
 }
 baseImports()
-
-#Import for testing purposes
-source("displays/timeSeriesDisplay.r")
 
 #Reactive values for plugins. plugins are function collections for collecting, plotting or displaying data
 plugins <- reactiveValues()
 plugins$data <- list() 		#List of import plugin proper names mapped to filenames
 plugins$displays <- list() 	#List of display plugin proper names linked to list(filename, plots). plots = compatible plot plugin filenames
 plugins$compatPlots <- list() #Set of plot plugins compatible with the available data import plugins. Maps plugin filenames to proper names.
-plugins$compatDisplays <- list()
+plugins$compatDisplays <- list() #Set of display plugins compatible with the selected plot plugin
+plugins$launchedDisplays <- list() #List of display plugins which have previously been launched
 
 #Initialize plugin reactive values once on app startup
 isolate(loadplugins())
@@ -38,30 +37,21 @@ isolate(loadplugins())
 window <- reactiveValues()
 window$content <- NULL #Name of the current user interface function
 
-window$activity <- "selection" #Name of the current activity
-
+#Start the intro activity when the app starts
 launchUI("intro()")
 
 #Application UI function
-ui <- fluidPage(
+ui <- fluidPage(title="Power Viewer",
 
 	theme=shinytheme("spacelab"),
 	includeCSS("styles/blue.css"), #Stylesheet for custom divs and other elements
-	conditionalPanel(condition='window$activity == "selection"',
-  		uiOutput("content") #All UI elements are rendered reactively
-  	),
-  	conditionalPanel(condition='window$activity == "tsDisplay"',
-  		timeSeriesDisplayUI("display")	
-  	)
+  	uiOutput("content") #All UI elements are rendered reactively
 )
 
 #R functionality
 server <- function(input, output, session) {
 	#Run the current UI function
 	output$content <- renderUI({ eval(parse(text=window$content)) })
-
-	#Start by calling display module?
-	callModule(timeSeriesDisplay, "display")
 
 	#Respond to button presses by changing UI function
 
@@ -70,8 +60,11 @@ server <- function(input, output, session) {
 		if (window$content == "intro()") {
 			launchUI("dataPicker()")
 		} else if (window$content == "dataPicker()") {
+			#Reset environment
+			rm(list=ls())
+			baseImports()
 			#Import data plugin chosen by user and switch to plot picker activity.
-			source(paste("data/", input$data, sep=""))#plugins$data[[input$data]][[1]], sep=""))
+			source(paste("data/", input$data, sep=""))
 			#Import the data
 			import_data()
 			#Update compatible plots list now that a dataset has been selected
@@ -90,40 +83,25 @@ server <- function(input, output, session) {
 			if (length(plugins$compatDisplays) == 1) {
 				#Set "selected display" variable
 				plugins$selectedDisplay <- plugins$compatDisplays[[1]]
-				#Import display plugin
-				#source(paste("displays/", plugins$selectedDisplay, sep=""))
-				#Launch display activity
-				#isolate(launchModule(plugins$selectedDisplay))
-
-				#Show display panel
-				window$activity <- "tsDisplay"
-
-
+				launchDisplayModule(plugins$selectedDisplay)
 			} else {
 				#Launch display chooser activity
-				window$content <- "displayPicker()"
+				launchUI("displayPicker()")
 			}
 		} else if (window$content == "displayPicker()") {
 			#Set "selected display" variable
 			plugins$selectedDisplay <- input$display
-			#Import display plugin
-			#source(paste("displays/", plugins$selectedDisplay, sep=""))
 			#Launch display activity
-			#isolate(launchModule(plugins$selectedDisplay))
-
-			#Show display panel
-			window$activity <- "tsDisplay"
+			launchDisplayModule(plugins$selectedDisplay)
 		}
 	})
 
 	#"Back" button
 	observeEvent(input$back, {
 		if (window$content == "dataPicker()") {
-			window$content <- "intro()"
+			launchUI("intro()")
 		} else if (window$content == "plotPicker()") {
-			window$content <- "dataPicker()" 
-		} else {
-			window$content <- "plotPicker()" #TODO: Delete environment and start over?
+			launchUI("dataPicker()") 
 		}
 	})
 }

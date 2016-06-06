@@ -16,7 +16,7 @@ dataPicker <- function() {
 					br(),
 					selectInput("data", "", plugins$data),
 					br(),
-					p("Please be patient, data will take approximately 3 seconds to load after clicking 'Import Data'.")
+					p("Please be patient, data will take approximately 5 seconds to load after clicking 'Import Data'.", style="font-weight:bold")
 				)
 			),
 			actionButton("forward", "Import Data", class="next")

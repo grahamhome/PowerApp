@@ -51,3 +51,6 @@ img/
 
 #Data directory
 rawdata/
+
+#That stupid Rplots file
+Rplots.pdf

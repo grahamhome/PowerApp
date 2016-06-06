@@ -48,3 +48,10 @@ body {
 	line-height:150%; 
 	text-align:center;
 }
+.shiny-progress .bar {
+background-color: #FF0000;
+.opacity = 1;
+}
+.shiny-progress .progress {
+height:10px;
+}
