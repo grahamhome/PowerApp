@@ -8,7 +8,7 @@ dispName <- function() {
 
 #Compatible plot plugins
 use_plots <- function() {
-	list('map.R','heatmap.R','correlation.R', 'bar.R')
+	list('map.R','heatmap.R', 'bar.R')
 }
 
 #UI
@@ -55,7 +55,7 @@ timeSeriesDisplayUI <- function(id) {
 					uiOutput(ns("stopContainer"))
 				),
 				column(2,
-					selectInput(ns("speed"), "Animation Speed:", choices=list("Half Speed"=0.5, "Normal Speed"=1, "Double Speed"=2), selected=1)
+					selectInput(ns("speed"), "Animation Speed:", choices=list("Slow"=0.1, "Normal Speed"=1, "Double Speed"=2), selected=1)
 				)
 			),
 			fluidRow(
@@ -105,9 +105,9 @@ timeSeriesDisplay <- function(input, output, session) {
 	#Switch to index-based display mode
 	observeEvent(c(input$time, input$activeMethod), {
 		if (!state$playing) {
-			makeFiles2(input$time, input$time, paste(input$activeMethod, "_png", sep=""))
+			makeFilesProgress(input$time, input$time, input$activeMethod)
 			output$image <- renderImage({
-				list(src = paste("plots/img/", paste(input$activeMethod, "_png", sep=""), "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}	
 	})
@@ -123,7 +123,7 @@ timeSeriesDisplay <- function(input, output, session) {
 				state$start <- isolate(input$start)
 				state$stop <- isolate(input$stop)
 				state$speed <- isolate(as.numeric(input$speed))
-				makeFiles2(state$start, state$stop, paste(input$activeMethod, "_png", sep=""))
+				makeFilesProgress(state$start, state$stop, input$activeMethod)
 				state$playing <- !state$playing
 			}
 		} else {
@@ -138,14 +138,14 @@ timeSeriesDisplay <- function(input, output, session) {
 		if (state$playing) {
 			method <- isolate(input$activeMethod)
 			output$image <- renderImage({
-				invalidateLater(100*state$speed)
-				if ((state$start+counter) >= state$stop) {
+				invalidateLater(100/state$speed)
+				updateSliderInput(session, "time", value=state$start+counter)
+				if ((state$start+counter) == state$stop) {
 					counter <<- 0 # this will restart the animation, or I could turn off the scheduled invalidation to end it
 				} else {
 					counter <<- counter + 1
 				}
-				updateSliderInput(session, "time", value=state$start+counter)
-				list(src = paste("plots/img/", paste(method, "_png", sep=""), "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}
 	})
@@ -166,6 +166,27 @@ timeSeriesDisplay <- function(input, output, session) {
 			launchUI("displayPicker()")
 		}
 	})
-	
+
+	#Sequentially creates a set of plot images for the given method in the given directory over the given range.
+	#Uses a proxy method that saves the resulting plot objects to PNG files.
+	makeFilesProgress <- function(start, stop, method) {
+		path <- paste("plots/img/", method, "/", name(), "/", sep="")
+		#Create directory for image files if it does not exist
+		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
+		dir.create(file.path("plots/img/", method), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", method, sep=""), name()), showWarnings=FALSE)
+		#Create any image files that do not yet exist
+		output$image <- renderImage({
+			withProgress(message="Creating Plot", detail="Working...", value=0, {
+				for (t in start:stop) {
+					if (!(file.exists(paste(path, t, ".png", sep="")))) {
+						plot2png(paste(method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))
+					}
+					incProgress(1/(stop-start))
+				}
+			})
+			list(src = paste("plots/img/", method, "/", name(), "/", start, ".png", sep=""), height="100%", width="100%")
+		}, deleteFile=FALSE)
 	return
+	}
 }

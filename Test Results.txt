@@ -7,4 +7,12 @@ Basic parallel method: 4.73992403348287 minutes
 Parallel method with PNG device: 1.73995466629664 minutes
 Parallel method with PNG device and dependency pre-loading: 1.55165638128916
 
-Results(Linux, 8 cores):
+Conclusion: Parallel method is fastest, but not too much faster than simply using the PNG device.
+
+Test: Write 20 images to disk.
+Results (Windows, 4 cores): 
+Run 1:
+Basic sequential method: 5.78623918294907 mins
+Sequential method with built-in PNG device: 1.96626414855321 mins
+Sequential method with proxy PNG device: 1.91364219983419 mins
+Conclusion: I can use the proxy PNG device instead of rewriting all the plotting plugins.

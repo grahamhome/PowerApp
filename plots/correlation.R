@@ -69,15 +69,17 @@ update_busloc_volt <- function(time){
   assign("bus_locs",bus_locs,envir = .GlobalEnv)
 } 
 
-plot_corrvolt <- function(t){
+plot_corrvolt <- function(t, fname){
   update_busloc_volt(t)
   update_covmat_volt(t)
-  ggcorrplot(cov2cor(Sv),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
+  g <- ggcorrplot(cov2cor(Sv),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
+  ggsave(file=fname, plot=g, width=10, height=4, units="in")
 }
 
-plot_corrfreq <- function(t){
+plot_corrfreq <- function(t, fname){
   update_busloc_freq(t)
   update_covmat_freq(t)
-  ggcorrplot(cov2cor(Sf),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
+  g <- ggcorrplot(cov2cor(Sf),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
+  ggsave(file=fname, plot=g, width=10, height=4, units="in")
 }
 
