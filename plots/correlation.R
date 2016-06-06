@@ -1,4 +1,5 @@
-library(ggcorrplot)
+library(ggplot2)
+library(corrplot)
 
 fnames <- function(){
   n <- list(Correlation="correlation",
@@ -72,15 +73,16 @@ update_busloc_volt <- function(time){
 plot_corrvolt <- function(t, fname){
   update_busloc_volt(t)
   update_covmat_volt(t)
-  g <- ggcorrplot(cov2cor(Sv),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
-  ggsave(file=fname, plot=g, width=10, height=4, units="in")
+  corrplot(cov2cor(Sv),tl.cex = 0.45,na.label.col = "white",addgrid.col = NA,
+           title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
 }
 
 plot_corrfreq <- function(t, fname){
   update_busloc_freq(t)
   update_covmat_freq(t)
-  g <- ggcorrplot(cov2cor(Sf),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
-  ggsave(file=fname, plot=g, width=10, height=4, units="in")
+  corrplot(cov2cor(Sf),tl.cex = 0.45,na.label.col = "white",addgrid.col = NA,
+           #col = c("blue","white","red"),
+           title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
 }
 
 
