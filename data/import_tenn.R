@@ -11,6 +11,7 @@ get_csvdata_tenn <- function(dpath){
   trans <<- read.csv(paste(dpath,"rawdata/tenn150_transformers.csv",sep = ""))
   Volt <<- read.csv(paste(dpath,"rawdata/tenn150_bus_voltage.csv",sep = ""))
   Freq <<- read.csv(paste(dpath,"rawdata/tenn150_bus_frequency.csv",sep = ""))
+  Pangle <<- read.csv(paste(dpath,"rawdata/tenn150_bus_angle.csv",sep = ""))
 }
 #Cleans up the names for various parts of the data so that it all matches up
 clean_names_tenn <- function(){
@@ -38,6 +39,13 @@ clean_names_tenn <- function(){
   cn <- gsub("[.][.]",".",cn)
   cn <- gsub("Gallatin[.]TN[.]","Gallatin.(TN)",cn)
   colnames(Volt) <<- c("Time",cn)
+  
+  pn <- colnames(Pangle[,-1])
+  pn <- gsub("Bus[.]","",pn)
+  pn <- gsub("[.]V[.]angle","",pn)
+  pn <- gsub("[.][.]",".",pn)
+  pn <- gsub("Gallatin[.]TN[.]","Gallatin.(TN)",pn)
+  colnames(Pangle) <<- c("Time",pn)
 }
 #Sets up all of the data structures containing parts of multiple input files, and adds the 
 # info to the appropriate data structure
@@ -46,10 +54,11 @@ get_merged_data_tenn  <- function(){
   
   #Set up dataframe with each bus name, bus number, the name of the substation it's at,
   # the lat/long of the station, the frequency (at time=0), and the voltage (at time=0)
-  bus_locs <<- data.frame(sub_buses$Bus.Num,sub_buses$Bus.Name,sub_buses$Sub.Name.x,sub_buses$Latitude,sub_buses$Longitude,"Frequency","Voltage")
-  colnames(bus_locs) <<- c("Bus.Num","Bus.Name","Sub.Name", "Latitude","Longitude","Frequency","Voltage")
+  bus_locs <<- data.frame(sub_buses$Bus.Num,sub_buses$Bus.Name,sub_buses$Sub.Name.x,sub_buses$Latitude,sub_buses$Longitude,"Frequency","Voltage","Angle")
+  colnames(bus_locs) <<- c("Bus.Num","Bus.Name","Sub.Name", "Latitude","Longitude","Frequency","Voltage","Angle")
   bus_locs$Frequency <<- 0
   bus_locs$Voltage <<- 0 
+  bus_locs$Angle <<- 0
   
   
   #Add the from/to bus latitudes/longitudes to the line data
@@ -61,7 +70,7 @@ get_merged_data_tenn  <- function(){
   cn <- gsub("Latitude[.]y","To.Latitude",cn)
   cn <- gsub("Longitude[.]y","To.Longitude",cn)
   colnames(linesb) <<- cn
-  linesb$Variance <<- 0
+  linesb$Correlation <<- 0
   #linesb$Line.id <- seq_len(nrow(linesb))
 }
 #Set up the map and ggmap object
@@ -84,6 +93,11 @@ get_covvariance_data_tenn  <- function(){
   Sf <<- cov(Xf[1:2,])
   curr_sf <<- 3
   xfbar <<- colMeans(Xf[1:2,])
+  #Set up these variables for the phase angle covariance matrix
+  Xa <<- as.matrix(Pangle[,-1])
+  Sa <<- cov(Xa[1:2,])
+  curr_sa <<- 3
+  xabar <<- colMeans(Xa[1:2,])
 }
 
 

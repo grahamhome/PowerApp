@@ -2,12 +2,17 @@ library(ggplot2)
 library(ggmap)
 library(outliers)
 
+source("data/import_ts.R")
+import_data()
+
 fnames <- function(){
   n <- list(Map="map",
             Voltage="plot_mapvolt",
             Frequency="plot_mapfreq",
             Voltage_Large="plot_mapvolt_large",
-            Frequency_Large="plot_mapfreq_large")
+            Frequency_Large="plot_mapfreq_large",
+            Angle="plot_mapangle",
+            Angle_lines="plot_mapangle_lines")
 
   n
 }
@@ -54,6 +59,28 @@ update_covbus_volt <- function(time) {
   assign("curr_sv",time,envir = .GlobalEnv)
   assign("Sv",Sv,envir = .GlobalEnv)
 }
+
+update_covbus_pangle <- function(time) {
+  #This is in case we call this function on a timepoint before the last one we left off at; if that is the case we want to make sure the loop
+  # is starting at time=3 and the xbar is only the mean of the first 2 timepoints.
+  if (curr_sa<time&&curr_sa>2) {
+    ca <- curr_sa
+  }
+  else{
+    ca <- 3
+    xabar <- colMeans(Xa[1:2,])
+    Sa <- cov(Xa[1:2,])
+  }
+  for (t in ca:time) {
+    xn1 <- Xa[t,]
+    Sa <- (((t-1)/t)*Sa)+
+      ((1/t+1)*(xn1-xabar)%*%(t((xn1-xabar))))
+    xabar <- xabar + (1/(t+1))*(xn1-xabar)
+  }
+  assign("xabar",xabar,envir = .GlobalEnv)
+  assign("curr_sa",time,envir = .GlobalEnv)
+  assign("Sa",Sa,envir = .GlobalEnv)
+}
 get_minmax_covfreq <- function(){
   mincovf <<- 1
   maxcovf <<- 0
@@ -92,7 +119,16 @@ get_busline_freqcov <- function(time){
     curr_row <- linesb[x,]
     sfc <- cov2cor(Sf[,])
     curr_row$Correlation <- as.numeric(as.character(sfc[[curr_row$From.Bus.Name,curr_row$To.Bus.Name]]))
-    #curr_row$Variance <- as.numeric(as.character(Sf[[curr_row$From.Bus.Name,curr_row$To.Bus.Name]]))
+    linesb[x,"Correlation"] <- curr_row$Correlation
+  }
+  linesb
+}
+get_busline_panglecov <- function(time){
+  update_covbus_pangle(time)
+  for (x in 1:nrow(linesb)) {
+    curr_row <- linesb[x,]
+    sac <- cov2cor(Sa[,])
+    curr_row$Correlation <- as.numeric(as.character(sac[[curr_row$From.Bus.Name,curr_row$To.Bus.Name]]))
     linesb[x,"Correlation"] <- curr_row$Correlation
   }
   linesb
@@ -110,13 +146,63 @@ update_freq <- function(time){
 }
 #Change the voltage column of bus_locs with the frequencies for a given time
 update_volt <- function(time){
-  vf <- t(Volt[time,-1])
-  vf <- cbind(rownames(vf),vf)
-  colnames(vf) <- c("Bus.Name","Voltage")
-  bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Frequency")),vf, by="Bus.Name")
+  tv <- t(Volt[time,-1])
+  tv <- cbind(rownames(tv),tv)
+  colnames(tv) <- c("Bus.Name","Voltage")
+  bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Frequency")),tv, by="Bus.Name")
   bus_locs$Voltage <- as.numeric(as.character(bus_locs$Voltage))
   assign("bus_locs",bus_locs,envir = .GlobalEnv)
 } 
+
+update_pangle <- function(time){
+  ta <- t(Pangle[time,-1])
+  ta <- cbind(rownames(ta),ta)
+  colnames(ta) <- c("Bus.Name","Angle")
+  bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Voltage","Frequency")),ta, by="Bus.Name")
+  bus_locs$Angle <- as.numeric(as.character(bus_locs$Angle))
+  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+}
+
+get_volt_outliers <- function(time){
+  curr_v <- Volt[time,]
+}
+
+
+plot_mapangle <- function(t){
+  if (!exists("Pangle")) {
+    p <- ggplot(data.frame())+
+      geom_text(data=NULL,aes(x=2,y=2,label="Phase angle data not available for this data set"))
+    return(p)
+  }
+  update_pangle(t)
+  g <- g+
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=10,alpha=0.5,shape=16) +
+    #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
+    scale_colour_gradientn("Bus Angle",colours = c("yellow","orange","blue","green"),limits=c(min(Pangle[,-1]),max(Pangle[,-1]))) +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+  g
+}
+plot_mapangle_lines <- function(t){
+  if (!exists("Pangle")) {
+    p <- ggplot(data.frame())+
+      geom_text(data=NULL,aes(x=2,y=2,label="Phase angle data not available for this data set"))
+    return(p)
+  }
+  update_pangle(t)
+  linesb <- get_busline_panglecov(t)
+  linesb$Correlation[is.nan(linesb$Correlation)] <- 1
+  g <- g+
+    geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),show.legend = FALSE) +
+    scale_colour_gradientn("Correlation",colours = c("red","yellow","green"),limits=c(-1,1)) +
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,fill=Angle),size=5,shape=21) +
+    scale_fill_gradientn("Angle",colours = c("yellow","orange","blue","green"),limits=c(min(Pangle[,-1]),max(Pangle[,-1]))) +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+  g
+}
 
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # voltage at time t
@@ -218,5 +304,6 @@ plot_mapfreq_large <- function(t){
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
+
 
 
