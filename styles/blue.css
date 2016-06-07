@@ -55,13 +55,13 @@ body {
 .shiny-progress .progress {
 	height:10px;
 }
-
 .shiny-progress .progress-text {
-	width:6%;
-	right:47%;
+	width:100px;
+	position:relative;
+	margin-left:auto;
+	margin-right:auto;
 	text-align:center;
 }
-
 .helpiconbox {
 	float:right;
 }

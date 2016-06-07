@@ -1,4 +1,7 @@
 #Functions to compare the execution times of parallel and non-parallel file saving methods.
+
+#NOTE: This file must be moved to the top-level project directory before it can be run.
+
 source("data/import_gmd.R")
 import_data()
 source("plots/heatmap.R")
