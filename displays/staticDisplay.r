@@ -78,7 +78,8 @@ staticDisplay <- function(input, output, session) {
 			div(class="helptextbox",
 				p("Use the double-ended slider to select a range of values to view in the linear plot. ", br(), br(),
 					"Use the radio buttons on the left side of the graph display to change the plotting method used ", br(),
-					"to create the graph.")
+					"to create the graph.", br(), br(),
+					"Use the back button in the top left corner of the display to choose a different plot type or data set.")
 			)
 		}
 	})
