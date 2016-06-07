@@ -61,3 +61,17 @@ body {
 	right:47%;
 	text-align:center;
 }
+
+.helpiconbox {
+	float:right;
+}
+.helptextbox {
+	position:fixed;
+	top:9%;
+	right:4%;
+	background-color:white;
+	border-style:solid;
+	border-width:2px;
+	border-color:black;
+	padding:5px;
+}

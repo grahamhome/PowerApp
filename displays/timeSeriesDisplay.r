@@ -26,6 +26,9 @@ timeSeriesDisplayUI <- function(id) {
 				column(8, 
 					h2(name()),
 					imageOutput(ns("image"), height="auto", width="100%")
+				),
+				column(2, 
+					div(class="helpiconbox", actionLink(ns("help"), "", icon=icon("question", "fa-2x"), class="icon"))
 				)
 			),
 			fluidRow(
@@ -64,7 +67,8 @@ timeSeriesDisplayUI <- function(id) {
 					div(class="backiconbox", uiOutput(ns("toggle")))
 				)
 			)
-		)
+		),
+		uiOutput(ns("helpbox"))
 	)
 }
 
@@ -76,6 +80,7 @@ timeSeriesDisplay <- function(input, output, session) {
 	#Counter variable
 	counter <- 0
 
+	#Reactive values related to window state
 	state <- reactiveValues()
 	#Play/pause variable
 	state$playing <- FALSE
@@ -84,6 +89,8 @@ timeSeriesDisplay <- function(input, output, session) {
 	state$stop <- 0
 	#Speed variable
 	state$speed <- 0
+	#Show/hide help text
+	state$showHelp <- FALSE
 
 	output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 
@@ -161,6 +168,27 @@ timeSeriesDisplay <- function(input, output, session) {
 			launchUI("plotPicker()")
 		} else {
 			launchUI("displayPicker()")
+		}
+	})
+	#Help text popup
+	observeEvent(input$help, {
+		state$showHelp <- !state$showHelp
+	})
+
+	#Help text
+	output$helpbox <- renderUI({
+		if (state$showHelp) {
+			div(class="helptextbox",
+				p("Use the slider or the forward/back buttons to view individual frames of the power data. ", br(), br(),
+					"To view an animated sequence of power data values, specify the start and end frames of the ", br(), 
+					"sequence in the 'Start' and 'Stop' boxes, select an animation speed and press the play icon. ", br(),  
+					"Longer animations may have longer rendering times before they can be played. To change the ", br(), 
+					"animation parameters, first pause the currently playing animation, then click the play icon ", br(),
+					"again after changing the start, stop, or speed values. ", br(), br(),
+					"Use the radio buttons on the left side of the graph display to change the plotting method used ", br(),
+					"to create the graph.", br(), br(),
+					"Use the back button in the top left corner of the display to choose a different plot type or data set.")
+			)
 		}
 	})
 
