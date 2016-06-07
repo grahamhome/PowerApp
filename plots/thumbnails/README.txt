@@ -1,0 +1,1 @@
+This folder contains a png of a sample plot for each type, to be displayed by the UI.

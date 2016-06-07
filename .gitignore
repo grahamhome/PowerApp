@@ -49,5 +49,8 @@ Temporary Items
 #Image directories
 img/
 
-#Data directories
-data/
+#Data directory
+rawdata/
+
+#That stupid Rplots file
+Rplots.pdf
