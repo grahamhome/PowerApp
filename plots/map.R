@@ -2,14 +2,23 @@ library(ggplot2)
 library(ggmap)
 library(outliers)
 
+
 fnames <- function(){
-  n <- list(Map="map",
-            Voltage="plot_mapvolt",
-            Frequency="plot_mapfreq",
-            Voltage_Large="plot_mapvolt_large",
-            Frequency_Large="plot_mapfreq_large",
-            Angle="plot_mapangle",
-            Angle_lines="plot_mapangle_lines")
+  if (!exists("Pangle")) {
+    n <- list(Map="map",
+              Voltage="plot_mapvolt",
+              Frequency="plot_mapfreq",
+              Voltage_Large="plot_mapvolt_large",
+              Frequency_Large="plot_mapfreq_large",
+              Angle="plot_mapangle",
+              Angle_lines="plot_mapangle_lines")
+  } else{
+    n <- list(Map="map",
+              Voltage="plot_mapvolt",
+              Frequency="plot_mapfreq",
+              Voltage_Large="plot_mapvolt_large",
+              Frequency_Large="plot_mapfreq_large")
+  }
 
   n
 }
@@ -78,6 +87,8 @@ update_covbus_pangle <- function(time) {
   assign("curr_sa",time,envir = .GlobalEnv)
   assign("Sa",Sa,envir = .GlobalEnv)
 }
+
+#Probably won't be needing these two functions, but I'm leaving them in just in case
 get_minmax_covfreq <- function(){
   mincovf <<- 1
   maxcovf <<- 0
@@ -167,11 +178,11 @@ get_volt_outliers <- function(time){
 
 
 plot_mapangle <- function(t){
-  if (!exists("Pangle")) {
-    p <- ggplot(data.frame())+
-      geom_text(data=NULL,aes(x=2,y=2,label="Phase angle data not available for this data set"))
-    return(p)
-  }
+ # if (!exists("Pangle")) {
+  #  p <- ggplot(data.frame())+
+   #   geom_text(data=NULL,aes(x=2,y=2,label="Phase angle data not available for this data set"))
+  #  return(p)
+#  }
   update_pangle(t)
   g <- g+
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=10,alpha=0.5,shape=16) +
@@ -183,11 +194,6 @@ plot_mapangle <- function(t){
   g
 }
 plot_mapangle_lines <- function(t){
-  if (!exists("Pangle")) {
-    p <- ggplot(data.frame())+
-      geom_text(data=NULL,aes(x=2,y=2,label="Phase angle data not available for this data set"))
-    return(p)
-  }
   update_pangle(t)
   linesb <- get_busline_panglecov(t)
   linesb$Correlation[is.nan(linesb$Correlation)] <- 1
