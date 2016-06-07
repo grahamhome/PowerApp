@@ -165,6 +165,7 @@ update_pangle <- function(time){
 
 get_volt_outliers <- function(time){
   curr_v <- Volt[time,]
+  
 }
 
 
@@ -290,7 +291,7 @@ plot_mapfreq_large <- function(t){
   #  g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
   update_freq(t)
   linesb <- get_busline_freqcov(t)
-  color_vals_freq <- as.numeric(sapply( c((mincovf+0.1),(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
+ # color_vals_freq <- as.numeric(sapply( c((mincovf+0.1),(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g+ 
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=Frequency,group=Sub.Name),size=25,alpha=0.25,shape=16) +
     scale_colour_gradientn("Bus Frequency",colours = c("green","blue","orange","yellow"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
