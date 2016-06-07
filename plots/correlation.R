@@ -1,7 +1,5 @@
-library(ggcorrplot)
-
-source("data/import_gmd.R")
-import_data()
+library(ggplot2)
+library(corrplot)
 
 fnames <- function(){
   n <- list(Correlation="correlation",
@@ -52,21 +50,6 @@ update_covmat_volt <- function(time) {
   assign("curr_sv",time,envir = .GlobalEnv)
   assign("Sv",Sv,envir = .GlobalEnv)
 }
-#Get the min/max values that will be in the covariance matrix
-mincovf <- 1
-maxcovf <- 0
-for (t in 1:nrow(Freq)) {
-  update_covmat_freq(t)
-  mincovf <- ifelse(min(Sf[,])<mincovf,min(Sf[,]),mincovf)
-  maxcovf <- ifelse(max(Sf[,])>maxcovf,max(Sf[,]),maxcovf)
-}
-mincovv <- 1
-maxcovv <- 0
-for (t in 1:nrow(Volt)) {
-  update_covmat_volt(t)
-  mincovv <- ifelse(min(Sv[,])<mincovv,min(Sv[,]),mincovv)
-  maxcovv <- ifelse(max(Sv[,])>maxcovv,max(Sv[,]),maxcovv)
-}
 
 #Change the frequency column of bus_locs with the frequencies for a given time 
 update_busloc_freq <- function(time){
@@ -87,16 +70,22 @@ update_busloc_volt <- function(time){
   assign("bus_locs",bus_locs,envir = .GlobalEnv)
 } 
 
-
 plot_corrvolt <- function(t){
   update_busloc_volt(t)
   update_covmat_volt(t)
-  ggcorrplot(cov2cor(Sv),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
+  corrplot(cov2cor(Sv),tl.cex = 0.45,na.label.col = "white",addgrid.col = NA,
+           title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
 }
 
 plot_corrfreq <- function(t){
   update_busloc_freq(t)
   update_covmat_freq(t)
-  ggcorrplot(cov2cor(Sf),tl.cex = 4.5,colors = c("blue","red","white"),title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
+  corrplot(cov2cor(Sf),tl.cex = 0.45,na.label.col = "white",addgrid.col = NA,
+           #col = c("blue","white","red"),
+           title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
 }
+
+
+
+
 

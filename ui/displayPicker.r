@@ -14,7 +14,7 @@ displayPicker <- function() {
 				column(8, offset=2,
 					h3("Select a plot type:"),
 					br(),
-					selectInput("display", "", modules$compatDisplays)
+					selectInput("display", "", plugins$compatDisplays)
 				)
 			),
 			actionButton("forward", "Select Display", class="next")

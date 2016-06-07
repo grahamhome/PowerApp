@@ -3,16 +3,16 @@
 
 #Proper Name
 dispName <- function() {
-	"Time Series Display"
+	"Correlation Time Series Display"
 }
 
 #Compatible plot plugins
 use_plots <- function() {
-	list('map.R','heatmap.R', 'bar.R')
+	list('correlation.R')
 }
 
 #UI
-timeSeriesDisplayUI <- function(id) {
+corrTimeSeriesDisplayUI <- function(id) {
 	#Create namespace function from id
 	ns <- NS(id)
 	#Enclose UI contents in a tagList
@@ -69,7 +69,7 @@ timeSeriesDisplayUI <- function(id) {
 }
 
 #Server logic
-timeSeriesDisplay <- function(input, output, session) {
+corrTimeSeriesDisplay <- function(input, output, session) {
 	#Get namespace function
 	ns <- session$ns
 
@@ -177,7 +177,7 @@ timeSeriesDisplay <- function(input, output, session) {
 			withProgress(message="Creating Plot", detail="", value=0, {
 				for (t in start:stop) {
 					if (!(file.exists(paste(path, t, ".png", sep="")))) {
-						plot2png(paste(method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))
+						plotCorr2png(paste(method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))
 					}
 					incProgress(1/(stop-start))
 				}

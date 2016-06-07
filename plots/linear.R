@@ -14,8 +14,8 @@ plot_voltage <- function(start,stop){
   #  theme(legend.position="right")
   #p
   par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
-  start <- ifelse(missing(start),1,start)
-  stop <- ifelse(missing(stop),nrow(Volt),stop)
+  #start <- ifelse(missing(start),1,start)
+  #stop <- ifelse(missing(stop),nrow(Volt),stop)
   xrange <- range(Volt[start:stop,1])
   yrange <- range(Volt[start:stop,-1])
   plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Voltage",
@@ -34,8 +34,8 @@ plot_voltage <- function(start,stop){
 #plot the a line graph of each bus from {start} to {stop} of the voltage
 plot_frequency <- function(start,stop){
   par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
-  start <- ifelse(missing(start),1,start)
-  stop <- ifelse(missing(stop),nrow(Freq),stop)
+  #start <- ifelse(missing(start),1,start)
+  #stop <- ifelse(missing(stop),nrow(Freq),stop)
   xrange <- range(Freq[start:stop,1])
   yrange <- range(Freq[start:stop,-1])
   plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Frequency",
@@ -49,6 +49,5 @@ plot_frequency <- function(start,stop){
     bus <- Freq[start:stop,z]
     lines(y=bus,x=Freq[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
   }
-  title(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   legend("topright", inset=c(-0.2,-0.15),legend = 1:n,col = colors, lty=linetype,cex=0.8)
 }
