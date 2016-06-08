@@ -1,7 +1,7 @@
 library(ggplot2)
 library(ggmap)
 library(outliers)
-
+library(MTS)
 
 fnames <- function(){
   if (exists("Pangle")) {
@@ -172,8 +172,29 @@ update_pangle <- function(time){
 }
 
 get_volt_outliers <- function(time){
-  curr_v <- Volt[time,]
+  time <- 1205
+  curr_v <-Volt[time,-1]
+  cvo <- outlier(curr_v)
+}
+library(gputools)
+make_sparklines_volt <- function(time){
+  curr_v <-Volt[1:time,-1]
+  distclust <- gpuDist(curr_v,method = "euclidean")
+  cvkm <- kmeans(x = curr_v,iter.max = 20,centers = 10)
+  cvkmt <- kmeans(x = t(curr_v),iter.max = 20,centers = 10)
+  #Choose number of clusters, kn, and small number, ep, for stopping the iterative process
   
+  #QT algorithm
+  qual_thresh <- 0.1
+  numnode <- sample(1:150,1)
+  curr_node <- curr_v[numnode]
+  closest_node <- NULL
+  for (i in 1:150) {
+    curr_dist <- gpuDist(c(curr_node,curr_v[i]),method = "euclidean")
+    if (condition) {
+      
+    }
+  }
 }
 
 
