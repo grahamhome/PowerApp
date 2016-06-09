@@ -1,7 +1,6 @@
 library(ggplot2)
 library(ggmap)
 library(outliers)
-library(MTS)
 
 
 fnames <- function(){
@@ -160,7 +159,8 @@ update_volt <- function(time){
   colnames(tv) <- c("Bus.Name","Voltage")
   bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Frequency")),tv, by="Bus.Name")
   bus_locs$Voltage <- as.numeric(as.character(bus_locs$Voltage))
-  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  #assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  bus_locs
 } 
 
 update_pangle <- function(time){
@@ -169,7 +169,8 @@ update_pangle <- function(time){
   colnames(ta) <- c("Bus.Name","Angle")
   bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Voltage","Frequency")),ta, by="Bus.Name")
   bus_locs$Angle <- as.numeric(as.character(bus_locs$Angle))
-  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  #assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  bus_locs
 }
 
 get_volt_outliers <- function(time){
@@ -177,7 +178,6 @@ get_volt_outliers <- function(time){
   curr_v <-Volt[time,-1]
   cvo <- outlier(curr_v)
 }
-library(gputools)
 make_sparklines_volt <- function(time){
   curr_v <-Volt[1:time,-1]
   distclust <- gpuDist(curr_v,method = "euclidean")
@@ -205,7 +205,7 @@ plot_mapangle <- function(t){
    #   geom_text(data=NULL,aes(x=2,y=2,label="Phase angle data not available for this data set"))
   #  return(p)
 #  }
-  update_pangle(t)
+  bus_locs <- update_pangle(t)
   g <- g+
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=10,alpha=0.5,shape=16) +
     #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
@@ -216,7 +216,7 @@ plot_mapangle <- function(t){
   g
 }
 plot_mapangle_lines <- function(t){
-  update_pangle(t)
+  bus_locs <- update_pangle(t)
   linesb <- get_busline_panglecov(t)
   linesb$Correlation[is.nan(linesb$Correlation)] <- 1
   g <- g+
@@ -239,7 +239,7 @@ plot_mapvolt <- function(t){
   #   scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
   #color_vals_freq <- rescale(c(min(F[,-1]),60.05,60.1,60.15,max(F[,-1])))
   #color_vals_volt <- rescale(c(min(V[,-1]),0.25,0.5,0.75,1,max(V[,-1])))
-  update_volt(t)
+  bus_locs <- update_volt(t)
   linesb <- get_busline_voltcov(t)
   linesb$Correlation[is.nan(linesb$Correlation)] <- 1
   if (min(Volt[,-1])<1) {
@@ -264,7 +264,7 @@ plot_mapvolt <- function(t){
 # frequency at time t
 plot_mapfreq <- function(t){
 
-  update_freq(t)
+  bus_locs <- update_freq(t)
   linesb <- get_busline_freqcov(t)
   linesb$Correlation[is.nan(linesb$Correlation)] <- 1
   if (min(Freq[,-1])<60) {
@@ -295,7 +295,7 @@ plot_mapvolt_large <- function(t){
 #   get_minmax_covvolt()
 #  }
   #g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
-  update_volt(t)
+  bus_locs <- update_volt(t)
   linesb <- get_busline_voltcov(t)
   g <- g+
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Voltage,group=Sub.Name),size=25,alpha=0.25,shape=16) +
@@ -314,7 +314,7 @@ plot_mapfreq_large <- function(t){
 #    get_minmax_covvolt()
 #  }
   #  g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
-  update_freq(t)
+  bus_locs <- update_freq(t)
   linesb <- get_busline_freqcov(t)
  # color_vals_freq <- as.numeric(sapply( c((mincovf+0.1),(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g+ 
