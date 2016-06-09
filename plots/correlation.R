@@ -74,7 +74,8 @@ plot_corrvolt <- function(t){
   update_busloc_volt(t)
   update_covmat_volt(t)
   corrplot(cov2cor(Sv),tl.cex = 0.45,na.label.col = "white",addgrid.col = NA,
-           title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
+           title =paste("Correlation of Voltage at Time",Volt[t,1],sep = " "))
+           #title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
 }
 
 plot_corrfreq <- function(t){
