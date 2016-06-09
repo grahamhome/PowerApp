@@ -106,7 +106,7 @@ timeSeriesDisplay <- function(input, output, session) {
 	})
 
 	#Switch to index-based display mode
-	observeEvent(c(input$time, input$activeMethod) {
+	observeEvent(c(input$time, input$activeMethod), {
 		if (!state$playing) {
 			makeFiles(input$time, input$time, input$activeMethod)
 			output$image <- renderImage({
