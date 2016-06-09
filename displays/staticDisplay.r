@@ -33,7 +33,6 @@ staticDisplayUI <- function(id) {
 			),
 			fluidRow(
 				column(10, offset=1,
-					plotOutput(ns("plot"), height="400px", width="100%") #TODO: Size reactively based on window size
 				)
 			),
 			fluidRow(

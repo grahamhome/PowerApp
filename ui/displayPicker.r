@@ -12,7 +12,7 @@ displayPicker <- function() {
 			),
 			fluidRow(
 				column(8, offset=2,
-					h3("Select a plot type:"),
+					h3("Select a display:"),
 					br(),
 					selectInput("display", "", plugins$compatDisplays)
 				)
