@@ -2,7 +2,6 @@ library(ggplot2)
 library(ggmap)
 library(outliers)
 
-
 fnames <- function(){
   if (exists("Pangle")) {
     n <- list(Map="map",
