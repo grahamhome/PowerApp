@@ -1,7 +1,8 @@
 library(ggplot2)
 library(ggmap)
 library(outliers)
-library(MTS)
+#library(MTS)
+#library(gputools)
 
 fnames <- function(){
   if (exists("Pangle")) {
@@ -176,7 +177,6 @@ get_volt_outliers <- function(time){
   curr_v <-Volt[time,-1]
   cvo <- outlier(curr_v)
 }
-library(gputools)
 make_sparklines_volt <- function(time){
   curr_v <-Volt[1:time,-1]
   distclust <- gpuDist(curr_v,method = "euclidean")
