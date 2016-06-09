@@ -58,7 +58,8 @@ update_busloc_freq <- function(time){
   colnames(tf) <- c("Bus.Name","Frequency")
   bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Voltage")),tf, by="Bus.Name")
   bus_locs$Frequency <- as.numeric(as.character(bus_locs$Frequency))
-  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  #assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  bus_locs
 }
 #Change the voltage column of bus_locs with the frequencies for a given time
 update_busloc_volt <- function(time){
@@ -67,11 +68,12 @@ update_busloc_volt <- function(time){
   colnames(vf) <- c("Bus.Name","Voltage")
   bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Frequency")),vf, by="Bus.Name")
   bus_locs$Voltage <- as.numeric(as.character(bus_locs$Voltage))
-  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  #assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  bus_locs 
 } 
 
 plot_corrvolt <- function(t){
-  update_busloc_volt(t)
+  bus_locs <- update_busloc_volt(t)
   update_covmat_volt(t)
   corrplot(cov2cor(Sv),tl.cex = 0.45,na.label.col = "white",addgrid.col = NA,
            title =paste("Correlation of Voltage at Time",Volt[t,1],sep = " "))
@@ -79,7 +81,7 @@ plot_corrvolt <- function(t){
 }
 
 plot_corrfreq <- function(t){
-  update_busloc_freq(t)
+  bus_locs <- update_busloc_freq(t)
   update_covmat_freq(t)
   corrplot(cov2cor(Sf),tl.cex = 0.45,na.label.col = "white",addgrid.col = NA,
            #col = c("blue","white","red"),
