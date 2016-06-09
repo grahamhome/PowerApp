@@ -114,7 +114,8 @@ update_freq <- function(time){
   colnames(tf) <- c("Bus.Name","Frequency")
   bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Voltage")),tf, by="Bus.Name")
   bus_locs$Frequency <- as.numeric(as.character(bus_locs$Frequency))
-  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  #assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  bus_locs
 }
 #Change the voltage column of bus_locs with the frequencies for a given time
 update_volt <- function(time){
@@ -123,7 +124,8 @@ update_volt <- function(time){
   colnames(vf) <- c("Bus.Name","Voltage")
   bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Frequency")),vf, by="Bus.Name")
   bus_locs$Voltage <- as.numeric(as.character(bus_locs$Voltage))
-  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  #assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  bus_locs
 } 
 #update_volt(1)
 #update_freq(1)
@@ -131,7 +133,7 @@ update_volt <- function(time){
 
 
 plot_heatmapvolt<- function(t){
-  update_volt(t)
+  bus_locs <- update_volt(t)
   xmn <- min(bus_locs$Longitude)
   xmx <- max(bus_locs$Longitude)
   ymn <- min(bus_locs$Latitude)
@@ -162,7 +164,7 @@ plot_heatmapvolt<- function(t){
 
 #Test method to see if saving directly to PNG is faster than returning a plot object
 plot_heatmapvolt_png<- function(t, fname){
-  update_volt(t)
+  bus_locs <- update_volt(t)
   xmn <- min(bus_locs$Longitude)
   xmx <- max(bus_locs$Longitude)
   ymn <- min(bus_locs$Latitude)
@@ -190,7 +192,7 @@ plot_heatmapvolt_png<- function(t, fname){
 }
 
 plot_heatmapfreq<- function(t){
-  update_freq(t)
+  bus_locs <- update_freq(t)
   xmn <- min(bus_locs$Longitude)
   xmx <- max(bus_locs$Longitude)
   ymn <- min(bus_locs$Latitude)
