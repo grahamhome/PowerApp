@@ -4,7 +4,7 @@ library(outliers)
 
 
 fnames <- function(){
-  if (!exists("Pangle")) {
+  if (exists("Pangle")) {
     n <- list(Map="map",
               Voltage="plot_mapvolt",
               Frequency="plot_mapfreq",

@@ -30,6 +30,15 @@ update_volt <- function(time){
  # assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs
 } 
+update_pangle <- function(time){
+  ta <- t(Pangle[time,-1])
+  ta <- cbind(rownames(ta),ta)
+  colnames(ta) <- c("Bus.Name","Angle")
+  bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Voltage","Frequency")),ta, by="Bus.Name")
+  bus_locs$Angle <- as.numeric(as.character(bus_locs$Angle))
+  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+}
+
 
 update_pangle <- function(time){
   ta <- t(Pangle[time,-1])
