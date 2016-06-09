@@ -5,7 +5,7 @@ library(raster)
 library(rgeos)
 library(akima)
 library(sp)
-#library(gputools)
+library(doSNOW)
 library(animation)
 #library(gdata)
 #library(spatstat)
@@ -138,19 +138,40 @@ plot_heatmapvolt<- function(t){
   xmx <- max(bus_locs$Longitude)
   ymn <- min(bus_locs$Latitude)
   ymx <- max(bus_locs$Latitude)
-  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
-                        xo=seq(xmn,xmx, by=0.05),
-                        yo=seq(ymn,ymx, by=0.05))
-  r <- raster(intp_coords)
-  #rtp <- readGDAL("tenn_raster.tif")
+  n_cores <- detectCores()-1
+  cl<-makeCluster(n_cores)
+  registerDoParallel(cl)
+  xlen <- (xmx-xmn)/n_cores
+  ylen <- (ymx-ymn)/n_cores
+  plist <- foreach(n=1:n_cores, .packages=c( "ggmap", "rgdal", "raster", "akima", "sp"), 
+          #.export=c("xmn","xmx","ymn","ymx","bus_locs","xlen")) %dopar% { 
+          .export=c("xmn","xmx","ymn","ymx","bus_locs","xlen")) %dopar% { 
+            xmn_curr <- xmn+(xlen*(n-1))
+            xmx_curr <- (xmn+(xlen*n))
+            #ymn_curr <- ymn+(ylen*(n-1))
+           # ymx_curr <- ymn+(ylen*n)
+            intp_coord_part <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
+                                      xo=seq(xmn_curr,xmx_curr, by=0.05),
+                                      yo=seq(ymn,ymx, by=0.05))
+                                    #  yo=seq(ymn_curr,ymx_curr, by=0.05))
+            return(rasterToPolygons(raster(intp_coord_part)))
+          }
+
+  rtp <- do.call(bind, plist)
+  stopCluster(cl)
   
-  rtp <- rasterToPolygons(r)
+#  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
+ #                       xo=seq(xmn,xmx, by=0.05),
+ #                       yo=seq(ymn,ymx, by=0.05))
+ # r <- raster(intp_coords)
+
+#  rtp <- rasterToPolygons(r)
   rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
   rtpFort <- fortify(rtp, data = rtp@data)
   #dfr <- as.data.frame(unlist(rtp))
   #rtpFort <- fortify(as.data.frame(rtp))
   rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
-# mrtpfm <- melt(rtpFortMer)
+
   g <- g + 
     geom_polygon(data = rtpFortMer, 
                         aes(x = long, y = lat, group = group, fill = layer), 
@@ -162,68 +183,178 @@ plot_heatmapvolt<- function(t){
   g
 }
 
-#Test method to see if saving directly to PNG is faster than returning a plot object
-plot_heatmapvolt_png<- function(t, fname){
-  bus_locs <- update_volt(t)
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
-  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
-                        xo=seq(xmn,xmx, by=0.05),
-                        yo=seq(ymn,ymx, by=0.05))
-  r <- raster(intp_coords)
-  
-  rtp <- rasterToPolygons(r)
-  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
-  
-  rtpFort <- fortify(rtp, data = rtp@data)
-  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
-  g <- g + geom_polygon(data = rtpFortMer, 
-                        aes(x = long, y = lat, group = group, fill = layer), 
-                        alpha = 0.5, 
-                        size = 0) +  ## size = 0 to remove the polygon outlines
-    scale_fill_gradientn("Voltage",colours = c("yellow","orange","red","blue","green"),limits=c(min(Volt[,-1]),max(Volt[,-1])))+
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
-  png(filename=fname, width=1000, height=400, units="px")
-  print(g)
-  dev.off()
-}
-
 plot_heatmapfreq<- function(t){
   bus_locs <- update_freq(t)
   xmn <- min(bus_locs$Longitude)
   xmx <- max(bus_locs$Longitude)
   ymn <- min(bus_locs$Latitude)
   ymx <- max(bus_locs$Latitude)
-  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
-                        xo=seq(xmn,xmx, by=0.07),
-                        yo=seq(ymn,ymx, by=0.07))
-  r <- raster(intp_coords)
- # r <- disaggregate(r,fact=10)
-  #beginCluster()
-  #rtp <- clusterR(r,rasterToPolygons)
-  #endCluster()
-  #m <- clump(r)
-  #a <- area(r)
-  #rtp <- zonal(a,m,'sum')
-  rtp <- rasterToPolygons(r)
+ # intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
+  #                      xo=seq(xmn,xmx, by=0.07),
+   #                     yo=seq(ymn,ymx, by=0.07))
+#  r <- raster(intp_coords)
+  n_cores <- detectCores()-1
+  cl<-makeCluster(n_cores)
+  registerDoParallel(cl)
+  xlen <- (xmx-xmn)/(n_cores*2)
+  ylen <- (ymx-ymn)/(n_cores*2)
+  plist <- foreach(n=1:(n_cores*2), .packages=c( "ggmap", "rgdal", "raster", "akima", "sp"), 
+                   #.export=c("xmn","xmx","ymn","ymx","bus_locs","xlen")) %dopar% { 
+                   .export=c("xmn","xmx","ymn","ymx","bus_locs","xlen")) %dopar% { 
+                     xmn_curr <- xmn+(xlen*(n-1))
+                     xmx_curr <- (xmn+(xlen*n))
+                     #ymn_curr <- ymn+(ylen*(n-1))
+                     # ymx_curr <- ymn+(ylen*n)
+                     intp_coord_part <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
+                                               xo=seq(xmn_curr,xmx_curr, by=0.035),
+                                               yo=seq(ymn,ymx, by=0.05))
+                     #  yo=seq(ymn_curr,ymx_curr, by=0.05))
+                     return(rasterToPolygons(raster(intp_coord_part)))
+                   }
+  
+  rtp <- do.call(bind,plist)
+  stopCluster(cl)
+  #rtp <- rasterToPolygons(r)
 
   rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
   rtpFort <- fortify(rtp, data = rtp@data)
   rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  if (min(Freq[,-1])<60) {
+    f_cols <-c("red","yellow","orange","blue","green")
+  } else{
+    f_cols <-c("green","blue","red","orange","yellow")
+  }
   g <- g + geom_polygon(data = rtpFortMer, 
                         aes(x = long, y = lat, group = group, fill = layer), 
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
     #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
-    scale_fill_gradientn("Frequency",colours = c("yellow","orange","red","blue","green"),limits=c(min(Freq[,-1]),max(Freq[,-1])))+
+    scale_fill_gradientn("Frequency",colours = f_cols,limits=c(min(Freq[,-1]),max(Freq[,-1])))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
-
+test_nonpar <- function(t){
+  startTime <- Sys.time()
+  plot_heatmapfreq_nonpar(t)
+  print(paste("Non-parallel: ", toString((Sys.time()-startTime)), sep=""))
+}
+test_par <- function(t){
+  startTime <- Sys.time()
+  plot_heatmapfreq(t)
+  print(paste("Parallel: ", toString((Sys.time()-startTime)), sep=""))
+}
+test_cluster <- function(t){
+  startTime <- Sys.time()
+  plot_heatmapfreq_cluster(t)
+  print(paste("Cluster: ", toString((Sys.time()-startTime)), sep=""))
+}
+test_freqs <- function(){
+  test_nonpar(1205)
+  test_par(1205)
+  test_cluster(1205)
+}
+plot_heatmapfreq_cluster<- function(t){
+  bus_locs <- update_freq(t)
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  # intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
+  #                      xo=seq(xmn,xmx, by=0.07),
+  #                     yo=seq(ymn,ymx, by=0.07))
+  #  r <- raster(intp_coords)
+  n_cores <- 20
+  cl<-makeCluster(n_cores, type="MPI")
+  registerDoSNOW(cl)
+  xlen <- (xmx-xmn)/(n_cores*2)
+  ylen <- (ymx-ymn)/(n_cores*2)
+  plist <- foreach(n=1:(n_cores*2), .packages=c( "ggmap", "rgdal", "raster", "akima", "sp"), 
+                   #.export=c("xmn","xmx","ymn","ymx","bus_locs","xlen")) %dopar% { 
+                   .export=c("xmn","xmx","ymn","ymx","bus_locs","xlen")) %dopar% { 
+                     xmn_curr <- xmn+(xlen*(n-1))
+                     xmx_curr <- (xmn+(xlen*n))
+                     #ymn_curr <- ymn+(ylen*(n-1))
+                     # ymx_curr <- ymn+(ylen*n)
+                     intp_coord_part <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
+                                               xo=seq(xmn_curr,xmx_curr, by=0.035),
+                                               yo=seq(ymn,ymx, by=0.05))
+                     #  yo=seq(ymn_curr,ymx_curr, by=0.05))
+                     return(rasterToPolygons(raster(intp_coord_part)))
+                   }
+  
+  rtp <- do.call(bind,plist)
+  stopCluster(cl)
+  #rtp <- rasterToPolygons(r)
+  
+  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+  rtpFort <- fortify(rtp, data = rtp@data)
+  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  if (min(Freq[,-1])<60) {
+    f_cols <-c("red","yellow","orange","blue","green")
+  } else{
+    f_cols <-c("green","blue","red","orange","yellow")
+  }
+  g <- g + geom_polygon(data = rtpFortMer, 
+                        aes(x = long, y = lat, group = group, fill = layer), 
+                        alpha = 0.5, 
+                        size = 0) +  ## size = 0 to remove the polygon outlines
+    #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
+    scale_fill_gradientn("Frequency",colours = f_cols,limits=c(min(Freq[,-1]),max(Freq[,-1])))+
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+  g
+}
+plot_heatmapfreq_nonpar<- function(t){
+  bus_locs <- update_freq(t)
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
+                        xo=seq(xmn,xmx, by=0.035),
+                       yo=seq(ymn,ymx, by=0.05))
+  r <- raster(intp_coords)
+  #n_cores <- detectCores()-1
+ # cl<-makeCluster(n_cores)
+#  registerDoParallel(cl)
+ # xlen <- (xmx-xmn)/(n_cores*2)
+ # ylen <- (ymx-ymn)/(n_cores*2)
+ # plist <- foreach(n=1:(n_cores*2), .packages=c( "ggmap", "rgdal", "raster", "akima", "sp"), 
+#                   .export=c("xmn","xmx","ymn","ymx","bus_locs","xlen")) %dopar% { 
+ #                    xmn_curr <- xmn+(xlen*(n-1))
+  #                   xmx_curr <- (xmn+(xlen*n))
+   #                  #ymn_curr <- ymn+(ylen*(n-1))
+                     # ymx_curr <- ymn+(ylen*n)
+#                     intp_coord_part <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
+#                                               xo=seq(xmn_curr,xmx_curr, by=0.035),
+#                                               yo=seq(ymn,ymx, by=0.05))
+                     #  yo=seq(ymn_curr,ymx_curr, by=0.05))
+#                     return(rasterToPolygons(raster(intp_coord_part)))
+#                   }
+  
+#  rtp <- do.call(bind,plist)
+#  stopCluster(cl)
+  rtp <- rasterToPolygons(r)
+  
+  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+  rtpFort <- fortify(rtp, data = rtp@data)
+  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  if (min(Freq[,-1])<60) {
+    f_cols <-c("red","yellow","orange","blue","green")
+  } else{
+    f_cols <-c("green","blue","red","orange","yellow")
+  }
+  g <- g + geom_polygon(data = rtpFortMer, 
+                        aes(x = long, y = lat, group = group, fill = layer), 
+                        alpha = 0.5, 
+                        size = 0) +  ## size = 0 to remove the polygon outlines
+    #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
+    scale_fill_gradientn("Frequency",colours = f_cols,limits=c(min(Freq[,-1]),max(Freq[,-1])))+
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+  g
+}
 #make a ggmap object, and create+save a .mp4 file with a given name for the frequency of the
 # buses over the specified time period (from start-stop)
 create_freqvideo <- function(start,stop,vidtitle){
@@ -247,16 +378,7 @@ create_voltvideo <- function(start,stop,vidtitle){
   },video.name = vidtitle)
 }
 
-sgdf_transform = function(sgdf){
-  
-  dim <- sgdf@grid@cells.dim
-  bbox <- sgdf@bbox
-  r <- raster(xmn=bbox[1,1], xmx=bbox[1,2], ymn=bbox[2,1], ymx=bbox[2,2], ncols=dim[1], nrows=dim[2])
-  r <- setValues(r,matrix(sgdf@data$band1, nrow = dim[1], ncol = dim[2]) %>% t()) 
-  data <- rasterToPoints(r) %>% data.table()
-  return(data)
-  
-}
+
 
 #registerDoParallel(cores = 8)
 #tenn <- map_data('USA') %>%data.table()
