@@ -5,6 +5,9 @@
 library(shiny)
 library(shinythemes)
 
+library(foreach)
+library(doParallel)
+
 #Basic imports needed for the app to function
 baseImports <- function() {
 

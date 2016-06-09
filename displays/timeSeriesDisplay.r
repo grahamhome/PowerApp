@@ -104,15 +104,17 @@ timeSeriesDisplay <- function(input, output, session) {
 		ns <- session$ns
 		numericInput(ns("stop"), "Stop", value=2, min=1, max=nsamples()) #TODO: set min reactively based on value of "start" (use updateNumericInput)
 	})
+
 	#Switch to index-based display mode
-	observeEvent(c(input$time, input$activeMethod), {
+	observeEvent(c(input$time, input$activeMethod), priority=2, {
 		if (!state$playing) {
-			makeFilesProgress(input$time, input$time, input$activeMethod)
+			makeFiles(input$time, input$time, input$activeMethod)
 			output$image <- renderImage({
 				list(src = paste("plots/img/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}	
 	})
+
 	#Switch to animation display mode
 	observeEvent(input$play, {
 		if (!state$playing) {
@@ -125,7 +127,7 @@ timeSeriesDisplay <- function(input, output, session) {
 				state$start <- isolate(input$start)
 				state$stop <- isolate(input$stop)
 				state$speed <- isolate(as.numeric(input$speed))
-				makeFilesProgress(state$start, state$stop, input$activeMethod)
+				makeFiles(state$start, state$stop, input$activeMethod)
 				state$playing <- !state$playing
 			}
 		} else {
@@ -143,7 +145,7 @@ timeSeriesDisplay <- function(input, output, session) {
 				invalidateLater(100/state$speed)
 				updateSliderInput(session, "time", value=state$start+counter)
 				if ((state$start+counter) == state$stop) {
-					counter <<- 0 # this will restart the animation, or I could turn off the scheduled invalidation to end it
+					counter <<- 0 #This will restart the animation
 				} else {
 					counter <<- counter + 1
 				}
@@ -192,26 +194,33 @@ timeSeriesDisplay <- function(input, output, session) {
 		}
 	})
 
-	#Sequentially creates a set of plot images for the given method in the given directory over the given range.
-	#Uses a proxy method that saves the resulting plot objects to PNG files.
-	makeFilesProgress <- function(start, stop, method) {
+	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
+	makeFiles <- function(start, stop, method) {
 		path <- paste("plots/img/", method, "/", name(), "/", sep="")
 		#Create directory for image files if it does not exist
 		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
 		dir.create(file.path("plots/img/", method), showWarnings=FALSE)
 		dir.create(file.path(paste("plots/img/", method, sep=""), name()), showWarnings=FALSE)
+		#Create list of image files that do not yet exist
+		files <- list()
+		for (i in start:stop) {
+			if (!(file.exists(paste(path, i, ".png", sep="")))) {
+				files[[length(files)+1]] <- i
+			}
+		}
 		#Create any image files that do not yet exist
-		output$image <- renderImage({
-			withProgress(message="Creating Plot", detail="", value=0, {
-				for (t in start:stop) {
-					if (!(file.exists(paste(path, t, ".png", sep="")))) {
-						plot2png(paste(method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))
-					}
-					incProgress(1/(stop-start))
-				}
-			})
-			list(src = paste("plots/img/", method, "/", name(), "/", start, ".png", sep=""), height="100%", width="100%")
-		}, deleteFile=FALSE)
-	return
+		if (length(files) > 1) {
+			#Set up parallel backend to use all but 1 of the available processors
+			cl<-makeCluster(detectCores()-1)
+			registerDoParallel(cl)
+			foreach(t=1:length(files), .packages=c("ggplot2", "ggmap", "rgdal", "raster", "akima", "sp"), .export=c(ls(globalenv()), "start", "stop")) %dopar% { #TODO: Figure out how to not hardcode packages
+				plot2png(paste(method, "(", files[[t]], ")", sep=""), paste(path, files[[t]], ".png", sep=""))
+			}
+			stopCluster(cl)
+		}
+		else if (length(files) == 1) {
+			plot2png(paste(method, "(", files[[1]], ")", sep=""), paste(path, files[[1]], ".png", sep=""))
+		}
+		return
 	}
 }
