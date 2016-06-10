@@ -3,21 +3,16 @@ library(ggmap)
 library(outliers)
 
 fnames <- function(){
-  if (exists("Pangle")) {
-    n <- list(Map="map",
-              Voltage="plot_mapvolt",
-              Frequency="plot_mapfreq",
-              Voltage_Large="plot_mapvolt_large",
-              Frequency_Large="plot_mapfreq_large",
-              Angle="plot_mapangle",
-              Angle_lines="plot_mapangle_lines")
-  } else{
+
     n <- list(Map="map",
               Voltage="plot_mapvolt",
               Frequency="plot_mapfreq",
               Voltage_Large="plot_mapvolt_large",
               Frequency_Large="plot_mapfreq_large")
-  }
+    if (exists("Pangle")) {
+      n <- c(n,Angle="plot_mapangle_lines",
+             "Power Factor"="plot_mappowfactor") 
+    }
 
   n
 }
@@ -142,6 +137,7 @@ get_busline_panglecov <- function(time){
 }
 
 
+
 #Change the frequency column of bus_locs with the frequencies for a given time 
 update_freq <- function(time){
   tf <- t(Freq[time,-1])
@@ -197,6 +193,29 @@ make_sparklines_volt <- function(time){
   }
 }
 
+plot_mappowfactor <- function(t){
+  bus_locs <- update_pangle(t)
+  pf <- subset(bus_locs,select = c("Bus.Name","Longitude","Latitude","Angle"))
+  pf$PowFact  <- apply(as.matrix(bus_locs[,"Angle"]), 1,function(x) abs(cos(x)))
+  pf$cg <- 0
+  pf$cg[pf$PowFact >=.95] <- 2
+  pf$cg[pf$PowFact <.95 & pf$PowFact >= .90] <- 1
+  linesb <- get_busline_panglecov(t)
+  linesb$Correlation[is.nan(linesb$Correlation)] <- 1
+  #pf$group[pf$PowFact < 90] <- 
+  g <- g+
+    geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),show.legend = FALSE) +
+    scale_colour_gradientn("Correlation",colours = c("black","brown","grey"),limits=c(-1,1)) +
+    geom_point(data=pf,aes(x=Longitude,y=Latitude,fill=factor(cg)),size=6,shape=21) +
+    #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
+    scale_fill_manual(values = c("0"="red","1"="yellow","2"="green"),
+                        labels=c("Power Factor<90%","95%>Power Factor>90%","Power Factor>95%"),
+                        name="") +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Power Factor at Time",atop(.(Pangle[t,1]),""))))
+  g
+}
 
 plot_mapangle <- function(t){
  # if (!exists("Pangle")) {
@@ -207,7 +226,6 @@ plot_mapangle <- function(t){
   bus_locs <- update_pangle(t)
   g <- g+
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=10,alpha=0.5,shape=16) +
-    #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
     scale_colour_gradientn("Bus Angle",colours = c("yellow","orange","blue","green"),limits=c(min(Pangle[,-1]),max(Pangle[,-1]))) +
     labs(x = "Longitude", y = "Latitude") +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
