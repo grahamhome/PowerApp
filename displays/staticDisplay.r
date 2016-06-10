@@ -38,7 +38,7 @@ staticDisplayUI <- function(id) {
 			),
 			fluidRow(
 				column(10, offset=1,
-					radioButtons(ns("activeMethod"), "Function:", fnames()[c(2, length(fnames()))], inline=TRUE),
+					radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())], inline=TRUE),
 					sliderInput(ns("time"), "Sample range to examine",  min = 1, max = nsamples(), value = c(1, 10), width = "100%")
 				)
 			)	

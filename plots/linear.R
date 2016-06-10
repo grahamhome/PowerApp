@@ -58,7 +58,7 @@ plot_voltage <- function(start,stop){
     bus <- Volt[start:stop,z]
     lines(y=bus,x=Volt[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
   }
-  legend("topright", inset=c(-0.2,-0.15),legend = colnames(Volt[,-1]),col = colors, lty=linetype,cex=0.8)
+ # legend("topright", inset=c(-0.2,-0.15),legend = colnames(Volt[,-1]),col = colors, lty=linetype,cex=0.8)
 }
 #plot the a line graph of each bus from {start} to {stop} of the voltage
 plot_frequency <- function(start,stop){
@@ -78,7 +78,7 @@ plot_frequency <- function(start,stop){
     bus <- Freq[start:stop,z]
     lines(y=bus,x=Freq[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
   }
-  legend("topright", inset=c(-.30,-0.15),legend = colnames(Freq[,-1]),col = colors, lty=linetype,cex=0.8)
+ # legend("topright", inset=c(-.30,-0.15),legend = colnames(Freq[,-1]),col = colors, lty=linetype,cex=0.8)
 }
 
 
