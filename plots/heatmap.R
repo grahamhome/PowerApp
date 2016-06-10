@@ -16,6 +16,9 @@ fnames <- function(){
   n <- list(Heatmap="heatmap",
             Voltage="plot_heatmapvolt",
             Frequency="plot_heatmapfreq")
+  if (exists("Pangle")) {
+    n <- c(n,Angle="plot_heatmapangle")
+  }
   n
 }
 
@@ -127,10 +130,41 @@ update_volt <- function(time){
   #assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs
 } 
-#update_volt(1)
-#update_freq(1)
+update_pangle <- function(time){
+  ta <- t(Pangle[time,-1])
+  ta <- cbind(rownames(ta),ta)
+  colnames(ta) <- c("Bus.Name","Angle")
+  bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Voltage","Frequency")),ta, by="Bus.Name")
+  bus_locs$Angle <- as.numeric(as.character(bus_locs$Angle))
+  #assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  bus_locs
+}
 
 
+plot_heatmapangle<- function(t){
+  bus_locs <- update_pangle(t)
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Angle, duplicate = "mean",
+                        xo=seq(xmn,xmx, by=0.04),
+                        yo=seq(ymn,ymx, by=0.05))
+  r <- raster(intp_coords)
+  rtp <- rasterToPolygons(r)
+  
+  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+  rtpFort <- fortify(rtp, data = rtp@data)
+  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  g <- g + geom_polygon(data = rtpFortMer, 
+                        aes(x = long, y = lat, group = group, fill = layer), 
+                        alpha = 0.5, 
+                        size = 0) +  ## size = 0 to remove the polygon outlines
+    scale_fill_gradientn("Angle",colours = c("red","yellow","green","blue","black"),limits=c(-90,90))+
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+  g
+}
 
 plot_heatmapvolt<- function(t){
   bus_locs <- update_volt(t)
