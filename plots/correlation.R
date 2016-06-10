@@ -5,6 +5,9 @@ fnames <- function(){
   n <- list(Correlation="correlation",
             Voltage="plot_corrvolt",
             Frequency="plot_corrfreq")
+  if (exists("Pangle")) {
+    n <- c(n,Angle="plot_corrpangle")
+  }
   n
 }
 
@@ -51,8 +54,31 @@ update_covmat_volt <- function(time) {
   assign("Sv",Sv,envir = .GlobalEnv)
 }
 
+
+update_covmat_pangle <- function(time) {
+  #This is in case we call this function on a timepoint before the last one we left off at; if that is the case we want to make sure the loop
+  # is starting at time=3 and the xbar is only the mean of the first 2 timepoints.
+  if (curr_sa<time&&curr_sa>2) {
+    ca <- curr_sa
+  }
+  else{
+    ca <- 3
+    xabar <- colMeans(Xa[1:2,])
+    Sa <- cov(Xa[1:2,])
+  }
+  for (t in ca:time) {
+    xn1 <- Xa[t,]
+    Sa <- (((t-1)/t)*Sa)+
+      ((1/t+1)*(xn1-xabar)%*%(t((xn1-xabar))))
+    xabar <- xabar + (1/(t+1))*(xn1-xabar)
+  }
+  assign("xabar",xabar,envir = .GlobalEnv)
+  assign("curr_sa",time,envir = .GlobalEnv)
+  assign("Sa",Sa,envir = .GlobalEnv)
+}
+
 #Change the frequency column of bus_locs with the frequencies for a given time 
-update_busloc_freq <- function(time){
+get_busloc_freq <- function(time){
   tf <- t(Freq[time,-1])
   tf <- cbind(rownames(tf),tf)
   colnames(tf) <- c("Bus.Name","Frequency")
@@ -62,7 +88,7 @@ update_busloc_freq <- function(time){
   bus_locs
 }
 #Change the voltage column of bus_locs with the frequencies for a given time
-update_busloc_volt <- function(time){
+get_busloc_volt <- function(time){
   vf <- t(Volt[time,-1])
   vf <- cbind(rownames(vf),vf)
   colnames(vf) <- c("Bus.Name","Voltage")
@@ -71,21 +97,43 @@ update_busloc_volt <- function(time){
   #assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs 
 } 
+get_busloc_pangle <- function(time){
+  ta <- t(Pangle[time,-1])
+  ta <- cbind(rownames(ta),ta)
+  colnames(ta) <- c("Bus.Name","Angle")
+  bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Voltage","Frequency")),ta, by="Bus.Name")
+  bus_locs$Angle <- as.numeric(as.character(bus_locs$Angle))
+  #assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  bus_locs
+}
+
+plot_corrpangle <- function(t){
+  bus_locs <- get_busloc_pangle(t)
+  update_covmat_pangle(t)
+  par(oma=c(2,0,1,0))
+  corrplot(cov2cor(Sa),tl.cex = 0.37,na.label.col = "white",addgrid.col = NA,
+           title =paste("Correlation of Phase Angle at Time",Pangle[t,1],sep = " "),
+           mar=c(3,0,4,0))
+  #title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
+}
 
 plot_corrvolt <- function(t){
-  bus_locs <- update_busloc_volt(t)
+  bus_locs <- get_busloc_volt(t)
   update_covmat_volt(t)
-  corrplot(cov2cor(Sv),tl.cex = 0.45,na.label.col = "white",addgrid.col = NA,
-           title =paste("Correlation of Voltage at Time",Volt[t,1],sep = " "))
+  par(oma=c(2,0,1,0))
+  corrplot(cov2cor(Sv),tl.cex = 0.37,na.label.col = "white",addgrid.col = NA,
+           title =paste("Correlation of Voltage at Time",Volt[t,1],sep = " "),
+           mar=c(3,0,4,0))
            #title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
 }
 
 plot_corrfreq <- function(t){
-  bus_locs <- update_busloc_freq(t)
+  bus_locs <- get_busloc_freq(t)
   update_covmat_freq(t)
-  corrplot(cov2cor(Sf),tl.cex = 0.45,na.label.col = "white",addgrid.col = NA,
-           #col = c("blue","white","red"),
-           title = bquote(atop("Correlation of Frequency at Time",atop(.(Freq[t,1]),""))))
+  par(oma=c(2,0,1,0))
+  corrplot(cov2cor(Sf),tl.cex = 0.37,na.label.col = "white",addgrid.col = NA,
+           mar=c(3,0,4,0),
+           title = paste("Correlation of Frequency at Time",Volt[t,1],sep = " "))
 }
 
 

@@ -62,19 +62,28 @@ plot_barpangle <- function(time){
     #scale_fill_gradient2(low="red",mid = 'black',high = 'blue',midpoint = 0)+
     theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 4))+
     #ylim((min(b$Voltage)-1),(max(b$Voltage)-1))+
-    ylim(-90,90)+
+    ylim(-50,50)+
     ylab("Angle")+
     ggtitle(bquote(atop("Angle at Time",atop(.(Pangle[time,1]),""))))
   if(unique(b$group)==0){
-    p<- p+ scale_fill_manual(values=c("0"="grey50"),drop=FALSE, 
-                             labels=c("Angle=0"),
-                             name="") 
+    bar_vals <- c("0"="grey50")
+    bar_labs <- c("Angle = 0")
+  } else if((unique(b$group) ==c(-1,1) | unique(b$group) ==c(1,-1)) & length(unique(b$group))==2){
+    bar_vals <- c("-1"="blue","1"="red")
+    bar_labs <- c("Angle < 0", "Angle > 0")
+  } else if((unique(b$group) ==c(-1,0) | unique(b$group) ==c(0,-1)) & length(unique(b$group))==2){
+    bar_vals <- c("-1"="blue","0"="grey50")
+    bar_labs <- c("Angle < 0", "Angle = 0")
+  } else if((unique(b$group) ==c(0,1) | unique(b$group) ==c(1,0))  & length(unique(b$group))==2 ){
+    bar_vals <- c("0"="grey50","1"="red")
+    bar_labs <- c("Angle = 0", "Angle > 0")
   } else{
-    p<- p+ scale_fill_manual(values=c("-1"="blue","1"="red"),
-                             labels=c("Angle < 0",
-                                      "Angle > 0"),
-                             name="") 
+    bar_vals <- c("-1"="blue","0"="grey50","1"="red")
+    bar_labs <- c("Angle < 0","Angle = 0", "Angle > 0")
   }
+  p<- p+ scale_fill_manual(values=bar_vals,
+                           labels=bar_labs,
+                           name="")
   p
 }
 
@@ -89,19 +98,29 @@ plot_barvolt <- function(time){
     #scale_fill_gradient2(low="red",mid = 'black',high = 'blue',midpoint = 0)+
     theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 4))+
     #ylim((min(b$Voltage)-1),(max(b$Voltage)-1))+
-    ylim(-1,1)+
+    #ylim(-1,1)+
+    scale_y_continuous("Voltage", labels=c(0,0.5,1,1.5,2), limits=c(-1,1))+
     ylab("Voltage")+
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[time,1]),""))))
   if(unique(b$group)==0){
-    p<- p+ scale_fill_manual(values=c("0"="grey50"),drop=FALSE, 
-                             labels=c("Voltage=1"),
-                             name="") 
+    bar_vals <- c("0"="grey50")
+    bar_labs <- c("Voltage = 1")
+  } else if((unique(b$group) ==c(-1,1) | unique(b$group) ==c(1,-1)) & length(unique(b$group))==2){
+    bar_vals <- c("-1"="blue","1"="red")
+    bar_labs <- c("Voltage < 1", "Voltage > 1")
+  } else if((unique(b$group) ==c(-1,0)| unique(b$group) ==c(0,-1)) & length(unique(b$group))==2){
+    bar_vals <- c("-1"="blue","0"="grey50")
+    bar_labs <- c("Voltage < 1", "Voltage = 1")
+  } else if((unique(b$group) ==c(0,1) | unique(b$group) ==c(1,0)) & length(unique(b$group))==2){
+    bar_vals <- c("0"="grey50","1"="red")
+    bar_labs <- c("Voltage = 1", "Voltage > 1")
   } else{
-    p<- p+ scale_fill_manual(values=c("-1"="blue","1"="red"),
-                             labels=c("Voltage < 1",
-                                      "Voltage > 1"),
-                             name="") 
+    bar_vals <- c("-1"="blue","0"="grey50","1"="red")
+    bar_labs <- c("Voltage < 1","Voltage = 1", "Voltage > 1")
   }
+  p<- p+ scale_fill_manual(values=bar_vals,
+                           labels=bar_labs,
+                           name="")
   p
 }
 plot_barfreq <- function(time){
@@ -114,20 +133,29 @@ plot_barfreq <- function(time){
     geom_bar(stat = "identity",position='identity')+
     theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 4))+
     #ylim((min(b$Frequency)-60),(max(b$Frequency)-60))+
-    ylim(-1,1)+
-    ylab("Frequency difference from 60")+
+    #ylim(-1,1)+
+    scale_y_continuous("Frequency", labels=c(58,59,60,61,62), limits=c(-1,1))+
+   # ylab("Frequency difference from 60")+
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[time,1]),""))))
   if(unique(b$group)==0){
-    p<- p+ scale_fill_manual(values=c("0"="grey50"),
-                             labels=c("Frequency=60"),
-                             name="") 
+    bar_vals <- c("0"="grey50")
+    bar_labs <- c("Frequency = 60")
+  } else if((unique(b$group) ==c(-1,1) | unique(b$group) ==c(1,-1)) & length(unique(b$group))==2){
+    bar_vals <- c("-1"="blue","1"="red")
+    bar_labs <- c("Frequency < 60", "Frequency > 60")
+  } else if((unique(b$group) ==c(-1,0) | unique(b$group) ==c(0,-1)) & length(unique(b$group))==2){
+    bar_vals <- c("-1"="blue","0"="grey50")
+    bar_labs <- c("Frequency < 60", "Frequency = 60")
+  } else if((unique(b$group) ==c(0,1) | unique(b$group) ==c(1,0)) & length(unique(b$group))==2){
+    bar_vals <- c("0"="grey50","1"="red")
+    bar_labs <- c("Frequency = 60", "Frequency > 60")
   } else{
-    p<- p+ scale_fill_manual(values=c("-1"="blue","1"="red"),drop=FALSE, 
-                             labels=c("Frequency > 60",
-                                      "Frequency < 60"),
-                             name="") 
+    bar_vals <- c("-1"="blue","0"="grey50","1"="red")
+    bar_labs <- c("Frequency < 60","Frequency = 60", "Frequency > 60")
   }
-  
+  p<- p+ scale_fill_manual(values=bar_vals,
+                           labels=bar_labs,
+                           name="")
   p
 }
 

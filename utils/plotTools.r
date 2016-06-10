@@ -15,7 +15,7 @@ plot2png <- function(functionCall, fileName) {
 #Given a function call (i.e. function name with arguments in parentheses) and a filename, saves the result of the function call with the specified filename.
 #Specialized for correlation plots which are of a different type than ggplots.
 plotCorr2png <- function(functionCall, fileName) {
-	png(filename=fileName, width=1000, height=400, units="px")
+	png(filename=fileName, width=500, height=500, units="px")
 	eval(parse(text=functionCall))
 	dev.off()
 }

@@ -102,6 +102,8 @@ server <- function(input, output, session) {
 			launchUI("intro()")
 		} else if (window$content == "plotPicker()") {
 			launchUI("dataPicker()") 
+		} else if (window$content == "displayPicker()") {
+			launchUI("plotPicker()")
 		}
 	})
 }
