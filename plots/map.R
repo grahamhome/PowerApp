@@ -2,8 +2,8 @@ library(ggplot2)
 library(ggmap)
 library(outliers)
 
+#Return the names of the functions for display purposes
 fnames <- function(){
-
     n <- list(Map="map",
               Voltage="plot_mapvolt",
               Frequency="plot_mapfreq",
@@ -17,7 +17,10 @@ fnames <- function(){
   n
 }
 
+#Update the frequency covariance matrix to the given time value
 update_covbus_freq <- function(time) {
+  #This is in case we call this function on a timepoint before the last one we left off at; if that is the case we want to make sure the loop
+  # is starting at time=3 and the xbar is only the mean of the first 2 timepoints.
   if (curr_sf<time&&curr_sf>2) {
     cf <- curr_sf
   }
@@ -60,6 +63,7 @@ update_covbus_volt <- function(time) {
   assign("Sv",Sv,envir = .GlobalEnv)
 }
 
+#Update the phase angle covariance matrix to the given time value
 update_covbus_pangle <- function(time) {
   #This is in case we call this function on a timepoint before the last one we left off at; if that is the case we want to make sure the loop
   # is starting at time=3 and the xbar is only the mean of the first 2 timepoints.
@@ -103,7 +107,9 @@ get_minmax_covvolt <- function(){
 } 
   
 
-
+#Updates the voltage covariance matrix to the given time, converts the covariance matrix to a correlation
+# matrix, then adds it to the column in the lines dataframe (linesb) to be used for plotting the
+# lines between the buses and returns the new linesb dataframe
 get_busline_voltcov <- function(time){
   update_covbus_volt(time)
   for (x in 1:nrow(linesb)) {
@@ -115,6 +121,9 @@ get_busline_voltcov <- function(time){
   }
   linesb
 }
+#Updates the frequency covariance matrix to the given time, converts the covariance matrix to a correlation
+# matrix, then adds it to the column in the lines dataframe (linesb) to be used for plotting the
+# lines between the buses and returns the new linesb dataframe
 get_busline_freqcov <- function(time){
   update_covbus_freq(time)
   for (x in 1:nrow(linesb)) {
@@ -125,6 +134,9 @@ get_busline_freqcov <- function(time){
   }
   linesb
 }
+#Updates the phase angle covariance matrix to the given time, converts the covariance matrix to a correlation
+# matrix, then adds it to the column in the lines dataframe (linesb) to be used for plotting the
+# lines between the buses and returns the new linesb dataframe
 get_busline_panglecov <- function(time){
   update_covbus_pangle(time)
   for (x in 1:nrow(linesb)) {
@@ -138,16 +150,19 @@ get_busline_panglecov <- function(time){
 
 
 
-#Change the frequency column of bus_locs with the frequencies for a given time 
+#Change the Frequency column of bus_locs with the frequencies for a given time, then returns the
+# new dataframe
 update_freq <- function(time){
   tf <- t(Freq[time,-1])
   tf <- cbind(rownames(tf),tf)
   colnames(tf) <- c("Bus.Name","Frequency")
   bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Voltage")),tf, by="Bus.Name")
   bus_locs$Frequency <- as.numeric(as.character(bus_locs$Frequency))
-  assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  #assign("bus_locs",bus_locs,envir = .GlobalEnv)
+  bus_locs
 }
-#Change the voltage column of bus_locs with the frequencies for a given time
+#Change the Voltage column of bus_locs with the frequencies for a given time, then returns the
+# new dataframe
 update_volt <- function(time){
   tv <- t(Volt[time,-1])
   tv <- cbind(rownames(tv),tv)
@@ -157,7 +172,8 @@ update_volt <- function(time){
   #assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs
 } 
-
+#Change the Angle column of bus_locs with the frequencies for a given time, then returns the
+# new dataframe
 update_pangle <- function(time){
   ta <- t(Pangle[time,-1])
   ta <- cbind(rownames(ta),ta)
