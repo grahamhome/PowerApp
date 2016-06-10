@@ -40,8 +40,8 @@ staticDisplayUI <- function(id) {
 				column(1, 
 					div(
 						div(style="height:100px"),
-						div(style="position:relative;float:left;margin-right:30px", actionLink(ns("decLeft"), "", icon=icon("step-backward", "fa-2x"), class="icon")),
-						div(style="position:relative;float:left", actionLink(ns("incLeft"), "", icon=icon("step-forward", "fa-2x"), class="icon"))
+						div(style="position:relative;float:right", actionLink(ns("incLeft"), "", icon=icon("step-forward", "fa-2x"), class="icon")),
+						div(style="position:relative;float:right;margin-right:30px", actionLink(ns("decLeft"), "", icon=icon("step-backward", "fa-2x"), class="icon"))
 					)
 				),
 				column(10,
