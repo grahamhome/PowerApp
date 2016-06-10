@@ -19,15 +19,15 @@ corrTimeSeriesDisplayUI <- function(id) {
 	tagList(
 		fixedPanel(class="mainwindow",
 			fluidRow(
-				column(1,
+				column(4,
 					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
 					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())]))
 				),
-				column(10,
+				column(4,
 					h2(name()),
 					imageOutput(ns("image"), height="auto", width="100%")
 				),
-				column(1, 
+				column(4, 
 					div(class="helpiconbox", actionLink(ns("help"), "", icon=icon("question", "fa-2x"), class="icon"))
 				)
 			),
