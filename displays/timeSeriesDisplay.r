@@ -21,7 +21,11 @@ timeSeriesDisplayUI <- function(id) {
 			fluidRow(
 				column(2,
 					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
-					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())]))
+					div(style="padding-top:40%;padding-left:10%", 
+						radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())]),
+						br(),
+						actionButton(ns("rescale"), "Re-Scale Plot")
+					)
 				),
 				column(8, 
 					h2(name()),
@@ -189,9 +193,14 @@ timeSeriesDisplay <- function(input, output, session) {
 					"again after changing the start, stop, or speed values. ", br(), br(),
 					"Use the radio buttons on the left side of the graph display to change the plotting method used ", br(),
 					"to create the graph.", br(), br(),
+					"Clicking 'Re-Scale Plot' will adjust the range of potential values to match the values of the current sample.", br(), br(),
 					"Use the back button in the top left corner of the display to choose a different plot type or data set.")
 			)
 		}
+	})
+
+	#Scale adjustment
+	observeEvent(input$rescale, {
 	})
 
 	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
