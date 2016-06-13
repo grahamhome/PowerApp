@@ -234,15 +234,25 @@ plot_mappowfactor <- function(t){
 }
 
 plot_mapangle <- function(t){
- # if (!exists("Pangle")) {
-  #  p <- ggplot(data.frame())+
-   #   geom_text(data=NULL,aes(x=2,y=2,label="Phase angle data not available for this data set"))
-  #  return(p)
-#  }
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
   bus_locs <- update_pangle(t)
+  if(autosc == TRUE){
+    # amin <- min(b$Angle)
+    # amax <- max(b$Angle)
+    amin <- ifelse(min(bus_locs$Angle)<-40,min(bus_locs$Angle),-40)
+    amax <- ifelse(max(bus_locs$Angle)>40,max(bus_locs$Angle),40)
+    #  adiff <- (amax-amin)
+    #  a_lab <- c(amin,(amin+(adiff/4)),(amin+(adiff/2)),(amax-(adiff/4)),amax)
+  } else{
+    amin <- -40
+    amax <- 40
+    # a_lab <- c(-40,-20,0,20,40)
+  }
   g <- g+
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=10,alpha=0.5,shape=16) +
-    scale_colour_gradientn("Bus Angle",colours = c("yellow","orange","blue","green"),limits=c(min(Pangle[,-1]),max(Pangle[,-1]))) +
+    scale_colour_gradientn("Bus Angle",colours = c("red","yellow","green","blue","black"),limits=c(amin,amax)) +
     labs(x = "Longitude", y = "Latitude") +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
@@ -256,29 +266,47 @@ plot_mapangle_lines <- function(t){
     geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),show.legend = FALSE) +
     scale_colour_gradientn("Correlation",colours = c("red","yellow","green"),limits=c(-1,1)) +
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,fill=Angle),size=5,shape=21) +
-    scale_fill_gradientn("Angle",colours = c("yellow","orange","blue","green"),limits=c(min(Pangle[,-1]),max(Pangle[,-1]))) +
+    scale_fill_gradientn("Angle",colours = c("red","yellow","green","blue","black"),limits=c(min(Pangle[,-1]),max(Pangle[,-1]))) +
     labs(x = "Longitude", y = "Latitude") +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
-
+#When called, change the autosc boolean from TRUE to FALSE or FALSE to TRUE
+autoscale <- function(){
+  if(autosc == TRUE){
+    autosc <<-FALSE
+  } else{
+    autosc <<-TRUE
+  }
+}
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # voltage at time t
 plot_mapvolt <- function(t){
-
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
   # g <- ggmap(mapten)+
   #  scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +
   #   scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
-  #color_vals_freq <- rescale(c(min(F[,-1]),60.05,60.1,60.15,max(F[,-1])))
-  #color_vals_volt <- rescale(c(min(V[,-1]),0.25,0.5,0.75,1,max(V[,-1])))
+  if(autosc == TRUE){
+   # vmin <- min(Volt[t,-1])
+    #vmax <- max(Volt[t,-1])
+    vmin <- ifelse(min(bus_locs$Voltage)<0.8,min(bus_locs$Voltage),0.8)
+    vmax <- ifelse(max(bus_locs$Voltage)>1.2,max(bus_locs$Voltage),1.2)
+  } else{
+    vmin <- 0.8
+    vmax <- 1.2
+  }
   bus_locs <- update_volt(t)
   linesb <- get_busline_voltcov(t)
   linesb$Correlation[is.nan(linesb$Correlation)] <- 1
-  if (min(Volt[,-1])<1) {
+  if (vmin<0.8 & vmax <= 1.2) {
     v_cols <-c("red","yellow","orange","blue","green")
+  } else if(vmax <1.2 & vmin >= 0.8){
+    v_cols <-c("green","blue","orange","yellow","red")
   } else{
-    v_cols <-c("green","blue","red","orange","yellow")
+    v_cols <-c("red","yellow","green","blue","black")
   }
   #color_vals_volt <- as.numeric(sapply(  c(mincovf,(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   #Below is for the TS dataset
@@ -288,7 +316,7 @@ plot_mapvolt <- function(t){
   g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),show.legend = FALSE) +
     scale_colour_gradientn("Correlation",colours = c("red","yellow","green"),limits=c(0,1)) +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 4, shape = 21) +
-    scale_fill_gradientn("Voltage",colours = v_cols,limits=c(min(Volt[,-1]),max(Volt[,-1]))) +
+    scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
@@ -296,14 +324,25 @@ plot_mapvolt <- function(t){
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # frequency at time t
 plot_mapfreq <- function(t){
-
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
   bus_locs <- update_freq(t)
+  if(autosc == TRUE){
+    fmin <- ifelse(min(bus_locs$Frequency)<59.8,min(bus_locs$Frequency),59.8)
+    fmax <- ifelse(max(bus_locs$Frequency)>60.2,max(bus_locs$Frequency),60.2)
+  } else{
+    fmin <- 59.8
+    fmax <- 60.2
+  }
   linesb <- get_busline_freqcov(t)
   linesb$Correlation[is.nan(linesb$Correlation)] <- 1
-  if (min(Freq[,-1])<60) {
+  if (fmin<59.8 & fmax <= 60.2) {
     f_cols <-c("red","yellow","orange","blue","green")
+  } else if(fmax <60.2 & fmin >= 59.8){
+    f_cols <-c("green","blue","orange","yellow","red")
   } else{
-    f_cols <-c("green","blue","red","orange","yellow")
+    f_cols <-c("red","yellow","green","blue","black")
   }
  # f_cols <- ifelse(min(Freq[,-1])<60,c("red","yellow","orange","blue","green"),c("green","blue","red","orange","yellow"))
   #color_vals_freq <- as.numeric(sapply( c((mincovf+0.1),(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
@@ -314,7 +353,7 @@ plot_mapfreq <- function(t){
   g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=0.1),show.legend = FALSE) +
     scale_colour_gradientn("Correlation",colours = c("red","yellow","green"),limits=c(0,1)) +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 4, shape = 21) +
-    scale_fill_gradientn("Frequency",colours = f_cols,limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
+    scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax)) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g

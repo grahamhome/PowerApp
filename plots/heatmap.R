@@ -139,9 +139,19 @@ update_pangle <- function(time){
   #assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs
 }
+autoscale <- function(){
+  if(autosc == TRUE){
+    autosc <<-FALSE
+  } else{
+    autosc <<-TRUE
+  }
+}
 
 
 plot_heatmapangle<- function(t){
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
   bus_locs <- update_pangle(t)
   xmn <- min(bus_locs$Longitude)
   xmx <- max(bus_locs$Longitude)
@@ -156,22 +166,49 @@ plot_heatmapangle<- function(t){
   rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
   rtpFort <- fortify(rtp, data = rtp@data)
   rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  
+  if(autosc == TRUE){
+    # amin <- min(b$Angle)
+    # amax <- max(b$Angle)
+    amin <- ifelse(min(b$Angle)<-40,min(b$Angle),-40)
+    amax <- ifelse(max(b$Angle)>40,max(b$Angle),40)
+  #  adiff <- (amax-amin)
+  #  a_lab <- c(amin,(amin+(adiff/4)),(amin+(adiff/2)),(amax-(adiff/4)),amax)
+  } else{
+    amin <- -40
+    amax <- 40
+   # a_lab <- c(-40,-20,0,20,40)
+  }
   g <- g + geom_polygon(data = rtpFortMer, 
                         aes(x = long, y = lat, group = group, fill = layer), 
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
-    scale_fill_gradientn("Angle",colours = c("red","yellow","green","blue","black"),limits=c(-90,90))+
+    scale_fill_gradientn("Angle",colours = c("red","yellow","green","blue","black"),limits=c(amin,amax))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
 
 plot_heatmapvolt<- function(t){
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
   bus_locs <- update_volt(t)
   xmn <- min(bus_locs$Longitude)
   xmx <- max(bus_locs$Longitude)
   ymn <- min(bus_locs$Latitude)
   ymx <- max(bus_locs$Latitude)
+  if(autosc == TRUE){
+    # vmin <- min(b$Voltage)
+    # vmax <- max(b$Voltage)
+    vmin <- ifelse(min(bus_locs$Voltage)<0.8,min(bus_locs$Voltage),0.8)
+    vmax <- ifelse(max(bus_locs$Voltage)>1.2,max(bus_locs$Voltage),1.2)
+  #  vdiff <- (vmax-vmin)
+ #   v_lab <- c(vmin,(vmin+(vdiff/4)),(vmin+(vdiff/2)),(vmax-(vdiff/4)),vmax)
+  } else{
+    vmin <- 0.8
+    vmax <- 1.2
+  }
   # n_cores <- detectCores()-1
   # cl<-makeCluster(n_cores)
   # registerDoParallel(cl)
@@ -203,17 +240,19 @@ plot_heatmapvolt<- function(t){
   rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
   rtpFort <- fortify(rtp, data = rtp@data)
   rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
-  if (min(Volt[,-1])<1) {
+  if (vmin<0.8 & vmax <= 1.2) {
     v_cols <-c("red","yellow","orange","blue","green")
+  } else if(vmax <1.2 & vmin >= 0.8){
+    v_cols <-c("green","blue","orange","yellow","red")
   } else{
-    v_cols <-c("green","blue","red","orange","yellow")
+    v_cols <-c("red","yellow","green","blue","black")
   }
   g <- g + 
     geom_polygon(data = rtpFortMer, 
                         aes(x = long, y = lat, group = group, fill = layer), 
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
-    scale_fill_gradientn("Voltage",colours = v_cols,limits=c(min(Volt[,-1]),max(Volt[,-1])))+#TODO: Change limits to between 0.8-1.2
+    scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
@@ -221,6 +260,18 @@ plot_heatmapvolt<- function(t){
 
 plot_heatmapfreq<- function(t){
   bus_locs <- update_freq(t)
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
+  if(autosc == TRUE){
+    fmin <- ifelse(min(bus_locs$Frequency)<59.8,min(bus_locs$Frequency),59.8)
+    fmax <- ifelse(max(bus_locs$Frequency)>60.2,max(bus_locs$Frequency),60.2)
+    #  vdiff <- (vmax-vmin)
+    #   v_lab <- c(vmin,(vmin+(vdiff/4)),(vmin+(vdiff/2)),(vmax-(vdiff/4)),vmax)
+  } else{
+    fmin <- 59.8
+    fmax <- 60.2
+  }
   xmn <- min(bus_locs$Longitude)
   xmx <- max(bus_locs$Longitude)
   ymn <- min(bus_locs$Latitude)
@@ -234,17 +285,19 @@ plot_heatmapfreq<- function(t){
   rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
   rtpFort <- fortify(rtp, data = rtp@data)
   rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
-  if (min(Freq[,-1])<60) {
+  if (fmin<59.8 & fmax <= 60.2) {
     f_cols <-c("red","yellow","orange","blue","green")
+  } else if(fmax <60.2 & fmin >= 59.8){
+    f_cols <-c("green","blue","orange","yellow","red")
   } else{
-    f_cols <-c("green","blue","red","orange","yellow")
+    f_cols <-c("red","yellow","green","blue","black")
   }
   g <- g + geom_polygon(data = rtpFortMer, 
                         aes(x = long, y = lat, group = group, fill = layer), 
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
     #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
-    scale_fill_gradientn("Frequency",colours = f_cols,limits=c(min(Freq[,-1]),max(Freq[,-1])))+
+    scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
