@@ -201,7 +201,7 @@ timeSeriesDisplay <- function(input, output, session) {
 
 	#Scale adjustment
 	observeEvent(input$rescale, {
-		#autoscale()
+		autoscale()
 	})
 
 	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
