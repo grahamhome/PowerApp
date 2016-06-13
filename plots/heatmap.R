@@ -140,6 +140,9 @@ update_pangle <- function(time){
   bus_locs
 }
 autoscale <- function(){
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
   if(autosc == TRUE){
     autosc <<-FALSE
   } else{

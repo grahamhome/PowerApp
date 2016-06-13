@@ -274,6 +274,9 @@ plot_mapangle_lines <- function(t){
 }
 #When called, change the autosc boolean from TRUE to FALSE or FALSE to TRUE
 autoscale <- function(){
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
   if(autosc == TRUE){
     autosc <<-FALSE
   } else{
