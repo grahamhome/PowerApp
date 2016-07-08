@@ -24,7 +24,7 @@ timeSeriesDisplayUI <- function(id) {
 					div(style="padding-top:40%;padding-left:10%", 
 						radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())]),
 						br(),
-						actionButton(ns("rescale"), "Re-Scale Plot")
+						checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
 					)
 				),
 				column(8, 
@@ -110,11 +110,16 @@ timeSeriesDisplay <- function(input, output, session) {
 	})
 
 	#Switch to index-based display mode
-	observeEvent(c(input$time, input$activeMethod), {
+	observeEvent(c(input$time, input$activeMethod, input$rescale), priority=1, {
 		if (!state$playing) {
 			makeFilesProgress(input$time, input$time, input$activeMethod)
+			if (input$rescale) {
+				scale = "autoScale"
+			} else {
+				scale = "defaultScale"
+			}
 			output$image <- renderImage({
-				list(src = paste("plots/img/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", scale, "/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}	
 	})
@@ -144,6 +149,11 @@ timeSeriesDisplay <- function(input, output, session) {
 	#Play animation
 	observeEvent(state$playing, {
 		if (state$playing) {
+			if (input$rescale) {
+				scale = "autoScale"
+			} else {
+				scale = "defaultScale"
+			}
 			method <- isolate(input$activeMethod)
 			output$image <- renderImage({
 				invalidateLater(100/state$speed)
@@ -153,7 +163,7 @@ timeSeriesDisplay <- function(input, output, session) {
 				} else {
 					counter <<- counter + 1
 				}
-				list(src = paste("plots/img/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}
 	})
@@ -200,17 +210,23 @@ timeSeriesDisplay <- function(input, output, session) {
 	})
 
 	#Scale adjustment
-	observeEvent(input$rescale, {
+	observeEvent(input$rescale, priority=0, {
 		autoscale()
 	})
 
 	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
 	makeFilesProgress <- function(start, stop, method) {
-		path <- paste("plots/img/", method, "/", name(), "/", sep="")
+		if (input$rescale) {
+			scale = "autoScale"
+		} else {
+			scale = "defaultScale"
+		}
+		path <- paste("plots/img/", scale, "/", method, "/", name(), "/", sep="")
 		#Create directory for image files if it does not exist
 		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
-		dir.create(file.path("plots/img/", method), showWarnings=FALSE)
-		dir.create(file.path(paste("plots/img/", method, sep=""), name()), showWarnings=FALSE)
+		dir.create(file.path("plots/img/", scale), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", scale, "/", sep=""), method), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", scale, "/", method, "/", sep=""), name()), showWarnings=FALSE)
 		#Create list of image files that do not yet exist
 		output$image <- renderImage({
 			withProgress(message="Creating Plot", detail="", value=0, {
@@ -221,7 +237,7 @@ timeSeriesDisplay <- function(input, output, session) {
 					incProgress(1/(stop-start))
 				}
 			})
-			list(src = paste("plots/img/", method, "/", name(), "/", start, ".png", sep=""), height="100%", width="100%")
+			list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", start, ".png", sep=""), height="100%", width="100%")
 		}, deleteFile=FALSE)
 		return
 	}
