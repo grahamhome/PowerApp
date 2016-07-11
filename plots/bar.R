@@ -70,10 +70,10 @@ plot_barpangle <- function(time){
   b$group[b$Angle >0] <- 1
   b$group[b$Angle <0] <- -1
   if(autosc == TRUE){
-   # amin <- min(b$Angle)
-   # amax <- max(b$Angle)
-    amin <- ifelse(min(b$Angle)<-40,min(b$Angle),-40)
-    amax <- ifelse(max(b$Angle)>40,max(b$Angle),40)
+    amin <- min(b$Angle)
+    amax <- max(b$Angle)
+    #amin <- ifelse(min(b$Angle)<-40,min(b$Angle),-40)
+  #  amax <- ifelse(max(b$Angle)>40,max(b$Angle),40)
     adiff <- (amax-amin)
     a_lab <- c(amin,(amin+(adiff/4)),(amin+(adiff/2)),(amax-(adiff/4)),amax)
   } else{
@@ -127,10 +127,10 @@ plot_barvolt <- function(time){
   b$group[b$Voltage >1] <- 1
   b$group[b$Voltage <1] <- -1
   if(autosc == TRUE){
-   # vmin <- min(b$Voltage)
-   # vmax <- max(b$Voltage)
-    vmin <- ifelse(min(b$Voltage)<0.8,min(b$Voltage),0.8)
-    vmax <- ifelse(max(b$Voltage)>1.2,max(b$Voltage),1.2)
+    vmin <- min(b$Voltage)
+    vmax <- max(b$Voltage)
+  #  vmin <- ifelse(min(b$Voltage)<0.8,min(b$Voltage),0.8)
+  #  vmax <- ifelse(max(b$Voltage)>1.2,max(b$Voltage),1.2)
     vdiff <- (vmax-vmin)
     v_lab <- c(vmin,(vmin+(vdiff/4)),(vmin+(vdiff/2)),(vmax-(vdiff/4)),vmax)
   } else{
@@ -184,8 +184,10 @@ plot_barfreq <- function(time){
   b$group[b$Frequency >60] <- 1
   b$group[b$Frequency <60] <- -1
   if(autosc == TRUE){
-    fmin <- ifelse(min(b$Frequency)<59.8,min(b$Frequency),59.8)
-    fmax <- ifelse(max(b$Frequency)>60.2,max(b$Frequency),60.2)
+    fmin <- min(b$Frequency)
+    fmax <- max(b$Frequency)
+  #  fmin <- ifelse(min(b$Frequency)<59.8,min(b$Frequency),59.8)
+  #  fmax <- ifelse(max(b$Frequency)>60.2,max(b$Frequency),60.2)
     fdiff <- fmax-fmin
     f_lab <- c(fmin,(fmin+(fdiff/4)),(fmin+(fdiff/2)),(fmax-(fdiff/4)),fmax)
   } else{
