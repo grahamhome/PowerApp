@@ -19,3 +19,9 @@ plotCorr2png <- function(functionCall, fileName) {
 	eval(parse(text=functionCall))
 	dev.off()
 }
+
+#Returns the current plot zoomed to the given parameters.
+zoomPlot <- function(xmin, ymin, xmax, ymax) {
+	g <<- g + scale_x_continuous(limits=c(xmin, xmax)) + 
+		scale_y_continuous(limits=c(ymin, ymax))
+}
