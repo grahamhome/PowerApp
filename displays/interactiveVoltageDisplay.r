@@ -1,45 +1,39 @@
 #A Shiny plugin which creates a window for displaying time series plots.
 #Created by Graham Home <grahamhome333@gmail.com>
 
-library(shinyjs)
-
 #Proper Name
 dispName <- function() {
-	"Interactive Time Series Display"
+	"Interactive Voltage Display"
 }
 
 #Compatible plot plugins
 use_plots <- function() {
-	list('map.R','heatmap.R', 'bar.R')
+	list('map.R')	#TODO: change to contour plot only
 }
 
 #UI
-interactiveDisplayUI <- function(id) {
+interactiveVoltageDisplayUI <- function(id) {
 	#Create namespace function from id
 	ns <- NS(id)
-
-	#Initialize ShinyJS
-	useShinyjs()
 
 	#Enclose UI contents in a tagList
 	tagList(
 		fixedPanel(class="mainwindow",
 			fluidRow(
-				column(2,
-					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
-					div(style="padding-top:40%;padding-left:10%", 
-						radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())]),
-						br(),
-						checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
-					)
+				column(1,
+					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon")
 				),
-				column(8, 
-					h2(name()), 
-					uiOutput(ns("display"))
-					
+				column(10, 
+					h2(name())
 				),
-				column(2, 
+				column(1, 
 					div(class="helpiconbox", actionLink(ns("help"), "", icon=icon("question", "fa-2x"), class="icon"))
+				)
+			),
+			uiOutput(ns("display")),
+			fluidRow(
+				column(2, offset=5, 
+					uiOutput(ns("zoomBtnBox"))
 				)
 			),
 			fluidRow(
@@ -53,38 +47,14 @@ interactiveDisplayUI <- function(id) {
 					div(class="iconbox", actionLink(ns("frameFwd"), "", icon=icon("step-forward", "fa-2x"), class="icon"))
 				) 
 			),
-			fluidRow(
-				column(2, offset=1, style="padding-top:2%;text-align:right",
-					p("Sample range to animate:", style="font-weight:bold")
-				),
-				column(2,
-					uiOutput(ns("startContainer"))
-				),
-				column(2, 
-					uiOutput(ns("stopContainer"))
-				),
-				column(2,
-					selectInput(ns("speed"), "Animation Speed:", choices=list("Slow"=0.1, "Normal Speed"=1, "Double Speed"=2), selected=1)
-				)
-			),
-			fluidRow(
-				column(12,
-					div(style="width:100%;color:red;text-align:center", textOutput(ns("result")))
-				)
-			),
-			fluidRow(
-				column(4, offset=4,
-					br(),
-					div(class="backiconbox", uiOutput(ns("toggle")))
-				)
-			)
+			uiOutput(ns("lowerDisplay"))
 		),
 		uiOutput(ns("helpbox"))
 	)
 }
 
 #Server logic
-interactiveDisplay <- function(input, output, session) {
+interactiveVoltageDisplay <- function(input, output, session) {
 	#Get namespace function
 	ns <- session$ns
 
@@ -103,6 +73,9 @@ interactiveDisplay <- function(input, output, session) {
 	#Show/hide help text
 	state$showHelp <- FALSE
 
+	#Plotting method
+	state$method <- "plot_mapvolt"	#TODO: Change to contour plot method
+
 	output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 
 	#Create range start selector
@@ -117,17 +90,12 @@ interactiveDisplay <- function(input, output, session) {
 	})
 
 	#Switch to index-based display mode
-	observeEvent(c(input$time, input$activeMethod, input$rescale), priority=1, {
+	observeEvent(c(input$time), priority=1, {
 		if (!state$playing) {
-			#makeFilesProgress(input$time, input$time, input$activeMethod)
-			if (input$rescale) {
-				scale = "autoScale"
-			} else {
-				scale = "defaultScale"
-			}
+			#makeFilesProgress(input$time, input$time)
 			showPlot()
 			output$plot <- renderPlot({
-				eval(parse(text=paste(input$activeMethod, "(", input$time, ")", sep="")))
+				eval(parse(text=paste(state$method, "(", input$time, ")", sep="")))
 			})
 		}	
 	})
@@ -145,7 +113,7 @@ interactiveDisplay <- function(input, output, session) {
 				state$start <- isolate(input$start)
 				state$stop <- isolate(input$stop)
 				state$speed <- isolate(as.numeric(input$speed))
-				makeFilesProgress(state$start, state$stop, input$activeMethod)
+				makeFilesProgress(state$start, state$stop)
 				state$playing <- !state$playing
 			}
 		} else {
@@ -158,13 +126,8 @@ interactiveDisplay <- function(input, output, session) {
 	#Play animation
 	observeEvent(state$playing, {
 		if (state$playing) {
-			if (input$rescale) {
-				scale = "autoScale"
-			} else {
-				scale = "defaultScale"
-			}
-			method <- isolate(input$activeMethod)
-
+			#Only default scale used in this viewer
+			scale = "defaultScale" 
 			showImage()
 
 			output$image <- renderImage({
@@ -175,7 +138,7 @@ interactiveDisplay <- function(input, output, session) {
 				} else {
 					counter <<- counter + 1
 				}
-				list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", scale, "/", state$method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}
 	})
@@ -213,7 +176,65 @@ interactiveDisplay <- function(input, output, session) {
 	#Plot display
 	showPlot <- function() {
 		output$display <- renderUI({
-			plotOutput(ns("plot"), click=ns("pltClk"), brush=brushOpts(id=ns("pltBrsh"), delayType="debounce"), dblclick=ns("pltDblClk"))
+			div(style="width:100%; height:auto; position:relative; float:left",
+				plotOutput(ns("plot"), click=ns("pltClk"), brush=brushOpts(id=ns("pltBrsh"), delayType="debounce"))
+			)
+		})
+	}
+
+	#Animation controls
+	showControls <- function() {
+		output$lowerDisplay <- renderUI({
+			tagList(
+				fluidRow(
+					column(2, offset=1, style="padding-top:2%;text-align:right",
+						p("Sample range to animate:", style="font-weight:bold")
+					),
+					column(2,
+						uiOutput(ns("startContainer"))
+					),
+					column(2, 
+						uiOutput(ns("stopContainer"))
+					),
+					column(2,
+						selectInput(ns("speed"), "Animation Speed:", choices=list("Slow"=0.1, "Normal Speed"=1, "Double Speed"=2), selected=1)
+					)
+				),
+				fluidRow(
+					column(12,
+						div(style="width:100%;color:red;text-align:center", textOutput(ns("result")))
+					)
+				),
+				fluidRow(
+					column(4, offset=4,
+						br(),
+						div(class="backiconbox", uiOutput(ns("toggle")))
+					)
+				)
+			)
+		})
+	}
+
+	#Show animation controls by default
+	showControls()
+
+	#Shows details about the current buses instead of the animation controls (used when plot zooms)
+	showDetails <- function() {
+		output$lowerDisplay <- renderUI({
+			#TODO: Details go here
+		})
+	}
+
+	#Show zoom button
+	showZoom <- function() {
+		output$zoomBtnBox <- renderUI({
+			actionButton(ns("resetPlot"), "Zoom Out")
+		})
+	}
+
+	#Hide zoom button
+	hideZoom <- function() {
+		output$zoomBtnBox <- renderUI({
 		})
 	}
 
@@ -227,9 +248,8 @@ interactiveDisplay <- function(input, output, session) {
 					"Longer animations may have longer rendering times before they can be played. To change the ", br(), 
 					"animation parameters, first pause the currently playing animation, then click the play icon ", br(),
 					"again after changing the start, stop, or speed values. ", br(), br(),
-					"Use the radio buttons on the left side of the graph display to change the plotting method used ", br(),
-					"to create the graph.", br(), br(),
-					"Clicking 'Re-Scale Plot' will adjust the range of potential values to match the values of the current sample.", br(), br(),
+					"When the graph is paused (not playing an animation), click near a bus to zoom in on the region.", br(),
+					"Click 'Zoom Out' to view the entire graph and restore the animation controls.", br(), br(),
 					"Use the back button in the top left corner of the display to choose a different plot type or data set.")
 			)
 		}
@@ -245,8 +265,11 @@ interactiveDisplay <- function(input, output, session) {
 		#Zoom to area around click
 		output$plot <- renderPlot({
 	 		zoomPlot(x-1, y-1, x+1, y+1)
-			eval(parse(text=paste(input$activeMethod, "(", input$time, ")", sep="")))
+			eval(parse(text=paste(state$method, "(", input$time, ")", sep="")))
 	 	})
+
+		showDetails()
+	 	showZoom()
 
 		#Get closest bus
 		#busses <- bus_locs[with(bus_locs, (Latitude >= y-0.2 & Latitude <= y+0.2) & (Longitude >= x-0.2 & Longitude <= x + 0.2)),]
@@ -254,6 +277,13 @@ interactiveDisplay <- function(input, output, session) {
 		#print(nearPoints(update_volt(input$time), input$pltClk))
 	})
 
+	#Zoom out function
+	observeEvent(input$resetPlot, {
+		hideZoom()
+		resetPlotZoom()
+		eval(parse(text=paste(state$method, "(", input$time, ")", sep="")))
+		showControls()
+	})
 	#Double-click detection
 	observeEvent(input$pltClk, {
 		print("Double-click detected")
@@ -271,35 +301,27 @@ interactiveDisplay <- function(input, output, session) {
 		#print(paste("(", input$pltBrsh$xmin, ",", input$pltBrsh$ymin, ")", ", ", "(", input$pltBrsh$xmax, ",", input$pltBrsh$ymax, ")", sep=""))
 	})
 
-	#Scale adjustment
-	observeEvent(input$rescale, priority=0, {
-		autoscale()
-	})
-
-	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
-	makeFilesProgress <- function(start, stop, method) {
-		if (input$rescale) {
-			scale = "autoScale"
-		} else {
-			scale = "defaultScale"
-		}
-		path <- paste("plots/img/", scale, "/", method, "/", name(), "/", sep="")
+	#Uses parallel processing to create a set of plot images over the given range.
+	makeFilesProgress <- function(start, stop) {
+		#Only default scale used in this viewer
+		scale = "defaultScale"
+		path <- paste("plots/img/", scale, "/", state$method, "/", name(), "/", sep="")
 		#Create directory for image files if it does not exist
 		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
 		dir.create(file.path("plots/img/", scale), showWarnings=FALSE)
-		dir.create(file.path(paste("plots/img/", scale, "/", sep=""), method), showWarnings=FALSE)
-		dir.create(file.path(paste("plots/img/", scale, "/", method, "/", sep=""), name()), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", scale, "/", sep=""), state$method), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", scale, "/", state$method, "/", sep=""), name()), showWarnings=FALSE)
 		#Create list of image files that do not yet exist
 		output$image <- renderImage({
 			withProgress(message="Creating Plot", detail="", value=0, {
 				for (t in start:stop) {
 					if (!(file.exists(paste(path, t, ".png", sep="")))) {
-						plot2png(paste(method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))
+						plot2png(paste(state$method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))
 					}
 					incProgress(1/(stop-start))
 				}
 			})
-			list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", start, ".png", sep=""), height="100%", width="100%")
+			list(src = paste("plots/img/", scale, "/", state$method, "/", name(), "/", start, ".png", sep=""), height="100%", width="100%")
 		}, deleteFile=FALSE)
 		return
 	}
