@@ -261,26 +261,10 @@ interactiveVoltageDisplay <- function(input, output, session) {
 		#Get x and y values of click
 		point <- c(input$pltClk$x, input$pltClk$y)
 
-		#Get map lat/long ratio
-		ratio <- (max(bus_locs$Latitude)-min(bus_locs$Latitude))/(max(bus_locs$Longitude)-min(bus_locs$Longitude))
-
-		#Get closest bus cluster
-		busses <- bus_locs[with(bus_locs, (Latitude >= point[2]-0.2 & Latitude <= point[2]+0.2) & (Longitude >= point[1]-0.2 & Longitude <= point[1]+0.2)),]
-		#print(busses)
-
 		#Zoom
 		output$plot <- renderPlot ({
-			eval(parse(text=paste(state$method, "(", input$time, ",", TRUE, ",", point, ")", sep="")))
+			eval(parse(text=paste(state$method, "(", input$time, ",", "TRUE", ",", "c(", point[1], ",", point[2], ")", ")", sep="")))
 		})
-
-
-
-
-		#Zoom to area around click
-		# output$plot <- renderPlot({
-	 	# 		zoomPlot(x-1, y-1, x+1, y+1)
-		# 	eval(parse(text=paste(state$method, "(", input$time, ")", sep="")))
-	 	# 	})
 
 		showDetails()
 	 	showZoom()
@@ -290,7 +274,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	observeEvent(input$resetPlot, {
 		hideZoom()
 		output$plot <- renderPlot({
-			eval(parse(text=paste(state$method, "(", input$time, ")", sep="")))
+			eval(parse(text=paste(state$method, "(", input$time, ",", FALSE, ")", sep="")))
 		})
 		showControls()
 	})

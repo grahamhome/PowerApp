@@ -429,6 +429,10 @@ bus_alarm_status <- function(t, bus_name, point) {
 #Returns a voltage map indicating alarm state
 plot_bus_volt <- function(t, zoom, point){
 
+  print("here goes nothing")
+  if(zoom) {
+    print(point[2])
+}
   #Add alarm column if it does not exist
   if(!("alarm" %in% colnames(bus_locs))) {
     bus_locs$alarm <<- "1"
@@ -478,22 +482,31 @@ plot_bus_volt <- function(t, zoom, point){
     scale_fill_manual(values = c("1"="green", "2"="blue", "3"="red", "4"="yellow"))
 
   if(zoom==TRUE) {
-    f <- f +
 
-    #Get current limits
     xmin <- min(bus_locs$Longitude)
     xmax <- max(bus_locs$Longitude)
     ymin <- min(bus_locs$Latitude)
-    ymax <- min(bus_locs$Latitude)
+    ymax <- max(bus_locs$Latitude)
 
-    #Get map lat/long ratio
-    #ratio <- (ymax-ymin/xmax-xmin)
+    ratio <- abs(xmax-xmin)/abs(ymax-ymin)
 
+    print(bus_locs$Latitude)
 
-    scale_x_continuous(limits=c(point[1]-((xmax-xmin)/4), point[1]+((xmax-xmin)/4), expand=c(0,0))) + 
-    scale_y_continuous(limits=c(point[2]-((ymax-ymin)/4), point[2]+((ymax-ymin)/4), expand=c(0,0)))
+    print(paste("(", xmin, ",", xmax, ")", ", (", ymin, ",", ymax, ")", sep=""))
+
+    xrange <- abs(xmax-xmin)/4
+    yrange <- abs(ymax-ymin)/4 #TODO: Zoom into the nearest cluster instead
+
+    xmin <- point[1]-xrange
+    xmax <- point[1]+xrange
+    ymin <- point[2]-yrange
+    ymax <- point[2]+yrange
+    
+    print(paste("(", xmin, ",", xmax, ")", ", (", ymin, ",", ymax, ")", sep=""))
+
+    f <- f +
+      scale_x_continuous(limits=c(xmin, xmax), expand=c(0,0)) + 
+      scale_y_continuous(limits=c(ymin, ymax), expand=c(0,0))
   }
   f
 }
-
-
