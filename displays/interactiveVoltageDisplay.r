@@ -95,7 +95,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 			#makeFilesProgress(input$time, input$time)
 			showPlot()
 			output$plot <- renderPlot({
-				eval(parse(text=paste(state$method, "(", input$time, ")", sep="")))
+				eval(parse(text=paste(state$method, "(", input$time, ",", FALSE, ")", sep="")))
 			})
 		}	
 	})
@@ -259,19 +259,18 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	observeEvent(input$pltClk, {
 
 		#Get x and y values of click
-		x <- input$pltClk$x
-		y <- input$pltClk$y
+		point <- c(input$pltClk$x, input$pltClk$y)
 
 		#Get map lat/long ratio
 		ratio <- (max(bus_locs$Latitude)-min(bus_locs$Latitude))/(max(bus_locs$Longitude)-min(bus_locs$Longitude))
 
 		#Get closest bus cluster
-		busses <- bus_locs[with(bus_locs, (Latitude >= y-0.2 & Latitude <= y+0.2) & (Longitude >= x-0.2 & Longitude <= x + 0.2)),]
+		busses <- bus_locs[with(bus_locs, (Latitude >= point[2]-0.2 & Latitude <= point[2]+0.2) & (Longitude >= point[1]-0.2 & Longitude <= point[1]+0.2)),]
 		#print(busses)
 
 		#Zoom
 		output$plot <- renderPlot ({
-			zoomPlot(eval(parse(text=paste(state$method, "(", input$time, ")", sep=""))), x-2, y-(2*ratio), x+2, y+(2*ratio))
+			eval(parse(text=paste(state$method, "(", input$time, ",", TRUE, ",", point, ")", sep="")))
 		})
 
 

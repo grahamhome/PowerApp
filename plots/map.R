@@ -413,7 +413,7 @@ upper_limit <- 1.2
 alarm_time <- 60 * 60 #samples/sec * alarm time (sec)
 
 #Returns a number indicating if the bus has recently been in an alarm state (2) or not (1).
-bus_alarm_status <- function(t, bus_name) {
+bus_alarm_status <- function(t, bus_name, point) {
   state <- "1"
   start <- ifelse((t>alarm_time), (t-alarm_time), 1)
   v <- Volt[start:t, bus_name]
@@ -427,7 +427,7 @@ bus_alarm_status <- function(t, bus_name) {
 }
 
 #Returns a voltage map indicating alarm state
-plot_bus_volt <- function(t){
+plot_bus_volt <- function(t, zoom, point){
 
   #Add alarm column if it does not exist
   if(!("alarm" %in% colnames(bus_locs))) {
@@ -465,14 +465,34 @@ plot_bus_volt <- function(t){
   print(bus_volts[bus_volts$alarm=="2",])
 
   print("ready to plot")
+
+  #Get point size from zoom
+  point_size <- ifelse(zoom, 16, 8)
   
   #Plot points
   f <- g +
-    geom_point(data = bus_volts_nominal, aes(x=Longitude, y=Latitude, fill=status), size = 10, shape = 21, show.legend=FALSE) +
-    geom_point(data = bus_volts_high, aes(x=Longitude, y=Latitude, fill=status), size = 10, shape = 21, show.legend=FALSE) +
-    geom_point(data = bus_volts_past, aes(x=Longitude, y=Latitude, fill=status), size = 10, shape = 21, show.legend=FALSE) +
-    geom_point(data = bus_volts_low, aes(x=Longitude, y=Latitude, fill=status), size = 10, shape = 21, show.legend=FALSE) +
+    geom_point(data = bus_volts_nominal, aes(x=Longitude, y=Latitude, fill=status), size = point_size, shape = 23, show.legend=FALSE) +
+    geom_point(data = bus_volts_high, aes(x=Longitude, y=Latitude, fill=status), size = point_size, shape = 23, show.legend=FALSE) +
+    geom_point(data = bus_volts_past, aes(x=Longitude, y=Latitude, fill=status), size = point_size, shape = 23, show.legend=FALSE) +
+    geom_point(data = bus_volts_low, aes(x=Longitude, y=Latitude, fill=status), size = point_size, shape = 23, show.legend=FALSE) +
     scale_fill_manual(values = c("1"="green", "2"="blue", "3"="red", "4"="yellow"))
+
+  if(zoom==TRUE) {
+    f <- f +
+
+    #Get current limits
+    xmin <- min(bus_locs$Longitude)
+    xmax <- max(bus_locs$Longitude)
+    ymin <- min(bus_locs$Latitude)
+    ymax <- min(bus_locs$Latitude)
+
+    #Get map lat/long ratio
+    #ratio <- (ymax-ymin/xmax-xmin)
+
+
+    scale_x_continuous(limits=c(point[1]-((xmax-xmin)/4), point[1]+((xmax-xmin)/4), expand=c(0,0))) + 
+    scale_y_continuous(limits=c(point[2]-((ymax-ymin)/4), point[2]+((ymax-ymin)/4), expand=c(0,0)))
+  }
   f
 }
 
