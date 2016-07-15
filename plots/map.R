@@ -156,7 +156,7 @@ update_freq <- function(time){
   tf <- t(Freq[time,-1])
   tf <- cbind(rownames(tf),tf)
   colnames(tf) <- c("Bus.Name","Frequency")
-  bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Voltage")),tf, by="Bus.Name")
+  bus_locs <- merge(bus_locs[ , ! colnames(bus_locs) %in% c("Frequency")],tf, by="Bus.Name")
   bus_locs$Frequency <- as.numeric(as.character(bus_locs$Frequency))
   #assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs
@@ -167,7 +167,7 @@ update_volt <- function(time){
   tv <- t(Volt[time,-1])
   tv <- cbind(rownames(tv),tv)
   colnames(tv) <- c("Bus.Name","Voltage")
-  bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Frequency")),tv, by="Bus.Name")
+  bus_locs <- merge(bus_locs[ , ! colnames(bus_locs) %in% c("Voltage")],tv, by="Bus.Name")
   bus_locs$Voltage <- as.numeric(as.character(bus_locs$Voltage))
   #assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs
@@ -178,7 +178,7 @@ update_pangle <- function(time){
   ta <- t(Pangle[time,-1])
   ta <- cbind(rownames(ta),ta)
   colnames(ta) <- c("Bus.Name","Angle")
-  bus_locs <- merge(subset(bus_locs,select = c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Voltage","Frequency")),ta, by="Bus.Name")
+  bus_locs <- merge(bus_locs[ , ! colnames(bus_locs) %in% c("Angle")],ta, by="Bus.Name")
   bus_locs$Angle <- as.numeric(as.character(bus_locs$Angle))
   #assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs
@@ -406,5 +406,74 @@ plot_mapfreq_large <- function(t){
   g
 }
 
+lower_limit <- 0.8
+upper_limit <- 1.2
+# .95, 1.05 #More sensitive voltage thresholds #TODO: Add switch
+
+alarm_time <- 60 * 60 #samples/sec * alarm time (sec)
+
+#Returns a number indicating if the bus has recently been in an alarm state (2) or not (1).
+bus_alarm_status <- function(t, bus_name) {
+  state <- "1"
+  start <- ifelse((t>alarm_time), (t-alarm_time), 1)
+  v <- Volt[start:t, bus_name]
+
+  #print(v[ ((v[t]>=upper_limit) | (v[t]<=lower_limit)) ])
+
+  if(length(v[ ((v>=upper_limit) | (v<=lower_limit)) ]) > 0) {
+    state <- "2"
+  }
+  state
+}
+
+#Returns a voltage map indicating alarm state
+plot_bus_volt <- function(t){
+
+  #Add alarm column if it does not exist
+  if(!("alarm" %in% colnames(bus_locs))) {
+    bus_locs$alarm <<- "1"
+  }
+
+  print("added alarm column")
+
+  #Update alarm column
+  bus_locs$alarm <<- apply(as.matrix(bus_locs), 1, function(x) bus_alarm_status(t, x["Bus.Name"]))
+
+  print("updated alarm column")  
+
+  bus_locs <- update_volt(t)
+
+  #Get bus voltages
+  bus_volts <- subset(bus_locs, select=c("Bus.Name", "Longitude", "Latitude", "Voltage", "alarm"))
+
+  print("got bus volts")
+
+  #Set bus statuses
+  bus_volts$status <- "1"
+  bus_volts$status[bus_volts$Voltage>=upper_limit] <- "2"
+  bus_volts$status[bus_volts$Voltage<=lower_limit] <- "3" #Under-voltage is more common and typically more serious than over-voltage, hence it is indicated with red and rendered above normal & high points
+  bus_volts$status[((bus_volts$status=="1") & (bus_volts$alarm=="2"))] <- "4"
+
+  print("set bus statuses")
+
+  #Create status dataframes
+  bus_volts_high <- subset(bus_volts, status=="2", select=c("Bus.Name", "Longitude", "Latitude", "Voltage", "status"))
+  bus_volts_low <- subset(bus_volts, status=="3", select=c("Bus.Name", "Longitude", "Latitude", "Voltage", "status"))
+  bus_volts_nominal <- subset(bus_volts, status=="1", select=c("Bus.Name", "Longitude", "Latitude", "Voltage", "status"))
+  bus_volts_past <- subset(bus_volts, status=="4", select=c("Bus.Name", "Longitude", "Latitude", "Voltage", "status"))
+
+  print(bus_volts[bus_volts$alarm=="2",])
+
+  print("ready to plot")
+  
+  #Plot points
+  f <- g +
+    geom_point(data = bus_volts_nominal, aes(x=Longitude, y=Latitude, fill=status), size = 10, shape = 21, show.legend=FALSE) +
+    geom_point(data = bus_volts_high, aes(x=Longitude, y=Latitude, fill=status), size = 10, shape = 21, show.legend=FALSE) +
+    geom_point(data = bus_volts_past, aes(x=Longitude, y=Latitude, fill=status), size = 10, shape = 21, show.legend=FALSE) +
+    geom_point(data = bus_volts_low, aes(x=Longitude, y=Latitude, fill=status), size = 10, shape = 21, show.legend=FALSE) +
+    scale_fill_manual(values = c("1"="green", "2"="blue", "3"="red", "4"="yellow"))
+  f
+}
 
 

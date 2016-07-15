@@ -74,7 +74,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	state$showHelp <- FALSE
 
 	#Plotting method
-	state$method <- "plot_mapvolt"	#TODO: Change to contour plot method
+	state$method <- "plot_bus_volt"	#TODO: Change to contour plot method
 
 	output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 
@@ -177,7 +177,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	showPlot <- function() {
 		output$display <- renderUI({
 			div(style="width:100%; height:auto; position:relative; float:left",
-				plotOutput(ns("plot"), click=ns("pltClk"), brush=brushOpts(id=ns("pltBrsh"), delayType="debounce"))
+				plotOutput(ns("plot"), click=ns("pltClk"))
 			)
 		})
 	}
@@ -262,19 +262,21 @@ interactiveVoltageDisplay <- function(input, output, session) {
 		x <- input$pltClk$x
 		y <- input$pltClk$y
 
+		#Get closest bus cluster
+		busses <- bus_locs[with(bus_locs, (Latitude >= y-0.2 & Latitude <= y+0.2) & (Longitude >= x-0.2 & Longitude <= x + 0.2)),]
+		print(busses)
+
+
+
+
 		#Zoom to area around click
-		output$plot <- renderPlot({
-	 		zoomPlot(x-1, y-1, x+1, y+1)
-			eval(parse(text=paste(state$method, "(", input$time, ")", sep="")))
-	 	})
+		# output$plot <- renderPlot({
+	 	# 		zoomPlot(x-1, y-1, x+1, y+1)
+		# 	eval(parse(text=paste(state$method, "(", input$time, ")", sep="")))
+	 	# 	})
 
 		showDetails()
 	 	showZoom()
-
-		#Get closest bus
-		#busses <- bus_locs[with(bus_locs, (Latitude >= y-0.2 & Latitude <= y+0.2) & (Longitude >= x-0.2 & Longitude <= x + 0.2)),]
-		#print(busses)
-		#print(nearPoints(update_volt(input$time), input$pltClk))
 	})
 
 	#Zoom out function
@@ -283,22 +285,6 @@ interactiveVoltageDisplay <- function(input, output, session) {
 		resetPlotZoom()
 		eval(parse(text=paste(state$method, "(", input$time, ")", sep="")))
 		showControls()
-	})
-	#Double-click detection
-	observeEvent(input$pltClk, {
-		print("Double-click detected")
-	})
-
-	#Brush detection
-	observeEvent(input$pltBrsh, {
-		print("Brush detected")
-
-		#Zoom to area around click
-		# output$plot <- renderPlot({
-		# 	zoomPlot(input$pltBrsh$xmin, input$pltBrsh$ymin, input$pltBrsh$xmax, input$pltBrsh$ymax)
-		# 	eval(parse(text=paste(input$activeMethod, "(", input$time, ")", sep="")))
-		# })
-		#print(paste("(", input$pltBrsh$xmin, ",", input$pltBrsh$ymin, ")", ", ", "(", input$pltBrsh$xmax, ",", input$pltBrsh$ymax, ")", sep=""))
 	})
 
 	#Uses parallel processing to create a set of plot images over the given range.
