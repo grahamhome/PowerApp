@@ -4,8 +4,8 @@ get_csvdata_wecc <- function(dpath){
   branches <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Network_Data_branches.csv",sep = ""))
   buses <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Network_Data_buses.csv",sep = ""))
   substations <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Network_Data_substations.csv",sep = ""))
-  Freq <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results.csv",sep = ""))
-  Pangle <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_1.csv",sep = ""))
+  Freq <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results.csv",sep = ""),stringsAsFactors = FALSE)
+  Pangle <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_1.csv",sep = ""),stringsAsFactors = FALSE)
   Volt <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_2.csv",sep = ""),stringsAsFactors = FALSE)
 #These files aren't used right now so let's not waste time reading them in
   #sr_3 <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_3.csv",sep = ""))
@@ -126,11 +126,12 @@ get_merged_data_wecc <- function(){
 
 get_map_data_wecc  <- function(){
   #Create the map to use as the background for the ggplot
-  maplocs <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), zoom = 4, maptype = "roadmap", scale = 2)
+  mapten <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), zoom = 4, maptype = "roadmap", scale = 2)
   #maplocs <<- get_map(location = c(min(bus_locs$Longitude), min(bus_locs$Latitude),
   #                                 max(bus_locs$Longitude),max(bus_locs$Latitude)),
  #                     maptype = "roadmap")
-  g <<- ggmap(maplocs) +
+  map_lims <<- c(-124, -104,31, 50) #xmin,xmax,ymin,ymax
+  g <<- ggmap(mapten) +
     scale_x_continuous(limits = c(-124, -104), expand = c(0, 0)) +
     scale_y_continuous(limits = c(31, 50), expand = c(0, 0))
 }

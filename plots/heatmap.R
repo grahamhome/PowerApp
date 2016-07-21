@@ -16,9 +16,11 @@ library(doParallel)
 fnames <- function(){
   n <- list(Heatmap="heatmap",
             Voltage="plot_heatmapvolt",
-            Frequency="plot_heatmapfreq")
+            Frequency="plot_heatmapfreq",
+            "Voltage alarms"="plot_heatmapvolt_alarms",
+            "Frequency alarms"="plot_heatmapfreq_alarms")
   if (exists("Pangle")) {
-    n <- c(n,Angle="plot_heatmapangle")
+    n <- c(n,Angle="plot_heatmapangle","Angle alarms"="plot_heatmapangle_alarms")
   }
   n
 }
@@ -430,11 +432,224 @@ update_grid_volt <- function(time){
 }
 
 
+alarm_time <- (60*10) #sample/sec * seconds to check
+upper_vlimit <- 1.05
+lower_vlimit <- 0.95
+update_alarmstatus_volt <- function(t,b){
+  state <- 1 #Meaning there are no values in the past <alarm_time> steps that are outside of the upper/lower limits
 
+  start <- ifelse((t>alarm_time), (t-alarm_time), 1)
+  v <- Volt[start:t, b["Bus.Name"]]
+  if(length(v[ ((v>upper_vlimit) | (v<lower_vlimit)) ]) > 0) {
+    state <- 2 #If there are values outside the limits
+  }
+  state
+}
+upper_flimit <- 60.05
+lower_flimit <- 59.95
+update_alarmstatus_freq <- function(t,b){
+  state <- 1 #Meaning there are no values in the past <alarm_time> steps that are outside of the upper/lower limits
+  
+  start <- ifelse((t>alarm_time), (t-alarm_time), 1)
+  f <- Freq[start:t, b["Bus.Name"]]
+  if(length(f[ ((f>upper_flimit) | (f<lower_flimit)) ]) > 0) {
+    state <- 2 #If there are values outside the limits
+  }
+  state
+}
+upper_alimit <- 20
+lower_alimit <- -20
+update_alarmstatus_angle <- function(t,b){
+  state <- 1 #Meaning there are no values in the past <alarm_time> steps that are outside of the upper/lower limits
+  start <- ifelse((t>alarm_time), (t-alarm_time), 1)
+  a <- Pangle[start:t, b["Bus.Name"]]
+  if(length(a[ ((a>upper_alimit) | (a<lower_alimit)) ]) > 0) {
+    state <- 2 #If there are values outside the limits
+  }
+  state
+}
 
-plot_heatmapangle<- function(t){
+zoom_map <- function(point){
+  if(!exists("zoom")){
+    zoom <<- FALSE
+  }
+  if(zoom == TRUE){
+    zoom <<- FALSE
+    g <<- ggmap(mapten) +
+      scale_x_continuous(limits=c(map_lims[1], map_lims[2]), expand=c(0,0)) + 
+      scale_y_continuous(limits=c(map_lims[3], map_lims[4]), expand=c(0,0))
+  } else{
+    zoom <<- TRUE
+    xmin <- min(bus_locs$Longitude)
+    xmax <- max(bus_locs$Longitude)
+    ymin <- min(bus_locs$Latitude)
+    ymax <- max(bus_locs$Latitude)
+    
+    ratio <- abs(xmax-xmin)/abs(ymax-ymin)
+    
+    xrange <- abs(xmax-xmin)/4
+    yrange <- abs(ymax-ymin)/4 #TODO: Zoom into the nearest cluster instead
+    
+    xmin <- point[1]-xrange
+    xmax <- point[1]+xrange
+    ymin <- point[2]-yrange
+    ymax <- point[2]+yrange
+    
+    g <<- ggmap(mapten) +
+      scale_x_continuous(limits=c(xmin, xmax), expand=c(0,0)) + 
+      scale_y_continuous(limits=c(ymin, ymax), expand=c(0,0))
+  }
+}
+
+plot_heatmapvolt_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
+  }
+  if(!exists("zoom")){
+    zoom <<- FALSE
+  }
+  bus_locs <- update_volt(t)
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  if(autosc == TRUE){
+     vmin <- min(bus_locs$Voltage)
+     vmax <- max(bus_locs$Voltage)
+    #vmin <- ifelse(min(bus_locs$Voltage)<0.8,min(bus_locs$Voltage),0.8)
+   # vmax <- ifelse(max(bus_locs$Voltage)>1.2,max(bus_locs$Voltage),1.2)
+  } else{
+    vmin <- 0.8
+    vmax <- 1.2
+  }
+  xstep <- (xmx-xmn)/80
+  ystep <- (ymx-ymn)/80
+  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
+                      xo=seq(xmn,xmx, by=xstep),
+                      yo=seq(ymn,ymx, by=ystep))
+  r <- raster(intp_coords)
+
+  rtp <- rasterToPolygons(r)
+  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+  rtpFort <- fortify(rtp, data = rtp@data)
+  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  
+  if (vmin<0.8 & vmax <= 1.2) {
+    v_cols <-c("red","yellow","orange","blue","green")
+  } else if(vmax <1.2 & vmin >= 0.8){
+    v_cols <-c("green","blue","orange","yellow","red")
+  } else{
+    v_cols <-c("red","yellow","green","blue","black")
+  }
+  
+  bus_locs$alarm <-apply(bus_locs,1, function(x) update_alarmstatus_volt(t, x))
+  bv_high <- subset(bus_locs, (alarm==2 & Voltage > upper_vlimit))
+  if(nrow(bv_high) > 0L){bv_high$color <- 2} #above limit = red
+  
+  bv_low <- subset(bus_locs, (alarm==2 & Voltage < lower_vlimit))
+  if(nrow(bv_low) > 0L){bv_low$color <- 4} #below limit = blue
+  
+  bv_normal <- subset(bus_locs, (alarm==1))
+  if(nrow(bv_normal) > 0L){bv_normal$color <- 1} #within limits = green
+  
+  bv_past <- subset(bus_locs, (alarm==2 & (Voltage >= lower_vlimit & Voltage <= upper_vlimit)))
+  if(nrow(bv_past) > 0L){bv_past$color <- 3} #currently within limits, but above/below in past=yellow
+  alarm_labs <- NULL
+  alarm_vals <- NULL
+  g <- g + 
+  geom_polygon(data = rtpFortMer,
+                       aes(x = long, y = lat, group = group, fill = layer),
+                       alpha = 0.5,
+                       size = 0) +  ## size = 0 to remove the polygon outlines
+    scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax))
+  if(nrow(bv_normal) > 0L){
+    alarm_labs <- c(alarm_labs,paste(lower_vlimit," < Voltage < ",upper_vlimit,sep=""))
+    alarm_vals <- c(alarm_vals,"1"="green")
+    g <- g+geom_point(data = bv_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  if(nrow(bv_high) > 0L){
+    alarm_labs <- c(alarm_labs,paste("Voltage > ",upper_vlimit,sep=""))
+    alarm_vals <- c(alarm_vals,"2"="red")
+    g <- g+geom_point(data = bv_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  if(nrow(bv_past) > 0L){
+    alarm_labs <- c(alarm_labs,"Voltage Previously outside of Limits")
+    alarm_vals <- c(alarm_vals,"3"="yellow")
+    g <- g+geom_point(data = bv_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  if(nrow(bv_low) > 0L){
+    alarm_labs <- c(alarm_labs,paste("Voltage < ",lower_vlimit,sep=""))
+    alarm_vals <- c(alarm_vals,"4"="blue")
+    g <- g+geom_point(data = bv_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  g <- g+scale_colour_manual("Alarm Status", values = alarm_vals,labels=alarm_labs) +
+    #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
+  #  scale_colour_gradientn("Alarm Status",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+  g
+}
+
+plot_heatmapvolt<- function(t){
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
+  if(!exists("zoom")){
+    zoom <<- FALSE
+  }
+  bus_locs <- update_volt(t)
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  if(autosc == TRUE){
+    vmin <- min(bus_locs$Voltage)
+    vmax <- max(bus_locs$Voltage)
+    #vmin <- ifelse(min(bus_locs$Voltage)<0.8,min(bus_locs$Voltage),0.8)
+    # vmax <- ifelse(max(bus_locs$Voltage)>1.2,max(bus_locs$Voltage),1.2)
+  } else{
+    vmin <- 0.8
+    vmax <- 1.2
+  }
+  xstep <- (xmx-xmn)/80
+  ystep <- (ymx-ymn)/80
+  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
+                        xo=seq(xmn,xmx, by=xstep),
+                        yo=seq(ymn,ymx, by=ystep))
+  r <- raster(intp_coords)
+  
+  rtp <- rasterToPolygons(r)
+  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+  rtpFort <- fortify(rtp, data = rtp@data)
+  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  
+  if (vmin<0.8 & vmax <= 1.2) {
+    v_cols <-c("red","yellow","orange","blue","green")
+  } else if(vmax <1.2 & vmin >= 0.8){
+    v_cols <-c("green","blue","orange","yellow","red")
+  } else{
+    v_cols <-c("red","yellow","green","blue","black")
+  }
+  
+  g <- g + 
+    geom_polygon(data = rtpFortMer,
+                 aes(x = long, y = lat, group = group, fill = layer),
+                 alpha = 0.5,
+                 size = 0) +  ## size = 0 to remove the polygon outlines
+    #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
+    #  scale_colour_gradientn("Alarm Status",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
+    scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax))+
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+  g
+}
+
+plot_heatmapangle_alarms<- function(t){
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
+  if(!exists("zoom")){
+    zoom <<- FALSE
   }
   bus_locs <- update_pangle(t)
   xmn <- min(bus_locs$Longitude)
@@ -443,7 +658,7 @@ plot_heatmapangle<- function(t){
   ymx <- max(bus_locs$Latitude)
   xstep <- (xmx-xmn)/80
   ystep <- (ymx-ymn)/80
-
+  
   intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Angle, duplicate = "mean",
                         xo=seq(xmn,xmx, by=xstep),
                         yo=seq(ymn,ymx, by=ystep))
@@ -459,12 +674,98 @@ plot_heatmapangle<- function(t){
     # amax <- max(b$Angle)
     amin <- ifelse(min(bus_locs$Angle)<(-40),min(bus_locs$Angle),-40)
     amax <- ifelse(max(bus_locs$Angle)>40,max(bus_locs$Angle),40)
-  #  adiff <- (amax-amin)
-  #  a_lab <- c(amin,(amin+(adiff/4)),(amin+(adiff/2)),(amax-(adiff/4)),amax)
+    #  adiff <- (amax-amin)
+    #  a_lab <- c(amin,(amin+(adiff/4)),(amin+(adiff/2)),(amax-(adiff/4)),amax)
   } else{
     amin <- -40
     amax <- 40
-   # a_lab <- c(-40,-20,0,20,40)
+    # a_lab <- c(-40,-20,0,20,40)
+  }
+  
+  bus_locs$alarm <-apply(bus_locs,1, function(x) update_alarmstatus_angle(t, x))
+  ba_high <- subset(bus_locs, (alarm==2 & Angle > upper_alimit))
+  if(nrow(ba_high) > 0L){ba_high$color <- 2} #above limit = red
+  
+  ba_low <- subset(bus_locs, (alarm==2 & Angle < lower_alimit))
+  if(nrow(ba_low) > 0L){ba_low$color <- 4} #below limit = blue
+  
+  ba_normal <- subset(bus_locs, (alarm==1))
+  if(nrow(ba_normal) > 0L){ba_normal$color <- 1} #within limits = green
+  
+  ba_past <- subset(bus_locs, (alarm==2 & (Angle >= lower_alimit & Angle <= upper_alimit)))
+  if(nrow(ba_past) > 0L){ba_past$color <- 3} #currently within limits, but above/below in past=yellow
+  
+  g <- g + geom_polygon(data = rtpFortMer, 
+                        aes(x = long, y = lat, group = group, fill = layer), 
+                        alpha = 0.5, 
+                        size = 0) + ## size = 0 to remove the polygon outlines
+    scale_fill_gradientn("Angle",colours = c("red","yellow","green","blue","black"),limits=c(amin,amax))
+  alarm_labs <- NULL
+  alarm_vals <- NULL
+  if(nrow(ba_normal) > 0L){
+    alarm_labs <- c(alarm_labs,paste(lower_alimit," < Angle < ",upper_alimit,sep=""))
+    alarm_vals <- c(alarm_vals,"1"="green")
+    g <- g+geom_point(data = ba_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)
+  }
+  if(nrow(ba_high) > 0L){
+    alarm_labs <- c(alarm_labs,paste("Angle > ",upper_alimit,sep=""))
+    alarm_vals <- c(alarm_vals,"2"="red")
+    g <- g+geom_point(data = ba_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  if(nrow(ba_past) > 0L){
+    alarm_labs <- c(alarm_labs,"Angle Previously outside of Limits")
+    alarm_vals <- c(alarm_vals,"3"="yellow")
+    g <- g+geom_point(data = ba_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  if(nrow(ba_low) > 0L){
+    alarm_labs <- c(alarm_labs,paste("Angle < ",lower_alimit,sep=""))
+    alarm_vals <- c(alarm_vals,"4"="blue")
+    g <- g+geom_point(data = ba_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  g <- g+  
+    scale_colour_manual("Alarm Status",values = alarm_vals,# c("1"="blue", "2"="green", "3"="red", "4"="yellow"),
+                        labels=alarm_labs) +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
+    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+  g
+}
+
+plot_heatmapangle<- function(t){
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
+  if(!exists("zoom")){
+    zoom <<- FALSE
+  }
+  bus_locs <- update_pangle(t)
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  xstep <- (xmx-xmn)/80
+  ystep <- (ymx-ymn)/80
+  
+  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Angle, duplicate = "mean",
+                        xo=seq(xmn,xmx, by=xstep),
+                        yo=seq(ymn,ymx, by=ystep))
+  r <- raster(intp_coords)
+  rtp <- rasterToPolygons(r)
+  
+  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+  rtpFort <- fortify(rtp, data = rtp@data)
+  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  
+  if(autosc == TRUE){
+    # amin <- min(b$Angle)
+    # amax <- max(b$Angle)
+    amin <- ifelse(min(bus_locs$Angle)<(-40),min(bus_locs$Angle),-40)
+    amax <- ifelse(max(bus_locs$Angle)>40,max(bus_locs$Angle),40)
+    #  adiff <- (amax-amin)
+    #  a_lab <- c(amin,(amin+(adiff/4)),(amin+(adiff/2)),(amax-(adiff/4)),amax)
+  } else{
+    amin <- -40
+    amax <- 40
+    # a_lab <- c(-40,-20,0,20,40)
   }
   g <- g + geom_polygon(data = rtpFortMer, 
                         aes(x = long, y = lat, group = group, fill = layer), 
@@ -476,91 +777,98 @@ plot_heatmapangle<- function(t){
   g
 }
 
-plot_heatmapvolt<- function(t){
+plot_heatmapfreq_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
-  bus_locs <- update_volt(t)
+  if(!exists("zoom")){
+    zoom <<- FALSE
+  }
+  bus_locs <- update_freq(t)
   xmn <- min(bus_locs$Longitude)
   xmx <- max(bus_locs$Longitude)
   ymn <- min(bus_locs$Latitude)
   ymx <- max(bus_locs$Latitude)
   if(autosc == TRUE){
-     vmin <- min(bus_locs$Voltage)
-     vmax <- max(bus_locs$Voltage)
-    #vmin <- ifelse(min(bus_locs$Voltage)<0.8,min(bus_locs$Voltage),0.8)
-   # vmax <- ifelse(max(bus_locs$Voltage)>1.2,max(bus_locs$Voltage),1.2)
-  #  vdiff <- (vmax-vmin)
- #   v_lab <- c(vmin,(vmin+(vdiff/4)),(vmin+(vdiff/2)),(vmax-(vdiff/4)),vmax)
+    fmin <- ifelse(min(bus_locs$Frequency)<59.8,min(bus_locs$Frequency),59.8)
+    fmax <- ifelse(max(bus_locs$Frequency)>60.2,max(bus_locs$Frequency),60.2)
   } else{
-    vmin <- 0.8
-    vmax <- 1.2
+    fmin <- 59.8
+    fmax <- 60.2
   }
-  # n_cores <- detectCores()-1
-  # cl<-makeCluster(n_cores)
-  # registerDoParallel(cl)
-  # xlen <- (xmx-xmn)/n_cores
-  # ylen <- (ymx-ymn)/n_cores
-  # plist <- foreach(n=1:n_cores, .packages=c( "ggmap", "rgdal", "raster", "akima", "sp"), 
-  #         #.export=c("xmn","xmx","ymn","ymx","bus_locs","xlen")) %dopar% { 
-  #         .export=c("xmn","xmx","ymn","ymx","bus_locs","xlen")) %dopar% { 
-  #           xmn_curr <- xmn+(xlen*(n-1))
-  #           xmx_curr <- (xmn+(xlen*n))
-  #           #ymn_curr <- ymn+(ylen*(n-1))
-  #          # ymx_curr <- ymn+(ylen*n)
-  #           intp_coord_part <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
-  #                                     xo=seq(xmn_curr,xmx_curr, by=0.05),
-  #                                     yo=seq(ymn,ymx, by=0.05))
-  #                                   #  yo=seq(ymn_curr,ymx_curr, by=0.05))
-  #           return(rasterToPolygons(raster(intp_coord_part)))
-  #         }
-  # 
-  # rtp <- do.call(bind, plist)
-  # stopCluster(cl)
-  # 
   xstep <- (xmx-xmn)/80
   ystep <- (ymx-ymn)/80
-  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
-                      xo=seq(xmn,xmx, by=xstep),
-                      yo=seq(ymn,ymx, by=ystep))
+  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
+                        xo=seq(xmn,xmx, by=xstep),
+                        yo=seq(ymn,ymx, by=ystep))
   r <- raster(intp_coords)
-
+  
   rtp <- rasterToPolygons(r)
   rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
   rtpFort <- fortify(rtp, data = rtp@data)
   rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
   
-#  rtc <- rasterToContour(r)
-#  rtc@data$id <- 1:nrow(rtc@data)
-#  rtcFort <- fortify(rtc, data=rtc@data)
- # rtcFortMer <- merge(rtcFort, rtc@data, by.x = 'id', by.y = 'id')
-  
-  if (vmin<0.8 & vmax <= 1.2) {
-    v_cols <-c("red","yellow","orange","blue","green")
-  } else if(vmax <1.2 & vmin >= 0.8){
-    v_cols <-c("green","blue","orange","yellow","red")
+  if (fmin<59.8 & fmax <= 60.2) {
+    f_cols <-c("red","yellow","orange","blue","green")
+  } else if(fmax <60.2 & fmin >= 59.8){
+    f_cols <-c("green","blue","orange","yellow","red")
   } else{
-    v_cols <-c("red","yellow","green","blue","black")
+    f_cols <-c("red","yellow","green","blue","black")
   }
+  
+  bus_locs$alarm <-apply(bus_locs,1, function(x) update_alarmstatus_freq(t, x))
+  bf_high <- subset(bus_locs, (alarm==2 & Frequency > upper_flimit))
+  if(nrow(bf_high) > 0L){bf_high$color <- 2} #above limit = red
+  
+  bf_low <- subset(bus_locs, (alarm==2 & Frequency < lower_flimit))
+  if(nrow(bf_low) > 0L){bf_low$color <- 4} #below limit = blue
+  
+  bf_normal <- subset(bus_locs, (alarm==1))
+  if(nrow(bf_normal) > 0L){bf_normal$color <- 1} #within limits = green
+  
+  bf_past <- subset(bus_locs, (alarm==2 & (Frequency >= lower_flimit & Frequency <= upper_flimit)))
+  if(nrow(bf_past) > 0L){bf_past$color <- 3} #currently within limits, but above/below in past=yellow
+  alarm_labs <- NULL
+  alarm_vals <- NULL
   g <- g + 
-  geom_polygon(data = rtpFortMer,
-                       aes(x = long, y = lat, group = group, fill = layer),
-                       alpha = 0.5,
-                       size = 0) +  ## size = 0 to remove the polygon outlines
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=Voltage,group=Sub.Name),size=5,alpha=0.7,shape=16) +
-    scale_colour_gradientn("Bus Voltage",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
-    scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax))+
+    geom_polygon(data = rtpFortMer,
+                 aes(x = long, y = lat, group = group, fill = layer),
+                 alpha = 0.5,
+                 size = 0) +  ## size = 0 to remove the polygon outlines
+    scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax))
+  if(nrow(bf_normal) > 0L){
+    alarm_labs <- c(alarm_labs,paste(lower_flimit," < Frequency < ",upper_flimit,sep=""))
+    alarm_vals <- c(alarm_vals,"1"="green")
+    g <- g+geom_point(data = bf_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  if(nrow(bf_high) > 0L){
+    alarm_labs <- c(alarm_labs,paste("Frequency > ",upper_flimit,sep=""))
+    alarm_vals <- c(alarm_vals,"2"="red")
+    g <- g+geom_point(data = bf_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  if(nrow(bf_past) > 0L){
+    alarm_labs <- c(alarm_labs,"Frequency Previously outside of Limits")
+    alarm_vals <- c(alarm_vals,"3"="yellow")
+    g <- g+geom_point(data = bf_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  if(nrow(bf_low) > 0L){
+    alarm_labs <- c(alarm_labs,paste("Frequency <",lower_flimit,sep=""))
+    alarm_vals <- c(alarm_vals,"4"="blue")
+    g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+  }
+  g <- g+scale_colour_manual("Alarm Status",values = alarm_vals,labels=alarm_labs) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
-
-
 
 plot_heatmapfreq<- function(t){
   bus_locs <- update_freq(t)
   if(!exists("autosc")){
     autosc <<- FALSE
+  }
+  if(!exists("zoom")){
+    zoom <<- FALSE
   }
   if(autosc == TRUE){
     fmin <- ifelse(min(bus_locs$Frequency)<59.8,min(bus_locs$Frequency),59.8)
@@ -605,6 +913,7 @@ plot_heatmapfreq<- function(t){
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
+
 
 plot_heatmapfreq_parallel<- function(t){
   bus_locs <- update_freq(t)
