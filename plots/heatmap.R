@@ -547,6 +547,8 @@ plot_heatmapvolt<- function(t){
                        aes(x = long, y = lat, group = group, fill = layer),
                        alpha = 0.5,
                        size = 0) +  ## size = 0 to remove the polygon outlines
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=Voltage,group=Sub.Name),size=5,alpha=0.7,shape=16) +
+    scale_colour_gradientn("Bus Voltage",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
@@ -595,6 +597,8 @@ plot_heatmapfreq<- function(t){
                         aes(x = long, y = lat, group = group, fill = layer), 
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=Frequency,group=Sub.Name),size=5,alpha=0.7,shape=16) +
+    scale_colour_gradientn("Bus Frequency",colours = c("green","blue","orange","yellow"),limits=c(fmin,fmax)) +
     #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
     scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
