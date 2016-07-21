@@ -6,11 +6,12 @@ get_csvdata_wecc <- function(dpath){
   substations <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Network_Data_substations.csv",sep = ""))
   Freq <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results.csv",sep = ""))
   Pangle <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_1.csv",sep = ""))
-  Volt <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_2.csv",sep = ""))
-  sr_3 <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_3.csv",sep = ""))
-  sr_4 <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_4.csv",sep = ""))
-  sr_5 <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_5.csv",sep = ""))
-  sr_6 <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_6.csv",sep = ""))
+  Volt <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_2.csv",sep = ""),stringsAsFactors = FALSE)
+#These files aren't used right now so let's not waste time reading them in
+  #sr_3 <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_3.csv",sep = ""))
+ # sr_4 <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_4.csv",sep = ""))
+  #sr_5 <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_5.csv",sep = ""))
+  #sr_6 <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_6.csv",sep = ""))
 }
 
 clean_names_wecc <- function(){
@@ -43,22 +44,20 @@ clean_names_wecc <- function(){
   vn  <- gsub(" V pu","",vn)
   colnames(Volt) <<- vn
   Volt <<- Volt[-1,]
-  
-  sn <- as.matrix(sr_3[1,])
-  colnames(sr_3) <<- sn
-  sr_3 <<- sr_3[-1,]
-  
-  sn <- as.matrix(sr_4[1,])
-  colnames(sr_4) <<- sn
-  sr_4 <<- sr_4[-1,]
-  
-  sn <- as.matrix(sr_5[1,])
-  colnames(sr_5) <<- sn
-  sr_5 <<- sr_5[-1,]
-  
-  sn <- as.matrix(sr_6[1,])
-  colnames(sr_6) <<- sn
-  sr_6 <<- sr_6[-1,]
+
+#Since we aren't using these, there's no need to pretty them up
+  # sn <- as.matrix(sr_3[1,])
+  # colnames(sr_3) <<- sn
+  # sr_3 <<- sr_3[-1,]
+  # sn <- as.matrix(sr_4[1,])
+  # colnames(sr_4) <<- sn
+  # sr_4 <<- sr_4[-1,]
+  # sn <- as.matrix(sr_5[1,])
+  # colnames(sr_5) <<- sn
+  # sr_5 <<- sr_5[-1,]
+  # sn <- as.matrix(sr_6[1,])
+  # colnames(sr_6) <<- sn
+  # sr_6 <<- sr_6[-1,]
   
   bus_locs <<- data.frame()
 }
