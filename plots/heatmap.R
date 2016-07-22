@@ -470,16 +470,16 @@ update_alarmstatus_angle <- function(t,b){
 }
 
 zoom_map <- function(point){
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
-  if(zoom == TRUE){
-    zoom <<- FALSE
+  if((is_zoom)){
+    is_zoom <<- FALSE
     g <<- ggmap(mapten) +
       scale_x_continuous(limits=c(map_lims[1], map_lims[2]), expand=c(0,0)) + 
       scale_y_continuous(limits=c(map_lims[3], map_lims[4]), expand=c(0,0))
   } else{
-    zoom <<- TRUE
+    is_zoom <<- TRUE
     xmin <- min(bus_locs$Longitude)
     xmax <- max(bus_locs$Longitude)
     ymin <- min(bus_locs$Latitude)
@@ -505,8 +505,8 @@ plot_heatmapvolt_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
   bus_locs <- update_volt(t)
   xmn <- min(bus_locs$Longitude)
@@ -594,8 +594,8 @@ plot_heatmapvolt<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
   bus_locs <- update_volt(t)
   xmn <- min(bus_locs$Longitude)
@@ -648,8 +648,8 @@ plot_heatmapangle_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
   bus_locs <- update_pangle(t)
   xmn <- min(bus_locs$Longitude)
@@ -734,8 +734,8 @@ plot_heatmapangle<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
   bus_locs <- update_pangle(t)
   xmn <- min(bus_locs$Longitude)
@@ -781,8 +781,8 @@ plot_heatmapfreq_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
   bus_locs <- update_freq(t)
   xmn <- min(bus_locs$Longitude)
@@ -839,22 +839,22 @@ plot_heatmapfreq_alarms<- function(t){
   if(nrow(bf_normal) > 0L){
     alarm_labs <- c(alarm_labs,paste(lower_flimit," < Frequency < ",upper_flimit,sep=""))
     alarm_vals <- c(alarm_vals,"1"="green")
-    g <- g+geom_point(data = bf_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 3, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bf_high) > 0L){
     alarm_labs <- c(alarm_labs,paste("Frequency > ",upper_flimit,sep=""))
     alarm_vals <- c(alarm_vals,"2"="red")
-    g <- g+geom_point(data = bf_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 3, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bf_past) > 0L){
     alarm_labs <- c(alarm_labs,"Frequency Previously outside of Limits")
     alarm_vals <- c(alarm_vals,"3"="yellow")
-    g <- g+geom_point(data = bf_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 3, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bf_low) > 0L){
     alarm_labs <- c(alarm_labs,paste("Frequency <",lower_flimit,sep=""))
     alarm_vals <- c(alarm_vals,"4"="blue")
-    g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 3, shape = 16)#, show.legend=FALSE)
   }
   g <- g+scale_colour_manual("Alarm Status",values = alarm_vals,labels=alarm_labs) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
@@ -867,8 +867,8 @@ plot_heatmapfreq<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
   if(autosc == TRUE){
     fmin <- ifelse(min(bus_locs$Frequency)<59.8,min(bus_locs$Frequency),59.8)
