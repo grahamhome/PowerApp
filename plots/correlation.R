@@ -110,27 +110,29 @@ get_busloc_pangle <- function(time){
 plot_corrpangle <- function(t){
   bus_locs <- get_busloc_pangle(t)
   update_covmat_pangle(t)
-  par(oma=c(2,2,2,0),mar=c(0,1,0,0))
+  par(oma=c(2,0,1,0))
   corrplot(cov2cor(Sa),tl.cex = 0.37,na.label.col = "white",addgrid.col = NA,
-           title =paste("Correlation of Phase Angle at Time",Pangle[t,1],sep = " "))
+           title =paste("Correlation of Phase Angle at Time",Pangle[t,1],sep = " "),
+           mar=c(3,0,4,0))
   #title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
 }
 
 plot_corrvolt <- function(t){
   bus_locs <- get_busloc_volt(t)
   update_covmat_volt(t)
-  par(oma=c(2,2,2,0),mar=c(0,1,0,0))
+  par(oma=c(2,0,1,0))
   corrplot(cov2cor(Sv),tl.cex = 0.37,na.label.col = "white",addgrid.col = NA,
-           title =paste("Correlation of Voltage at Time",Volt[t,1],sep = " "))
+           title =paste("Correlation of Voltage at Time",Volt[t,1],sep = " "),
+           mar=c(3,0,4,0))
            #title = bquote(atop("Correlation of Voltage at Time",atop(.(Volt[t,1]),""))))
 }
 
 plot_corrfreq <- function(t){
   bus_locs <- get_busloc_freq(t)
   update_covmat_freq(t)
-  par(oma=c(2,2,2,0),mar=c(0,1,0,0))
+  par(oma=c(2,0,1,0))
   corrplot(cov2cor(Sf),tl.cex = 0.37,na.label.col = "white",addgrid.col = NA,
-           #col = c("blue","white","red"),
+           mar=c(3,0,4,0),
            title = paste("Correlation of Frequency at Time",Volt[t,1],sep = " "))
 }
 
