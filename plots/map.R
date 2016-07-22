@@ -252,16 +252,16 @@ update_alarmstatus_angle <- function(t,b){
 }
 
 zoom_map <- function(point){
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
-  if(zoom == TRUE){
-    zoom <<- FALSE
+  if(is_zoom == TRUE){
+    is_zoom <<- FALSE
     g <<- ggmap(mapten) +
       scale_x_continuous(limits=c(map_lims[1], map_lims[2]), expand=c(0,0)) + 
       scale_y_continuous(limits=c(map_lims[3], map_lims[4]), expand=c(0,0))
   } else{
-    zoom <<- TRUE
+    is_zoom <<- TRUE
     xmin <- min(bus_locs$Longitude)
     xmax <- max(bus_locs$Longitude)
     ymin <- min(bus_locs$Latitude)
@@ -328,6 +328,9 @@ plot_mapangle <- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
+  }
   bus_locs <- update_pangle(t)
   if(autosc == TRUE){
     # amin <- min(b$Angle)
@@ -352,6 +355,12 @@ plot_mapangle <- function(t){
 #Plot angle of each bus with connecting lines (colored by correlation between the buses)
 #Autoscale isn't implemented in this yet; just using the min/max angle values
 plot_mapangle_lines <- function(t){
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
+  }
   bus_locs <- update_pangle(t)
   linesb <- get_busline_panglecov(t)
   linesb$Correlation[is.nan(linesb$Correlation)] <- 1
@@ -370,8 +379,8 @@ plot_mapangle_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
   bus_locs <- update_pangle(t)
   if(autosc == TRUE){
@@ -436,6 +445,9 @@ plot_mapvolt <- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
+  }
   # g <- ggmap(mapten)+
   #  scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +
   #   scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
@@ -472,8 +484,8 @@ plot_mapvolt_alarms <- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
   bus_locs <- update_volt(t)
   if(autosc == TRUE){
@@ -540,6 +552,9 @@ plot_mapfreq <- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
+  }
   bus_locs <- update_freq(t)
   if(autosc == TRUE){
     fmin <- ifelse(min(bus_locs$Frequency)<59.8,min(bus_locs$Frequency),59.8)
@@ -548,8 +563,8 @@ plot_mapfreq <- function(t){
     fmin <- 59.8
     fmax <- 60.2
   }
- # linesb <- get_busline_freqcov(t)
-#  linesb$Correlation[is.nan(linesb$Correlation)] <- 1
+  linesb <- get_busline_freqcov(t)
+  linesb$Correlation[is.nan(linesb$Correlation)] <- 1
   if (fmin<59.8 & fmax <= 60.2) {
     f_cols <-c("red","yellow","orange","blue","green")
   } else if(fmax <60.2 & fmin >= 59.8){
@@ -576,8 +591,8 @@ plot_mapfreq_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
-  if(!exists("zoom")){
-    zoom <<- FALSE
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
   bus_locs <- update_freq(t)
   if(autosc == TRUE){
@@ -640,7 +655,9 @@ plot_mapfreq_alarms<- function(t){
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # voltage at time t; each point is a large semi-transparent circle rather than a small solid circle
 plot_mapvolt_large <- function(t){
-
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
+  }
   if(!exists("autosc")){
     autosc <<- FALSE
   }
@@ -680,6 +697,9 @@ plot_mapfreq_large <- function(t){
 #  if(!exists("mincovv") | !exists("maxcovv")){
 #    get_minmax_covvolt()
 #  }
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
+  }
   #  g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
   bus_locs <- update_freq(t)
   linesb <- get_busline_freqcov(t)
@@ -708,6 +728,9 @@ alarm_time <- 60 * 60 #samples/sec * alarm time (sec)
 plot_mapvolt_230 <- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
+  }
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
   }
   # g <- ggmap(mapten)+
   #  scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +
