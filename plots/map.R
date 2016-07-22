@@ -158,11 +158,7 @@ update_freq <- function(time){
   tf <- t(Freq[time,-1])
   tf <- cbind(rownames(tf),tf)
   colnames(tf) <- c("Bus.Name","Frequency")
-<<<<<<< HEAD
-  bus_locs <- merge(bus_locs[ , ! colnames(bus_locs) %in% c("Frequency")],tf, by="Bus.Name")
-=======
   bus_locs <-  merge(bus_locs[ , ! colnames(bus_locs) %in% c("Frequency")],tf, by="Bus.Name")
->>>>>>> refs/remotes/origin/staging
   bus_locs$Frequency <- as.numeric(as.character(bus_locs$Frequency))
   #assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs

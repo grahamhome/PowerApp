@@ -1,4 +1,4 @@
-#A Shiny plugin which creates a window for displaying time series plots.
+#A display for viewing actionable 
 #Created by Graham Home <grahamhome333@gmail.com>
 
 #Proper Name
@@ -8,7 +8,7 @@ dispName <- function() {
 
 #Compatible plot plugins
 use_plots <- function() {
-	list('map.R')	#TODO: change to contour plot only
+	list('heatmap.R')
 }
 
 #UI
@@ -74,7 +74,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	state$showHelp <- FALSE
 
 	#Plotting method
-	state$method <- "plot_bus_volt"	#TODO: Change to contour plot method
+	method <- "plot_heatmapvolt_alarms"
 
 	output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 
@@ -95,7 +95,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 			#makeFilesProgress(input$time, input$time)
 			showPlot()
 			output$plot <- renderPlot({
-				eval(parse(text=paste(state$method, "(", input$time, ",", FALSE, ")", sep="")))
+				eval(parse(text=paste(method, "(", input$time, ")", sep="")))
 			})
 		}	
 	})
@@ -138,7 +138,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 				} else {
 					counter <<- counter + 1
 				}
-				list(src = paste("plots/img/", scale, "/", state$method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}
 	})
@@ -263,7 +263,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 
 		#Zoom
 		output$plot <- renderPlot ({
-			eval(parse(text=paste(state$method, "(", input$time, ",", "TRUE", ",", "c(", point[1], ",", point[2], ")", ")", sep="")))
+			zoom_map(point)
 		})
 
 		showDetails()
@@ -274,7 +274,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	observeEvent(input$resetPlot, {
 		hideZoom()
 		output$plot <- renderPlot({
-			eval(parse(text=paste(state$method, "(", input$time, ",", FALSE, ")", sep="")))
+			eval(parse(text=paste(method, "(", input$time, ")", sep="")))
 		})
 		showControls()
 	})
@@ -283,23 +283,23 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	makeFilesProgress <- function(start, stop) {
 		#Only default scale used in this viewer
 		scale = "defaultScale"
-		path <- paste("plots/img/", scale, "/", state$method, "/", name(), "/", sep="")
+		path <- paste("plots/img/", scale, "/", method, "/", name(), "/", sep="")
 		#Create directory for image files if it does not exist
 		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
 		dir.create(file.path("plots/img/", scale), showWarnings=FALSE)
-		dir.create(file.path(paste("plots/img/", scale, "/", sep=""), state$method), showWarnings=FALSE)
-		dir.create(file.path(paste("plots/img/", scale, "/", state$method, "/", sep=""), name()), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", scale, "/", sep=""), method), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", scale, "/", method, "/", sep=""), name()), showWarnings=FALSE)
 		#Create list of image files that do not yet exist
 		output$image <- renderImage({
 			withProgress(message="Creating Plot", detail="", value=0, {
 				for (t in start:stop) {
 					if (!(file.exists(paste(path, t, ".png", sep="")))) {
-						plot2png(paste(state$method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))
+						plot2png(paste(method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))
 					}
 					incProgress(1/(stop-start))
 				}
 			})
-			list(src = paste("plots/img/", scale, "/", state$method, "/", name(), "/", start, ".png", sep=""), height="100%", width="100%")
+			list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", start, ".png", sep=""), height="100%", width="100%")
 		}, deleteFile=FALSE)
 		return
 	}
