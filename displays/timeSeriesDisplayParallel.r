@@ -7,7 +7,7 @@ library(doParallel)
 
 #Proper Name
 dispName <- function() {
-	"Time Series Display with Parallel Processing"
+	"Time Series Display"
 }
 
 #Compatible plot plugins
