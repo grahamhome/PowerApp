@@ -7,7 +7,7 @@ library(doParallel)
 
 #Proper Name
 dispName <- function() {
-	"Time Series Display with Parallel Processing"
+	"Time Series Display"
 }
 
 #Compatible plot plugins
@@ -25,7 +25,9 @@ timeSeriesDisplayParallelUI <- function(id) {
 			fluidRow(
 				column(2,
 					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
-					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())]))
+					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())])),
+					br(),
+					checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
 				),
 				column(8, 
 					h2(name()),
@@ -96,46 +98,67 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 	#Show/hide help text
 	state$showHelp <- FALSE
 
+	#Create "play" button
 	output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 
 	#Create range start selector
 	output$startContainer <- renderUI({
 		ns <- session$ns
-		numericInput(ns("start"), "Start", value=1, min=1, max=nsamples()) #TODO: set max reactively based on value of "stop" (use updateNumericInput)
+		numericInput(ns("start"), "Start", value=1, min=1, max=nsamples())
 	})
 	#Create range end selector
 	output$stopContainer <- renderUI({
 		ns <- session$ns
-		numericInput(ns("stop"), "Stop", value=2, min=1, max=nsamples()) #TODO: set min reactively based on value of "start" (use updateNumericInput)
+		numericInput(ns("stop"), "Stop", value=2, min=1, max=nsamples())
 	})
 
 	#Switch to index-based display mode
-	observeEvent(c(input$time, input$activeMethod), {
+	observeEvent(c(input$time, input$activeMethod, input$rescale), priority=1, {
+		#If an animation is not currently playing
 		if (!state$playing) {
+			#Generate image for selected frame
 			makeFiles(input$time, input$time, input$activeMethod)
+			if (input$rescale) {
+				scale = "autoScale"
+			} else {
+				scale = "defaultScale"
+			}
+			#Display generated image
 			output$image <- renderImage({
-				list(src = paste("plots/img/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", scale, "/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}	
 	})
 
 	#Switch to animation display mode
 	observeEvent(input$play, {
+		#If an animation is not currently playing
 		if (!state$playing) {
+			#Check for valid range (1 <= start < stop <= total # of frames in dataset)
 			if ((input$start > input$stop) | (input$start < 1) | (input$stop > nsamples())) {
 				output$result <- renderText("Invalid range")
 			} else {
+				#Show "pause" icon when animation starts
 				output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("pause", "fa-2x"), class="icon") })
-				output$result <- renderText("")
 				#Read start and stop values one time only
 				state$start <- isolate(input$start)
 				state$stop <- isolate(input$stop)
 				state$speed <- isolate(as.numeric(input$speed))
-				makeFiles(state$start, state$stop, input$activeMethod)
+				#Show progress indicator so user knows that the images are being rendered, even though it doesn't update until the end
+				withProgress(message="Creating Plot, Please Wait...", detail="", value=0, {
+					#Create images for selcted frames
+					makeFiles(state$start, state$stop, input$activeMethod)
+					#Update progress bar when done
+					incProgress(1)
+				})
+				#Clear any displayed message and play animation
+				output$result <- renderText("")
 				state$playing <- !state$playing
 			}
 		} else {
+			#Stop the currently plahying animation
 			state$playing <- !state$playing
+			#Show "play" icon
 			output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 		}
 		
@@ -143,8 +166,15 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 
 	#Play animation
 	observeEvent(state$playing, {
+		#If an animation is playing
 		if (state$playing) {
+			if (input$rescale) {
+				scale = "autoScale"
+			} else {
+				scale = "defaultScale"
+			}
 			method <- isolate(input$activeMethod)
+			#Display image for current frame and update current frame
 			output$image <- renderImage({
 				invalidateLater(100/state$speed)
 				updateSliderInput(session, "time", value=state$start+counter)
@@ -153,7 +183,7 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 				} else {
 					counter <<- counter + 1
 				}
-				list(src = paste("plots/img/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}
 	})
@@ -162,10 +192,13 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 	observeEvent(input$frameBwd, {
 		updateSliderInput(session, "time", value=input$time-1)
 	})
+
 	#Seek forward one frame
 	observeEvent(input$frameFwd, {
 		updateSliderInput(session, "time", value=input$time+1)
 	})
+
+	#Go back to plot or display picker
 	observeEvent(input$back, {
 		state$playing <- FALSE
 		output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
@@ -176,6 +209,7 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 			launchUI("displayPicker()")
 		}
 	})
+
 	#Help text popup
 	observeEvent(input$help, {
 		state$showHelp <- !state$showHelp
@@ -193,18 +227,31 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 					"again after changing the start, stop, or speed values. ", br(), br(),
 					"Use the radio buttons on the left side of the graph display to change the plotting method used ", br(),
 					"to create the graph.", br(), br(),
+					"Clicking 'Re-Scale Plot' will adjust the range of potential values to match the values of the current sample.", br(), br(),
 					"Use the back button in the top left corner of the display to choose a different plot type or data set.")
 			)
 		}
 	})
 
+	#Scale adjustment
+	observeEvent(input$rescale, priority=0, {
+		autoscale()
+	})
+
 	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
 	makeFiles <- function(start, stop, method) {
-		path <- paste("plots/img/", method, "/", name(), "/", sep="")
+		if (input$rescale) {
+			scale = "autoScale"
+		} else {
+			scale = "defaultScale"
+		}
+		#Path to image directory
+		path <- paste("plots/img/", scale, "/", method, "/", name(), "/", sep="")
 		#Create directory for image files if it does not exist
 		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
-		dir.create(file.path("plots/img/", method), showWarnings=FALSE)
-		dir.create(file.path(paste("plots/img/", method, sep=""), name()), showWarnings=FALSE)
+		dir.create(file.path("plots/img/", scale), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", scale, "/", sep=""), method), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", scale, "/", method, "/", sep=""), name()), showWarnings=FALSE)
 		#Create list of image files that do not yet exist
 		files <- list()
 		for (i in start:stop) {
@@ -213,6 +260,7 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 			}
 		}
 		#Create any image files that do not yet exist
+		#Only use parallel processing if >1 images need to be made
 		if (length(files) > 1) {
 			#Set up parallel backend to use all but 1 of the available processors
 			cl<-makeCluster(detectCores()-1)
@@ -223,6 +271,7 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 			stopCluster(cl)
 		}
 		else if (length(files) == 1) {
+			#Use sequential processing if only 1 image is to be made
 			plot2png(paste(method, "(", files[[1]], ")", sep=""), paste(path, files[[1]], ".png", sep=""))
 		}
 		return

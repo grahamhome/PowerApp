@@ -8,7 +8,7 @@ dispName <- function() {
 
 #Compatible plot plugins
 use_plots <- function() {
-	list('map.R','heatmap.R', 'bar.R')
+	list()	#This display is deprecated and therefore has no "compatible" plots listed (although it should technically work fine with map.R, heatmap.R, and bar.R)
 }
 
 #UI
