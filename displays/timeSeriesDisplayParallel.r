@@ -25,7 +25,9 @@ timeSeriesDisplayParallelUI <- function(id) {
 			fluidRow(
 				column(2,
 					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
-					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())]))
+					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())])),
+					br(),
+					checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
 				),
 				column(8, 
 					h2(name()),
@@ -110,11 +112,16 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 	})
 
 	#Switch to index-based display mode
-	observeEvent(c(input$time, input$activeMethod), {
+	observeEvent(c(input$time, input$activeMethod, input$rescale), priority=1, {
 		if (!state$playing) {
 			makeFiles(input$time, input$time, input$activeMethod)
+			if (input$rescale) {
+				scale = "autoScale"
+			} else {
+				scale = "defaultScale"
+			}
 			output$image <- renderImage({
-				list(src = paste("plots/img/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", scale, "/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}	
 	})
@@ -126,12 +133,15 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 				output$result <- renderText("Invalid range")
 			} else {
 				output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("pause", "fa-2x"), class="icon") })
-				output$result <- renderText("")
 				#Read start and stop values one time only
 				state$start <- isolate(input$start)
 				state$stop <- isolate(input$stop)
 				state$speed <- isolate(as.numeric(input$speed))
-				makeFiles(state$start, state$stop, input$activeMethod)
+				withProgress(message="Creating Plot, Please Wait...", detail="", value=0, {
+					makeFiles(state$start, state$stop, input$activeMethod)
+					incProgress(1)
+				})
+				output$result <- renderText("")
 				state$playing <- !state$playing
 			}
 		} else {
@@ -144,6 +154,11 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 	#Play animation
 	observeEvent(state$playing, {
 		if (state$playing) {
+			if (input$rescale) {
+				scale = "autoScale"
+			} else {
+				scale = "defaultScale"
+			}
 			method <- isolate(input$activeMethod)
 			output$image <- renderImage({
 				invalidateLater(100/state$speed)
@@ -153,7 +168,7 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 				} else {
 					counter <<- counter + 1
 				}
-				list(src = paste("plots/img/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)
 		}
 	})
@@ -193,18 +208,30 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 					"again after changing the start, stop, or speed values. ", br(), br(),
 					"Use the radio buttons on the left side of the graph display to change the plotting method used ", br(),
 					"to create the graph.", br(), br(),
+					"Clicking 'Re-Scale Plot' will adjust the range of potential values to match the values of the current sample.", br(), br(),
 					"Use the back button in the top left corner of the display to choose a different plot type or data set.")
 			)
 		}
 	})
 
+	#Scale adjustment
+	observeEvent(input$rescale, priority=0, {
+		autoscale()
+	})
+
 	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
 	makeFiles <- function(start, stop, method) {
-		path <- paste("plots/img/", method, "/", name(), "/", sep="")
+		if (input$rescale) {
+			scale = "autoScale"
+		} else {
+			scale = "defaultScale"
+		}
+		path <- paste("plots/img/", scale, "/", method, "/", name(), "/", sep="")
 		#Create directory for image files if it does not exist
 		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
-		dir.create(file.path("plots/img/", method), showWarnings=FALSE)
-		dir.create(file.path(paste("plots/img/", method, sep=""), name()), showWarnings=FALSE)
+		dir.create(file.path("plots/img/", scale), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", scale, "/", sep=""), method), showWarnings=FALSE)
+		dir.create(file.path(paste("plots/img/", scale, "/", method, "/", sep=""), name()), showWarnings=FALSE)
 		#Create list of image files that do not yet exist
 		files <- list()
 		for (i in start:stop) {
