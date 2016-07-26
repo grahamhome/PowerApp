@@ -3,7 +3,7 @@
 
 #Proper Name
 dispName <- function() {
-	"Time Series Display"
+	"Time Series Display [DEPRICATED]"
 }
 
 #Compatible plot plugins
