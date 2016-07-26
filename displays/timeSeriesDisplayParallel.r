@@ -260,8 +260,8 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 			}
 		}
 		#Create any image files that do not yet exist
-		#Only use parallel processing if >1 images need to be made
-		if (length(files) > 1) {
+		#Only use parallel processing if >= (#cores-1) images need to be made, otherwise there's no advantage to using parallel processing.
+		if (length(files) >= (detectCores()-1)) {
 			#Set up parallel backend to use all but 1 of the available processors
 			cl<-makeCluster(detectCores()-1)
 			registerDoParallel(cl)
@@ -270,9 +270,11 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 			}
 			stopCluster(cl)
 		}
-		else if (length(files) == 1) {
-			#Use sequential processing if only 1 image is to be made
-			plot2png(paste(method, "(", files[[1]], ")", sep=""), paste(path, files[[1]], ".png", sep=""))
+		else {
+			#Use sequential processing if < (#cores-1) images are to be made
+			for (file in files) {
+				plot2png(paste(method, "(", file, ")", sep=""), paste(path, file, ".png", sep=""))
+			}
 		}
 		return
 	}
