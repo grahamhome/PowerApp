@@ -71,7 +71,28 @@ update_covbus_volt <- function(time) {
   assign("curr_sv",time,envir = .GlobalEnv)
   assign("Sv",Sv,envir = .GlobalEnv)
 }
-
+#Update the phase angle covariance matrix to the given time value
+update_covbus_pangle <- function(time) {
+  #This is in case we call this function on a timepoint before the last one we left off at; if that is the case we want to make sure the loop
+  # is starting at time=3 and the xbar is only the mean of the first 2 timepoints.
+  if (curr_sa<time&&curr_sa>2) {
+    ca <- curr_sa
+  }
+  else{
+    ca <- 3
+    xabar <- colMeans(Xa[1:2,])
+    Sa <- cov(Xa[1:2,])
+  }
+  for (t in ca:time) {
+    xn1 <- Xa[t,]
+    Sa <- (((t-1)/t)*Sa)+
+      ((1/t+1)*(xn1-xabar)%*%(t((xn1-xabar))))
+    xabar <- xabar + (1/(t+1))*(xn1-xabar)
+  }
+  assign("xabar",xabar,envir = .GlobalEnv)
+  assign("curr_sa",time,envir = .GlobalEnv)
+  assign("Sa",Sa,envir = .GlobalEnv)
+}
 #Update voltage covariance matrix, then goes through the lines matrix and returns linesb with the Correlation
 # column updated with the current values
 get_busline_voltcov <- function(time){
@@ -90,6 +111,19 @@ get_busline_freqcov <- function(time){
   for (x in 1:nrow(linesb)) {
     curr_row <- linesb[x,]
     curr_row$Correlation <- as.numeric(as.character(Sf[[curr_row$From.Bus.Name,curr_row$To.Bus.Name]]))
+    linesb[x,"Correlation"] <- curr_row$Correlation
+  }
+  linesb
+}
+#Updates the phase angle covariance matrix to the given time, converts the covariance matrix to a correlation
+# matrix, then adds it to the column in the lines dataframe (linesb) to be used for plotting the
+# lines between the buses and returns the new linesb dataframe
+get_busline_panglecov <- function(time){
+  update_covbus_pangle(time)
+  for (x in 1:nrow(linesb)) {
+    curr_row <- linesb[x,]
+    sac <- cov2cor(Sa[,])
+    curr_row$Correlation <- as.numeric(as.character(sac[[curr_row$From.Bus.Name,curr_row$To.Bus.Name]]))
     linesb[x,"Correlation"] <- curr_row$Correlation
   }
   linesb
@@ -281,7 +315,6 @@ update_virtualvalue <- function(x,y,x1,y1,vj){
   
   
 }
-
 #Go through every point within a circle for a given bus (with long/lat location) and updates the values there
 # nval = name of value to be updating the matrix with ("Voltage","Frequency","Angle")
 #Unused
@@ -308,7 +341,6 @@ update_neighbor_points <- function(nbus,nval){
   }
 }
 #new_voltvals$new.layer <- ifelse(new_voltvals$distsum!=0,(new_voltvals$valsum/new_voltvals$distsum),0)
-
 #updated_voltvals <- new_voltvals[(new_voltvals$distsum != 0),]
 #updated_voltvals$new.layer <- updated_voltvals$valsum/updated_voltvals$distsum
 #Unused
