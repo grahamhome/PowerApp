@@ -1,4 +1,5 @@
 
+#Function that returns a list that maps the plot functions with the name we want for the display
 fnames <- function(){
   n <- list(Linear="linear",
             Voltage="plot_voltage",
@@ -9,6 +10,7 @@ fnames <- function(){
   n
 }
 
+#Plot the bus angles of all buses from <start> to <stop>
 plot_pangle <- function(start,stop){
   #Vmelt <- melt(Volt[1:1000,], id="Time")
   #p <- ggplot(Vmelt,aes(x=Time,y=value,colour=variable,group=variable)) +
