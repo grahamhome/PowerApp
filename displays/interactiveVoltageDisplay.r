@@ -264,7 +264,9 @@ interactiveVoltageDisplay <- function(input, output, session) {
 		#Zoom
 		output$plot <- renderPlot ({
 			zoom_map(point)
-
+			output$plot <- renderPlot({
+				eval(parse(text=paste(method, "(", input$time, ")", sep="")))
+			})
 		})
 
 		showDetails()
