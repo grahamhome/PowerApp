@@ -518,9 +518,10 @@ plot_heatmapvolt_alarms<- function(t){
   bus_locs <- update_volt(t)
   if (is_zoom) {
     xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
-    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmax),"Longitude"])
     ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
-    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude<z_ymax),"Latitude"])
+   # b <- bus_locs[((bus_locs$Latitude>z_ymin)&)]
   } else{
     xmn <- min(bus_locs$Longitude)
     xmx <- max(bus_locs$Longitude)
@@ -618,9 +619,9 @@ plot_heatmapvolt<- function(t){
   bus_locs <- update_volt(t)
   if (is_zoom) {
     xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
-    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmax),"Longitude"])
     ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
-    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude<z_ymax),"Latitude"])
   } else{
     xmn <- min(bus_locs$Longitude)
     xmx <- max(bus_locs$Longitude)
@@ -680,9 +681,9 @@ plot_heatmapangle_alarms<- function(t){
   bus_locs <- update_pangle(t)
   if (is_zoom) {
     xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
-    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmax),"Longitude"])
     ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
-    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude<z_ymax),"Latitude"])
   } else{
     xmn <- min(bus_locs$Longitude)
     xmx <- max(bus_locs$Longitude)
@@ -773,9 +774,9 @@ plot_heatmapangle<- function(t){
   bus_locs <- update_pangle(t)
   if (is_zoom) {
     xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
-    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmax),"Longitude"])
     ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
-    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude<z_ymax),"Latitude"])
   } else{
     xmn <- min(bus_locs$Longitude)
     xmx <- max(bus_locs$Longitude)
@@ -827,9 +828,9 @@ plot_heatmapfreq_alarms<- function(t){
   bus_locs <- update_freq(t)
   if (is_zoom) {
     xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
-    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmax),"Longitude"])
     ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
-    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude<z_ymax),"Latitude"])
   } else{
     xmn <- min(bus_locs$Longitude)
     xmx <- max(bus_locs$Longitude)
@@ -928,9 +929,9 @@ plot_heatmapfreq<- function(t){
   }
   if (is_zoom) {
     xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
-    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmax),"Longitude"])
     ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
-    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude<z_ymax),"Latitude"])
   } else{
     xmn <- min(bus_locs$Longitude)
     xmx <- max(bus_locs$Longitude)
