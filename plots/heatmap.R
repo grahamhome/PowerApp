@@ -13,6 +13,8 @@ library(geosphere)
 #library(data.table)
 #library(parallel)
 library(doParallel)
+
+#Function that returns a list that maps the plot functions with the name we want for the display
 fnames <- function(){
   n <- list(Heatmap="heatmap",
             Voltage="plot_heatmapvolt",
@@ -95,7 +97,7 @@ get_busline_freqcov <- function(time){
 
 
 
-#Change the frequency column of bus_locs with the frequencies for a given time then returns the new matrix
+#Change the frequency column of bus_locs with the frequencies for a given time then returns the new data frame
 update_freq <- function(time){
   tf <- t(Freq[time,-1])
   tf <- cbind(rownames(tf),tf)
@@ -106,7 +108,7 @@ update_freq <- function(time){
   #assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs
 }
-#Change the voltage column of bus_locs with the voltages for a given time then returns the new matrix
+#Change the voltage column of bus_locs with the voltages for a given time then returns the new data frame
 update_volt <- function(time){
   tv <- t(Volt[time,-1])
   tv <- cbind(rownames(tv),tv)
@@ -117,7 +119,7 @@ update_volt <- function(time){
   #assign("bus_locs",bus_locs,envir = .GlobalEnv)
   bus_locs
 } 
-#Change the angle column of bus_locs with the angles for a given time then returns the new matrix
+#Change the angle column of bus_locs with the angles for a given time then returns the new data frame
 update_pangle <- function(time){
   ta <- t(Pangle[time,-1])
   ta <- cbind(rownames(ta),ta)
@@ -259,23 +261,26 @@ update_virtualvalue <- function(x,y,x1,y1,vj){
       #new_voltvals[curr_id,][["distsum"]] <<- c_diststum +as.numeric((1/((td)^2)))
     }
   }
-}
+  
+  #Old attempts at making this function; keeping just in case I need it
   # curr_index <- rtpFortMer_test[((round(rtpFortMer_test$long,digits=2) == tx)&(round(rtpFortMer_test$lat,digits=2)==ty)),]
- # ci <- which((((round(rtpFortMer_test$long,digits=2)==tx)&(round(rtpFortMer_test$lat,digits=2)==ty))))
+  # ci <- which((((round(rtpFortMer_test$long,digits=2)==tx)&(round(rtpFortMer_test$lat,digits=2)==ty))))
   # curr_yind <- match(y,intp_coords[["y"]])
- # curr_xind <- match(x,intp_coords[["x"]])
+  # curr_xind <- match(x,intp_coords[["x"]])
   #c_valsum <- zc_vals[curr_xind,curr_yind] #as.numeric(curr_vals[[1]][2]) #Value sum
-#  c_distsum <- zc_dists[curr_xind,curr_yind] #as.numeric(curr_vals[[1]][1]) #Distance sum value
+  #  c_distsum <- zc_dists[curr_xind,curr_yind] #as.numeric(curr_vals[[1]][1]) #Distance sum value
   #Update value sum
-#  c_valsum <- c_valsum+(vj*(1/((td)^2)))
- # c_distsum <- c_distsum+(1/((td)^2))
- # new_vals <- paste(c_distsum,c_valsum,sep = ",")
- # coords_z[curr_xind,curr_yind] <<- new_vals
- # zc_vals[curr_xind,curr_yind] <<- I(list(c_valsum,c(td,vj)))#c_valsum+ vj#(vj*(1/((td)^2)))
- # zc_dists[curr_xind,curr_yind] <<- #c_distsum+ td#(1/((td)^2))
- # zc_dists <<- zc_dists
+  #  c_valsum <- c_valsum+(vj*(1/((td)^2)))
+  # c_distsum <- c_distsum+(1/((td)^2))
+  # new_vals <- paste(c_distsum,c_valsum,sep = ",")
+  # coords_z[curr_xind,curr_yind] <<- new_vals
+  # zc_vals[curr_xind,curr_yind] <<- I(list(c_valsum,c(td,vj)))#c_valsum+ vj#(vj*(1/((td)^2)))
+  # zc_dists[curr_xind,curr_yind] <<- #c_distsum+ td#(1/((td)^2))
+  # zc_dists <<- zc_dists
   #zc_vals <<- zc_vals
-
+  
+  
+}
 
 #Go through every point within a circle for a given bus (with long/lat location) and updates the values there
 # nval = name of value to be updating the matrix with ("Voltage","Frequency","Angle")
@@ -303,22 +308,6 @@ update_neighbor_points <- function(nbus,nval){
   }
 }
 #new_voltvals$new.layer <- ifelse(new_voltvals$distsum!=0,(new_voltvals$valsum/new_voltvals$distsum),0)
-  
-#  ylist <- xlist <- list()
-  # for (x in seq(from = (-dinf+x1),to = (dinf+x1),by=0.1)) {
-  #   tx <- round(x,digits = 2) #Longitude
-  #     #print(paste("x:",tx,sep = ""))
-  #   for (y in seq(from = (Arg(-sqrt(as.complex((dinf^2)-(x^2))))+y1),to = (Arg((sqrt(as.complex((dinf^2)-(x^2)))))+y1),by=0.1)) {
-  #     ty <- round(y,digits = 2) #Latitude
-  #     
-  #     # if ((tx %in% intp_coords[["x"]])&(ty %in% intp_coords[["y"]])) {
-  #     #if(ty %in% ulats) {
-  #       # update_virtualvalue(tx,ty,x1,y1,vj)
-  #       #  print(paste("y:",ty,sep = ""))
-  #    # }
-  #     
-  #   }
-  # }
 
 #updated_voltvals <- new_voltvals[(new_voltvals$distsum != 0),]
 #updated_voltvals$new.layer <- updated_voltvals$valsum/updated_voltvals$distsum
@@ -431,10 +420,21 @@ update_grid_volt <- function(time){
   assign("intp_coords",intp_coords,envir = .GlobalEnv)
 }
 
-
+#Values to use for the alarm status functio
 alarm_time <- (60*10) #sample/sec * seconds to check
+#Upper/lower limit for the voltage to be considered alarmed
 upper_vlimit <- 1.05
 lower_vlimit <- 0.95
+#Upper/lower limit for the frequency to be considered alarmed
+upper_flimit <- 60.05
+lower_flimit <- 59.95
+#Upper/lower limit for the angle to be considered alarmed
+upper_alimit <- 20
+lower_alimit <- -20
+#Go back <alarm_time> steps to see if the voltage for the given bus ever went outside of the limits
+#returns 1 if it never went out of the limits; 2 otherwise
+#t = time (current time to look back from)
+#b = bus_locs row (bus we want to check)
 update_alarmstatus_volt <- function(t,b){
   state <- 1 #Meaning there are no values in the past <alarm_time> steps that are outside of the upper/lower limits
 
@@ -445,8 +445,10 @@ update_alarmstatus_volt <- function(t,b){
   }
   state
 }
-upper_flimit <- 60.05
-lower_flimit <- 59.95
+#Go back <alarm_time> steps to see if the frequency for the given bus ever went outside of the limits
+#returns 1 if it never went out of the limits; 2 otherwise
+#t = time (current time to look back from)
+#b = bus_locs row (bus we want to check)
 update_alarmstatus_freq <- function(t,b){
   state <- 1 #Meaning there are no values in the past <alarm_time> steps that are outside of the upper/lower limits
   
@@ -457,8 +459,10 @@ update_alarmstatus_freq <- function(t,b){
   }
   state
 }
-upper_alimit <- 20
-lower_alimit <- -20
+#Go back <alarm_time> steps to see if the angle for the given bus ever went outside of the limits
+#returns 1 if it never went out of the limits; 2 otherwise
+#t = time (current time to look back from)
+#b = bus_locs row (bus we want to check)
 update_alarmstatus_angle <- function(t,b){
   state <- 1 #Meaning there are no values in the past <alarm_time> steps that are outside of the upper/lower limits
   start <- ifelse((t>alarm_time), (t-alarm_time), 1)
@@ -468,7 +472,9 @@ update_alarmstatus_angle <- function(t,b){
   }
   state
 }
-
+#given a point that the user clicked on (<point>, from the shiny app), sets <is_zoom> to FALSE if it was TRUE, or TRUE if it was FALSE (or didn't exist)
+# if it is changed to TRUE, the ggplot that is used for plotting, <g> has its limits changed to 1/4 of the previous size.
+# If it is changed to FALSE, <g> is reset to its original size using the map_lims list (created in the import_data() function)
 zoom_map <- function(point){
   if(!exists("is_zoom")){
     is_zoom <<- FALSE
@@ -490,17 +496,18 @@ zoom_map <- function(point){
     xrange <- abs(xmax-xmin)/4
     yrange <- abs(ymax-ymin)/4 #TODO: Zoom into the nearest cluster instead
     
-    xmin <- point[1]-xrange
-    xmax <- point[1]+xrange
-    ymin <- point[2]-yrange
-    ymax <- point[2]+yrange
+    z_xmin <<- point[1]-xrange
+    z_xmax <<- point[1]+xrange
+    z_ymin <<- point[2]-yrange
+    z_ymax <<- point[2]+yrange
     
     g <<- ggmap(mapten) +
-      scale_x_continuous(limits=c(xmin, xmax), expand=c(0,0)) + 
-      scale_y_continuous(limits=c(ymin, ymax), expand=c(0,0))
+      scale_x_continuous(limits=c(z_xmin, z_xmax), expand=c(0,0)) + 
+      scale_y_continuous(limits=c(z_ymin, z_ymax), expand=c(0,0))
   }
 }
 
+#Plot the heatmap of the voltages of the buses at time <t>, and add points representing each bus over that heatmap, colored by their alarm state
 plot_heatmapvolt_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -509,10 +516,17 @@ plot_heatmapvolt_alarms<- function(t){
     is_zoom <<- FALSE
   }
   bus_locs <- update_volt(t)
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
+  if (is_zoom) {
+    xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+  } else{
+    xmn <- min(bus_locs$Longitude)
+    xmx <- max(bus_locs$Longitude)
+    ymn <- min(bus_locs$Latitude)
+    ymx <- max(bus_locs$Latitude)
+  }
   if(autosc == TRUE){
      vmin <- min(bus_locs$Voltage)
      vmax <- max(bus_locs$Voltage)
@@ -589,19 +603,31 @@ plot_heatmapvolt_alarms<- function(t){
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
-
+#Plot the heatmap of the voltages of the buses at time <t>
 plot_heatmapvolt<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
     is_zoom <<- FALSE
+    z_xmin <<- 0
+    z_xmax <<- 0
+    z_ymin <<- 0
+    z_ymax <<- 0
   }
   bus_locs <- update_volt(t)
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
+  if (is_zoom) {
+    xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+  } else{
+    xmn <- min(bus_locs$Longitude)
+    xmx <- max(bus_locs$Longitude)
+    ymn <- min(bus_locs$Latitude)
+    ymx <- max(bus_locs$Latitude)
+  }
+
   if(autosc == TRUE){
     vmin <- min(bus_locs$Voltage)
     vmax <- max(bus_locs$Voltage)
@@ -643,7 +669,7 @@ plot_heatmapvolt<- function(t){
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
-
+#Plot the heatmap of the angles of the buses at time <t>, and add points representing each bus over that heatmap, colored by their alarm state
 plot_heatmapangle_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -652,10 +678,17 @@ plot_heatmapangle_alarms<- function(t){
     is_zoom <<- FALSE
   }
   bus_locs <- update_pangle(t)
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
+  if (is_zoom) {
+    xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+  } else{
+    xmn <- min(bus_locs$Longitude)
+    xmx <- max(bus_locs$Longitude)
+    ymn <- min(bus_locs$Latitude)
+    ymx <- max(bus_locs$Latitude)
+  }
   xstep <- (xmx-xmn)/80
   ystep <- (ymx-ymn)/80
   
@@ -729,7 +762,7 @@ plot_heatmapangle_alarms<- function(t){
     ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
-
+#Plot the heatmap of the angles of the buses at time <t>
 plot_heatmapangle<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -738,10 +771,17 @@ plot_heatmapangle<- function(t){
     is_zoom <<- FALSE
   }
   bus_locs <- update_pangle(t)
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
+  if (is_zoom) {
+    xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+  } else{
+    xmn <- min(bus_locs$Longitude)
+    xmx <- max(bus_locs$Longitude)
+    ymn <- min(bus_locs$Latitude)
+    ymx <- max(bus_locs$Latitude)
+  }
   xstep <- (xmx-xmn)/80
   ystep <- (ymx-ymn)/80
   
@@ -776,7 +816,7 @@ plot_heatmapangle<- function(t){
     ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
-
+#Plot the heatmap of the frequency of the buses at time <t>, and add points representing each bus over that heatmap, colored by their alarm state
 plot_heatmapfreq_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -785,10 +825,17 @@ plot_heatmapfreq_alarms<- function(t){
     is_zoom <<- FALSE
   }
   bus_locs <- update_freq(t)
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
+  if (is_zoom) {
+    xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+  } else{
+    xmn <- min(bus_locs$Longitude)
+    xmx <- max(bus_locs$Longitude)
+    ymn <- min(bus_locs$Latitude)
+    ymx <- max(bus_locs$Latitude)
+  }
   if(autosc == TRUE){
     fmin <- ifelse(min(bus_locs$Frequency)<59.8,min(bus_locs$Frequency),59.8)
     fmax <- ifelse(max(bus_locs$Frequency)>60.2,max(bus_locs$Frequency),60.2)
@@ -861,7 +908,7 @@ plot_heatmapfreq_alarms<- function(t){
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
-
+#Plot the heatmap of the frequency of the buses at time <t>
 plot_heatmapfreq<- function(t){
   bus_locs <- update_freq(t)
   if(!exists("autosc")){
@@ -879,10 +926,17 @@ plot_heatmapfreq<- function(t){
     fmin <- 59.8
     fmax <- 60.2
   }
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
+  if (is_zoom) {
+    xmn <- min(bus_locs[(bus_locs$Longitude>=z_xmin),"Longitude"])
+    xmx <- max(bus_locs[(bus_locs$Longitude<=z_xmin),"Longitude"])
+    ymn <- min(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+    ymx <- max(bus_locs[(bus_locs$Latitude>z_ymin),"Latitude"])
+  } else{
+    xmn <- min(bus_locs$Longitude)
+    xmx <- max(bus_locs$Longitude)
+    ymn <- min(bus_locs$Latitude)
+    ymx <- max(bus_locs$Latitude)
+  }
   xstep <- (xmx-xmn)/80
   ystep <- (ymx-ymn)/80
   intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
@@ -914,7 +968,8 @@ plot_heatmapfreq<- function(t){
   g
 }
 
-
+#Plot the heatmap of the frequency of the buses at time <t>; uses parallel processing to compute the heatmap
+#Unused (it's not any faster than the nonparallel version)
 plot_heatmapfreq_parallel<- function(t){
   bus_locs <- update_freq(t)
   xmn <- min(bus_locs$Longitude)
@@ -965,6 +1020,8 @@ plot_heatmapfreq_parallel<- function(t){
   g
 }
 
+#Plot the heatmap of the frequency of the buses at time <t>; uses parallel processing to compute the heatmap with a cluster
+#Unused (it's not any faster than the nonparallel version)
 plot_heatmapfreq_cluster<- function(t){
   bus_locs <- update_freq(t)
   xmn <- min(bus_locs$Longitude)
@@ -1012,26 +1069,23 @@ plot_heatmapfreq_cluster<- function(t){
   g
 }
 
-
+#test function for the nonparallel versions; unused
 test_nonpar <- function(t){
   startTime <- Sys.time()
   plot_heatmapfreq_nonpar(t)
   print(paste("Non-parallel: ", toString((Sys.time()-startTime)), sep=""))
 }
+#test function for the parallel versions; unused
 test_par <- function(t){
   startTime <- Sys.time()
   print(plot_heatmapfreq(t))
   print(paste("Parallel: ", toString((Sys.time()-startTime)), sep=""))
 }
+#test function for the cluster parallel versions; unused
 test_cluster <- function(t){
   startTime <- Sys.time()
   plot_heatmapfreq_cluster(t)
   print(paste("Cluster: ", toString((Sys.time()-startTime)), sep=""))
-}
-test_freqs <- function(){
-  test_nonpar(1205)
-  test_par(1205)
-  test_cluster(1205)
 }
 
 

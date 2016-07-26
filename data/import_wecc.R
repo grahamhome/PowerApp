@@ -1,5 +1,6 @@
 library(ggmap)
 
+#Read in all of the csv data files
 get_csvdata_wecc <- function(dpath){
   branches <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Network_Data_branches.csv",sep = ""))
   buses <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Network_Data_buses.csv",sep = ""))
@@ -14,6 +15,7 @@ get_csvdata_wecc <- function(dpath){
   #sr_6 <<- read.csv(paste(dpath,"rawdata/WECC_2000Eqv_Scenario_Results_6.csv",sep = ""))
 }
 
+#Change up the names so that they all match; also remove first row for most of the data frames since they are the column names
 clean_names_wecc <- function(){
   ndn <- as.matrix(branches[1,])
   colnames(branches) <<- ndn
@@ -62,6 +64,7 @@ clean_names_wecc <- function(){
   bus_locs <<- data.frame()
 }
 
+#Create all of the merged data frames that will be used by the plotting functions
 get_merged_data_wecc <- function(){
   sub_buses <<- merge(buses,substations,by = c("Sub Num","Sub ID","Sub Name"))
   
@@ -111,7 +114,6 @@ get_merged_data_wecc <- function(){
   ln <- gsub("Longitude","To.Longitude",ln)
   ln <- gsub("From.To.Latitude","From.Latitude",ln,fixed = TRUE)
   ln <- gsub("From.To.Longitude","From.Longitude",ln,fixed = TRUE)
- # ln <- gsub("Latitude","To Latitude",ln)
   ln <- gsub("New.Bus.Name.x","From.Bus.Name",ln)
   ln <- gsub("New.Bus.Name.y","To.Bus.Name",ln)
   colnames(linesb_full) <<- ln
@@ -121,9 +123,25 @@ get_merged_data_wecc <- function(){
   #linesb <<- linesb_full[linesb_full$From.Bus.Name %in% colnames(Freq),]
   linesb$Correlation <<- 0
   
-
+  
+  transformers <<- merge(branches[(branches$`Branch Device Type`=="Transformer"),],bus_locs_full[,c("Bus.Num","Bus.Name","Latitude","Longitude","New.Bus.Name")],by.x = c("From Number","From Name"),by.y = c("Bus.Num","Bus.Name"))
+  tn <- colnames(transformers)
+  tn <- gsub("Latitude","From.Latitude",tn)
+  tn <- gsub("Longitude","From.Longitude",tn)
+  colnames(transformers) <<- tn
+  transformers <<- merge(transformers,bus_locs_full[,c("Bus.Num","Bus.Name","Latitude","Longitude","New.Bus.Name")],by.x = c("To Number","To Name"),by.y = c("Bus.Num","Bus.Name"))
+  tn <- colnames(transformers)
+  tn <- gsub("Latitude","To.Latitude",tn)
+  tn <- gsub("Longitude","To.Longitude",tn)
+  tn <- gsub("From.To.Latitude","From.Latitude",tn,fixed = TRUE)
+  tn <- gsub("From.To.Longitude","From.Longitude",tn,fixed = TRUE)
+  tn <- gsub("New.Bus.Name.x","From.Bus.Name",tn)
+  tn <- gsub("New.Bus.Name.y","To.Bus.Name",tn)
+  colnames(transformers) <<- tn
+  
 }
 
+#Create the map and ggmap to be used by the plot functions (the map ones at least)
 get_map_data_wecc  <- function(){
   #Create the map to use as the background for the ggplot
   mapten <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), zoom = 4, maptype = "roadmap", scale = 2)
@@ -136,6 +154,7 @@ get_map_data_wecc  <- function(){
     scale_y_continuous(limits = c(31, 50), expand = c(0, 0))
 }
 
+#Create the covariance matrix for each value
 get_covvariance_data_wecc  <- function(){
   #Set up the variables for the voltage covariance matrix
   Xv <<- data.matrix(Volt[,-1])
@@ -154,7 +173,7 @@ get_covvariance_data_wecc  <- function(){
   xabar <<- colMeans(Xa[1:2,])
 }
 
-
+#Call all the functions in order
 import_data <- function(){
   get_csvdata_wecc("data/")
   clean_names_wecc()
@@ -163,11 +182,12 @@ import_data <- function(){
   get_covvariance_data_wecc()
 }
 
+#Name of the data set
 name <- function(){
   n <- "May 2014 Scenario"
   n
 }
-
+#How many time points is the data
 nsamples <- function(){
   nrow(Freq)
 }
