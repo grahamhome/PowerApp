@@ -113,7 +113,12 @@ interactiveVoltageDisplay <- function(input, output, session) {
 				state$start <- isolate(input$start)
 				state$stop <- isolate(input$stop)
 				state$speed <- isolate(as.numeric(input$speed))
-				makeFilesProgress(state$start, state$stop)
+				#Show progress indicator so user knows that the images are being rendered, even though it doesn't update until the end
+				withProgress(message="Creating Plot, Please Wait...", detail="", value=0, {
+					makeFiles(state$start, state$stop, method)
+					#Update progress bar when done
+					incProgress(1)
+				})
 				state$playing <- !state$playing
 			}
 		} else {
@@ -127,9 +132,8 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	observeEvent(state$playing, {
 		if (state$playing) {
 			#Only default scale used in this viewer
-			scale = "defaultScale" 
+			scale = "autoScale" 
 			showImage()
-
 			output$image <- renderImage({
 				invalidateLater(100/state$speed)
 				updateSliderInput(session, "time", value=state$start+counter)
@@ -169,7 +173,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	#Image display
 	showImage <- function() {
 		output$display <- renderUI({
-			imageOutput(ns("image"), height="auto", width="100%")
+			imageOutput(ns("image"), height="auto", width="90%")
 		})
 	}
 
@@ -283,10 +287,10 @@ interactiveVoltageDisplay <- function(input, output, session) {
 		showControls()
 	})
 
-	#Uses parallel processing to create a set of plot images over the given range.
-	makeFilesProgress <- function(start, stop) {
-		#Only default scale used in this viewer
-		scale = "defaultScale"
+	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
+	makeFiles <- function(start, stop, method) {
+		scale = "autoScale"
+		#Path to image directory
 		path <- paste("plots/img/", scale, "/", method, "/", name(), "/", sep="")
 		#Create directory for image files if it does not exist
 		dir.create(file.path("plots/", "img"), showWarnings=FALSE)
@@ -294,17 +298,29 @@ interactiveVoltageDisplay <- function(input, output, session) {
 		dir.create(file.path(paste("plots/img/", scale, "/", sep=""), method), showWarnings=FALSE)
 		dir.create(file.path(paste("plots/img/", scale, "/", method, "/", sep=""), name()), showWarnings=FALSE)
 		#Create list of image files that do not yet exist
-		output$image <- renderImage({
-			withProgress(message="Creating Plot", detail="", value=0, {
-				for (t in start:stop) {
-					if (!(file.exists(paste(path, t, ".png", sep="")))) {
-						plot2png(paste(method, "(", t, ")", sep=""), paste(path, t, ".png", sep=""))
-					}
-					incProgress(1/(stop-start))
-				}
-			})
-			list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", start, ".png", sep=""), height="100%", width="100%")
-		}, deleteFile=FALSE)
+		files <- list()
+		for (i in start:stop) {
+			if (!(file.exists(paste(path, i, ".png", sep="")))) {
+				files[[length(files)+1]] <- i
+			}
+		}
+		#Create any image files that do not yet exist
+		#Only use parallel processing if >= (#cores-1) images need to be made, otherwise there's no advantage to using parallel processing.
+		if (length(files) >= (detectCores()-1)) {
+			#Set up parallel backend to use all but 1 of the available processors
+			cl<-makeCluster(detectCores()-1)
+			registerDoParallel(cl)
+			foreach(t=1:length(files), .packages=c("ggplot2", "ggmap", "rgdal", "raster", "akima", "sp"), .export=c(ls(globalenv()), "start", "stop")) %dopar% { #TODO: Figure out how to not hardcode packages
+				plot2png(paste(method, "(", files[[t]], ")", sep=""), paste(path, files[[t]], ".png", sep=""))
+			}
+			stopCluster(cl)
+		}
+		else {
+			#Use sequential processing if < (#cores-1) images are to be made
+			for (file in files) {
+				plot2png(paste(method, "(", file, ")", sep=""), paste(path, file, ".png", sep=""))
+			}
+		}
 		return
 	}
 }
