@@ -215,8 +215,19 @@ make_sparklines_volt <- function(time){
 
 
 alarm_time <- (60*10) #sample/sec * seconds to check
+#Upper/lower limit for the voltage to be considered alarmed
 upper_vlimit <- 1.05
 lower_vlimit <- 0.95
+#Upper/lower limit for the frequency to be considered alarmed
+upper_flimit <- 60.05
+lower_flimit <- 59.95
+#Upper/lower limit for the angle to be considered alarmed
+upper_alimit <- 20
+lower_alimit <- -20
+#Go back <alarm_time> steps to see if the voltage for the given bus ever went outside of the limits
+#returns 1 if it never went out of the limits; 2 otherwise
+#t = time (current time to look back from)
+#b = bus_locs row (bus we want to check)
 update_alarmstatus_volt <- function(t,b){
   state <- 1 #Meaning there are no values in the past <alarm_time> steps that are outside of the upper/lower limits
   
@@ -227,8 +238,10 @@ update_alarmstatus_volt <- function(t,b){
   }
   state
 }
-upper_flimit <- 60.05
-lower_flimit <- 59.95
+#Go back <alarm_time> steps to see if the frequency for the given bus ever went outside of the limits
+#returns 1 if it never went out of the limits; 2 otherwise
+#t = time (current time to look back from)
+#b = bus_locs row (bus we want to check)
 update_alarmstatus_freq <- function(t,b){
   state <- 1 #Meaning there are no values in the past <alarm_time> steps that are outside of the upper/lower limits
   
@@ -239,8 +252,10 @@ update_alarmstatus_freq <- function(t,b){
   }
   state
 }
-upper_alimit <- 20
-lower_alimit <- -20
+#Go back <alarm_time> steps to see if the angle for the given bus ever went outside of the limits
+#returns 1 if it never went out of the limits; 2 otherwise
+#t = time (current time to look back from)
+#b = bus_locs row (bus we want to check)
 update_alarmstatus_angle <- function(t,b){
   state <- 1 #Meaning there are no values in the past <alarm_time> steps that are outside of the upper/lower limits
   start <- ifelse((t>alarm_time), (t-alarm_time), 1)
@@ -251,6 +266,9 @@ update_alarmstatus_angle <- function(t,b){
   state
 }
 
+#given a point that the user clicked on (<point>, from the shiny app), sets <is_zoom> to FALSE if it was TRUE, or TRUE if it was FALSE (or didn't exist)
+# if it is changed to TRUE, the ggplot that is used for plotting, <g> has its limits changed to 1/4 of the previous size.
+# If it is changed to FALSE, <g> is reset to its original size using the map_lims list (created in the import_data() function)
 zoom_map <- function(point){
   if(!exists("is_zoom")){
     is_zoom <<- FALSE
@@ -283,6 +301,7 @@ zoom_map <- function(point){
   }
 }
 #When called, change the autosc boolean from TRUE to FALSE or FALSE to TRUE
+#autoscale being TRUE means that the limits of whatever you are mapping is 
 autoscale <- function(){
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -293,7 +312,7 @@ autoscale <- function(){
     autosc <<-TRUE
   }
 }
-#Plot the power factor of each bus
+#Plot the power factor of each bus - power factor is the absolute value of the cosign of the bus angle
 plot_mappowfactor <- function(t){
   bus_locs <- update_pangle(t)
   pf <- subset(bus_locs,select = c("Bus.Name","Longitude","Latitude","Angle"))
@@ -317,11 +336,6 @@ plot_mappowfactor <- function(t){
     ggtitle(bquote(atop("Power Factor at Time",atop(.(Pangle[t,1]),""))))
   g
 }
-#g <- ggmap(maplocs)+
-#  geom_point(data=bus_locs_full,aes(x=Longitude,y=Latitude,colour="grey50"),size=4,alpha=0.5,shape=16) +
-  #scale_colour_gradientn("Bus Angle",colours = c("red","yellow","green","blue","black"),limits=c(amin,amax)) +
-#  labs(x = "Longitude", y = "Latitude") +
- # theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
 
 #Plot angle of each bus, without the connecting lines
 plot_mapangle <- function(t){
@@ -375,6 +389,9 @@ plot_mapangle_lines <- function(t){
   g
 }
 
+#Plot the alarm state of the angles of each bus at the given time
+#t = time to plot
+#return g, a ggmap object
 plot_mapangle_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -480,6 +497,9 @@ plot_mapvolt <- function(t){
   g
 }
 
+#Plot the alarm state of the voltage of each bus at the given time
+#t = time to plot
+#return g, a ggmap object
 plot_mapvolt_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -587,6 +607,9 @@ plot_mapfreq <- function(t){
   g
 }
 
+#Plot the alarm state of the frequency of each bus at the given time
+#t = time to plot
+#return g, a ggmap object
 plot_mapfreq_alarms<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -691,12 +714,6 @@ plot_mapvolt_large <- function(t){
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # frequency at time t; each point is a large semi-transparent circle rather than a small solid circle
 plot_mapfreq_large <- function(t){
- # if(!exists("mincovf") | !exists("maxcovf")){
-  #  get_minmax_covfreq()
-#  }
-#  if(!exists("mincovv") | !exists("maxcovv")){
-#    get_minmax_covvolt()
-#  }
   if(!exists("is_zoom")){
     is_zoom <<- FALSE
   }
@@ -718,7 +735,7 @@ plot_mapfreq_large <- function(t){
   g
 }
 
-
+#Plot the voltages of just the buses with a Nominal kV of 230. This isn't used by the display
 plot_mapvolt_230 <- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
