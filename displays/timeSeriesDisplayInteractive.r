@@ -1,32 +1,40 @@
-#A display for viewing actionable 
+#A Shiny plugin which creates a window for displaying time series plots, using parallel processing to generate plot images.
+#Supports interaction with plots including zooming in and viewing a single bus on a map.
 #Created by Graham Home <grahamhome333@gmail.com>
+
+#Dependencies for parallel processing
+library(foreach)
+library(doParallel)
 
 #Proper Name
 dispName <- function() {
-	"Interactive Voltage Display"
+	"Interactive Time Series Display"
 }
 
 #Compatible plot plugins
 use_plots <- function() {
-	list('heatmap.R')
+	list('map.R','heatmap.R')
 }
 
 #UI
-interactiveVoltageDisplayUI <- function(id) {
+timeSeriesDisplayInteractiveUI <- function(id) {
 	#Create namespace function from id
 	ns <- NS(id)
-
 	#Enclose UI contents in a tagList
 	tagList(
 		fixedPanel(class="mainwindow",
 			fluidRow(
-				column(1,
-					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon")
+				column(2,
+					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
+					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())])),
+					br(),
+					checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
 				),
-				column(10, 
-					h2(name())
+				column(8, 
+					h2(name()),
+					imageOutput(ns("image"), height="auto", width="100%")
 				),
-				column(1, 
+				column(2, 
 					div(class="helpiconbox", actionLink(ns("help"), "", icon=icon("question", "fa-2x"), class="icon"))
 				)
 			),
@@ -54,7 +62,7 @@ interactiveVoltageDisplayUI <- function(id) {
 }
 
 #Server logic
-interactiveVoltageDisplay <- function(input, output, session) {
+timeSeriesDisplayInteractive <- function(input, output, session) {
 	#Get namespace function
 	ns <- session$ns
 
@@ -73,56 +81,61 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	#Show/hide help text
 	state$showHelp <- FALSE
 
-	#Plotting method
-	method <- "plot_heatmapvolt_alarms"
-
+	#Create "play" button
 	output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 
 	#Create range start selector
 	output$startContainer <- renderUI({
 		ns <- session$ns
-		numericInput(ns("start"), "Start", value=1, min=1, max=nsamples()) #TODO: set max reactively based on value of "stop" (use updateNumericInput)
+		numericInput(ns("start"), "Start", value=1, min=1, max=nsamples())
 	})
 	#Create range end selector
 	output$stopContainer <- renderUI({
 		ns <- session$ns
-		numericInput(ns("stop"), "Stop", value=2, min=1, max=nsamples()) #TODO: set min reactively based on value of "start" (use updateNumericInput)
+		numericInput(ns("stop"), "Stop", value=2, min=1, max=nsamples())
 	})
 
 	#Switch to index-based display mode
-	observeEvent(c(input$time), priority=1, {
+	observeEvent(c(input$time, input$activeMethod, input$rescale), priority=1, {
+		#If an animation is not currently playing
 		if (!state$playing) {
-			#makeFilesProgress(input$time, input$time)
+			#Display plot
 			showPlot()
 			output$plot <- renderPlot({
-				eval(parse(text=paste(method, "(", input$time, ")", sep="")))
+				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
 			})
 		}	
 	})
 
 	#Switch to animation display mode
 	observeEvent(input$play, {
+		#If an animation is not currently playing
 		if (!state$playing) {
+			#Check for valid range (1 <= start < stop <= total # of frames in dataset)
 			if ((input$start > input$stop) | (input$start < 1) | (input$stop > nsamples())) {
 				output$result <- renderText("Invalid range")
 			} else {
+				#Show "pause" icon when animation starts
 				output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("pause", "fa-2x"), class="icon") })
-				output$result <- renderText("")
-
 				#Read start and stop values one time only
 				state$start <- isolate(input$start)
 				state$stop <- isolate(input$stop)
 				state$speed <- isolate(as.numeric(input$speed))
 				#Show progress indicator so user knows that the images are being rendered, even though it doesn't update until the end
 				withProgress(message="Creating Plot, Please Wait...", detail="", value=0, {
-					makeFiles(state$start, state$stop, method)
+					#Create images for selcted frames
+					makeFiles(state$start, state$stop, input$activeMethod)
 					#Update progress bar when done
 					incProgress(1)
 				})
+				#Clear any displayed message and play animation
+				output$result <- renderText("")
 				state$playing <- !state$playing
 			}
 		} else {
+			#Stop the currently plahying animation
 			state$playing <- !state$playing
+			#Show "play" icon
 			output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 		}
 		
@@ -130,10 +143,17 @@ interactiveVoltageDisplay <- function(input, output, session) {
 
 	#Play animation
 	observeEvent(state$playing, {
+		#If an animation is playing
 		if (state$playing) {
-			#Only default scale used in this viewer
-			scale = "autoScale" 
+			if (input$rescale) {
+				scale = "autoScale"
+			} else {
+				scale = "defaultScale"
+			}
+			#Show image instead of plot
 			showImage()
+			method <- isolate(input$activeMethod)
+			#Display image for current frame and update current frame
 			output$image <- renderImage({
 				invalidateLater(100/state$speed)
 				updateSliderInput(session, "time", value=state$start+counter)
@@ -151,10 +171,13 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	observeEvent(input$frameBwd, {
 		updateSliderInput(session, "time", value=input$time-1)
 	})
+
 	#Seek forward one frame
 	observeEvent(input$frameFwd, {
 		updateSliderInput(session, "time", value=input$time+1)
 	})
+
+	#Go back to plot or display picker
 	observeEvent(input$back, {
 		state$playing <- FALSE
 		output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
@@ -165,9 +188,33 @@ interactiveVoltageDisplay <- function(input, output, session) {
 			launchUI("displayPicker()")
 		}
 	})
+
 	#Help text popup
 	observeEvent(input$help, {
 		state$showHelp <- !state$showHelp
+	})
+
+	#Help text
+	output$helpbox <- renderUI({
+		if (state$showHelp) {
+			div(class="helptextbox",
+				p("Use the slider or the forward/back buttons to view individual frames of the power data. ", br(), br(),
+					"To view an animated sequence of power data values, specify the start and end frames of the ", br(), 
+					"sequence in the 'Start' and 'Stop' boxes, select an animation speed and press the play icon. ", br(),  
+					"Longer animations may have longer rendering times before they can be played. To change the ", br(), 
+					"animation parameters, first pause the currently playing animation, then click the play icon ", br(),
+					"again after changing the start, stop, or speed values. ", br(), br(),
+					"Use the radio buttons on the left side of the graph display to change the plotting method used ", br(),
+					"to create the graph.", br(), br(),
+					"Clicking 'Re-Scale Plot' will adjust the range of potential values to match the values of the current sample.", br(), br(),
+					"Use the back button in the top left corner of the display to choose a different plot type or data set.")
+			)
+		}
+	})
+
+	#Scale adjustment
+	observeEvent(input$rescale, priority=0, {
+		autoscale()
 	})
 
 	#Image display
@@ -224,13 +271,6 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	#Show animation controls by default
 	showControls()
 
-	#Shows details about the current buses instead of the animation controls (used when plot zooms)
-	showDetails <- function() {
-		output$lowerDisplay <- renderUI({
-			#TODO: Details go here
-		})
-	}
-
 	#Show zoom button
 	showZoom <- function() {
 		output$zoomBtnBox <- renderUI({
@@ -244,23 +284,6 @@ interactiveVoltageDisplay <- function(input, output, session) {
 		})
 	}
 
-	#Help text
-	output$helpbox <- renderUI({
-		if (state$showHelp) {
-			div(class="helptextbox",
-				p("Use the slider or the forward/back buttons to view individual frames of the power data. ", br(), br(),
-					"To view an animated sequence of power data values, specify the start and end frames of the ", br(), 
-					"sequence in the 'Start' and 'Stop' boxes, select an animation speed and press the play icon. ", br(),  
-					"Longer animations may have longer rendering times before they can be played. To change the ", br(), 
-					"animation parameters, first pause the currently playing animation, then click the play icon ", br(),
-					"again after changing the start, stop, or speed values. ", br(), br(),
-					"When the graph is paused (not playing an animation), click near a bus to zoom in on the region.", br(),
-					"Click 'Zoom Out' to view the entire graph and restore the animation controls.", br(), br(),
-					"Use the back button in the top left corner of the display to choose a different plot type or data set.")
-			)
-		}
-	})
-
 	#Click detection
 	observeEvent(input$pltClk, {
 
@@ -271,7 +294,7 @@ interactiveVoltageDisplay <- function(input, output, session) {
 		output$plot <- renderPlot ({
 			zoom_map(point)
 			output$plot <- renderPlot({
-				eval(parse(text=paste(method, "(", input$time, ")", sep="")))
+				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
 			})
 		})
 
@@ -284,14 +307,18 @@ interactiveVoltageDisplay <- function(input, output, session) {
 		hideZoom()
 		output$plot <- renderPlot({
 			zoom_map(point)
-			eval(parse(text=paste(method, "(", input$time, ")", sep="")))
+			eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
 		})
 		showControls()
 	})
 
 	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
 	makeFiles <- function(start, stop, method) {
-		scale = "autoScale"
+		if (input$rescale) {
+			scale = "autoScale"
+		} else {
+			scale = "defaultScale"
+		}
 		#Path to image directory
 		path <- paste("plots/img/", scale, "/", method, "/", name(), "/", sep="")
 		#Create directory for image files if it does not exist
