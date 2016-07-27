@@ -314,6 +314,9 @@ autoscale <- function(){
 }
 #Plot the power factor of each bus - power factor is the absolute value of the cosign of the bus angle
 plot_mappowfactor <- function(t){
+  if(!exists("is_zoom")){
+    is_zoom <<- FALSE
+  }
   bus_locs <- update_pangle(t)
   pf <- subset(bus_locs,select = c("Bus.Name","Longitude","Latitude","Angle"))
   pf$PowFact  <- apply(as.matrix(bus_locs[,"Angle"]), 1,function(x) abs(cos(x)))
@@ -323,10 +326,15 @@ plot_mappowfactor <- function(t){
   linesb <- get_busline_panglecov(t)
   linesb$Correlation[is.nan(linesb$Correlation)] <- 1
   #pf$group[pf$PowFact < 90] <- 
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
   g <- g+
     geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),show.legend = FALSE) +
     scale_colour_gradientn("Correlation",colours = c("black","brown","grey"),limits=c(-1,1)) +
-    geom_point(data=pf,aes(x=Longitude,y=Latitude,fill=factor(cg)),size=6,shape=21) +
+    geom_point(data=pf,aes(x=Longitude,y=Latitude,fill=factor(cg)),size=bus_size,shape=21) +
     #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
     scale_fill_manual(values = c("0"="red","1"="yellow","2"="green"),
                         labels=c("Power Factor<90%","95%>Power Factor>90%","Power Factor>95%"),
@@ -358,8 +366,13 @@ plot_mapangle <- function(t){
     amax <- 20
     # a_lab <- c(-40,-20,0,20,40)
   }
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
   g <- g+
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=10,alpha=0.5,shape=16) +
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=bus_size,alpha=0.5,shape=16) +
     scale_colour_gradientn("Bus Angle",colours = c("red","yellow","green","blue","black"),limits=c(amin,amax)) +
     labs(x = "Longitude", y = "Latitude") +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
@@ -375,13 +388,18 @@ plot_mapangle_lines <- function(t){
   if(!exists("is_zoom")){
     is_zoom <<- FALSE
   }
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
   bus_locs <- update_pangle(t)
   linesb <- get_busline_panglecov(t)
   linesb$Correlation[is.nan(linesb$Correlation)] <- 1
   g <- g+
     geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),alpha=0.4,show.legend = FALSE) +
     scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,fill=Angle),size=5,shape=21) +
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,fill=Angle),size=bus_size,shape=21) +
     scale_fill_gradientn("Angle",colours = c("red","yellow","green","blue","black"),limits=c(min(Pangle[,-1]),max(Pangle[,-1]))) +
     labs(x = "Longitude", y = "Latitude") +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
@@ -412,7 +430,11 @@ plot_mapangle_alarms<- function(t){
     amax <- 40
     # a_lab <- c(-40,-20,0,20,40)
   }
-  
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
   bus_locs$alarm <-apply(bus_locs,1, function(x) update_alarmstatus_angle(t, x))
   ba_high <- subset(bus_locs, (alarm==2 & Angle > upper_alimit))
   if(nrow(ba_high) > 0L){ba_high$color <- 2} #above limit = red
@@ -430,22 +452,22 @@ plot_mapangle_alarms<- function(t){
   if(nrow(ba_normal) > 0L){
     alarm_labs <- c(alarm_labs,paste(lower_alimit," < Angle < ",upper_alimit,sep=""))
     alarm_vals <- c(alarm_vals,"1"="green")
-    g <- g+geom_point(data = ba_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)
+    g <- g+geom_point(data = ba_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)
   }
   if(nrow(ba_high) > 0L){
     alarm_labs <- c(alarm_labs,paste("Angle > ",upper_alimit,sep=""))
     alarm_vals <- c(alarm_vals,"2"="red")
-    g <- g+geom_point(data = ba_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = ba_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(ba_past) > 0L){
     alarm_labs <- c(alarm_labs,"Angle Previously outside of Limits")
     alarm_vals <- c(alarm_vals,"3"="yellow")
-    g <- g+geom_point(data = ba_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = ba_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(ba_low) > 0L){
     alarm_labs <- c(alarm_labs,paste("Angle < ",lower_alimit,sep=""))
     alarm_vals <- c(alarm_vals,"4"="blue")
-    g <- g+geom_point(data = ba_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = ba_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   g <- g+  
     scale_colour_manual("Alarm Status",values = alarm_vals,# c("1"="blue", "2"="green", "3"="red", "4"="yellow"),
@@ -488,9 +510,14 @@ plot_mapvolt <- function(t){
   } else{
     v_cols <-c("red","orange","yellow","green","blue")
   }
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
  g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),alpha=0.4,show.legend = FALSE) +
     scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
-    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = 4, shape = 21) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21) +
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
@@ -525,6 +552,11 @@ plot_mapvolt_alarms<- function(t){
   } else{
     v_cols <-c("red","yellow","green","blue","black")
   }
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
   bus_locs$alarm <-apply(bus_locs,1, function(x) update_alarmstatus_volt(t, x))
   bv_high <- subset(bus_locs, (alarm==2 & Voltage > upper_vlimit))
   if(nrow(bv_high) > 0L){bv_high$color <- 2} #above limit = red
@@ -542,22 +574,22 @@ plot_mapvolt_alarms<- function(t){
   if(nrow(bv_normal) > 0L){
     alarm_labs <- c(alarm_labs,paste(lower_vlimit," < Voltage < ",upper_vlimit,sep=""))
     alarm_vals <- c(alarm_vals,"1"="green")
-    g <- g+geom_point(data = bv_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bv_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bv_high) > 0L){
     alarm_labs <- c(alarm_labs,paste("Voltage > ",upper_vlimit,sep=""))
     alarm_vals <- c(alarm_vals,"2"="red")
-    g <- g+geom_point(data = bv_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bv_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bv_past) > 0L){
     alarm_labs <- c(alarm_labs,"Voltage Previously outside of Limits")
     alarm_vals <- c(alarm_vals,"3"="yellow")
-    g <- g+geom_point(data = bv_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bv_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bv_low) > 0L){
     alarm_labs <- c(alarm_labs,paste("Voltage < ",lower_vlimit,sep=""))
     alarm_vals <- c(alarm_vals,"4"="blue")
-    g <- g+geom_point(data = bv_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bv_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   g <- g+scale_colour_manual("Alarm Status", values = alarm_vals,labels=alarm_labs) +
     #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
@@ -593,6 +625,11 @@ plot_mapfreq <- function(t){
   } else{
     f_cols <-c("red","yellow","green","blue","black")
   }
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
  # f_cols <- ifelse(min(Freq[,-1])<60,c("red","yellow","orange","blue","green"),c("green","blue","red","orange","yellow"))
   #color_vals_freq <- as.numeric(sapply( c((mincovf+0.1),(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   #Below is for the TS dataset
@@ -601,7 +638,7 @@ plot_mapfreq <- function(t){
   #color_vals_freq <- as.numeric(sapply( c(mincovf,50,100,150,200,(maxcovf-5)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=0.1),alpha=0.4,show.legend = FALSE) +
     scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
-    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 4, shape = 21) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = bus_size, shape = 21) +
     scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax)) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
@@ -634,7 +671,11 @@ plot_mapfreq_alarms<- function(t){
   } else{
     f_cols <-c("red","yellow","green","blue","black")
   }
-  
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
   bus_locs$alarm <-apply(bus_locs,1, function(x) update_alarmstatus_freq(t, x))
   bf_high <- subset(bus_locs, (alarm==2 & Frequency > upper_flimit))
   if(nrow(bf_high) > 0L){bf_high$color <- 2} #above limit = red
@@ -653,22 +694,22 @@ plot_mapfreq_alarms<- function(t){
   if(nrow(bf_normal) > 0L){
     alarm_labs <- c(alarm_labs,paste(lower_flimit," < Frequency < ",upper_flimit,sep=""))
     alarm_vals <- c(alarm_vals,"1"="green")
-    g <- g+geom_point(data = bf_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=0.9, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=0.9, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bf_high) > 0L){
     alarm_labs <- c(alarm_labs,paste("Frequency > ",upper_flimit,sep=""))
     alarm_vals <- c(alarm_vals,"2"="red")
-    g <- g+geom_point(data = bf_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=0.9, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=0.9, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bf_past) > 0L){
     alarm_labs <- c(alarm_labs,"Frequency Previously outside of Limits")
     alarm_vals <- c(alarm_vals,"3"="yellow")
-    g <- g+geom_point(data = bf_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=0.9, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=0.9, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bf_low) > 0L){
     alarm_labs <- c(alarm_labs,paste("Frequency <",lower_flimit,sep=""))
     alarm_vals <- c(alarm_vals,"4"="blue")
-    g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=0.9, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=0.9, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   g <- g+scale_colour_manual("Alarm Status",values = alarm_vals,labels=alarm_labs) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
@@ -703,8 +744,13 @@ plot_mapvolt_large <- function(t){
   } else{
     v_cols <-c("red","yellow","green","blue","black")
   }
+  if(is_zoom){
+    bus_size <- 25
+  } else{
+    bus_size <- 10
+  }
   g <- g+
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,color=Voltage),size=25,alpha=0.25,shape=16) +
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,color=Voltage),size=bus_size,alpha=0.25,shape=16) +
     #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
     scale_color_gradientn("Bus Voltage",colors = v_cols,limits=c(vmin,vmax)) +
     labs(x = "Longitude", y = "Latitude") +
@@ -718,12 +764,17 @@ plot_mapfreq_large <- function(t){
   if(!exists("is_zoom")){
     is_zoom <<- FALSE
   }
+  if(is_zoom){
+    bus_size <- 25
+  } else{
+    bus_size <- 10
+  }
   #  g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
   bus_locs <- update_freq(t)
   linesb <- get_busline_freqcov(t)
  # color_vals_freq <- as.numeric(sapply( c((mincovf+0.1),(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g+ 
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=Frequency,group=Sub.Name),size=25,alpha=0.25,shape=16) +
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=Frequency,group=Sub.Name),size=bus_size,alpha=0.25,shape=16) +
     scale_colour_gradientn("Bus Frequency",colours = c("green","blue","orange","yellow"),limits=c(min(bus_locs$Frequency),max(bus_locs$Frequency))) +
     labs(x = "Longitude", y = "Latitude") +
     #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,fill=Variance),show.legend = TRUE) +
@@ -736,12 +787,7 @@ plot_mapfreq_large <- function(t){
   g
 }
 
-lower_limit <- 0.8
-upper_limit <- 1.2
-# .95, 1.05 #More sensitive voltage thresholds #TODO: Add switch
 
-
-alarm_time <- 60 * 60 #samples/sec * alarm time (sec)
 
 #Plot the voltages of just the buses with a Nominal kV of 230. This isn't used by the display
 plot_mapvolt_230 <- function(t){
@@ -783,103 +829,4 @@ plot_mapvolt_230 <- function(t){
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
-}
-
-#Returns a number indicating if the bus has recently been in an alarm state (2) or not (1).
-bus_alarm_status <- function(t, bus_name, point) {
-  state <- "1"
-  start <- ifelse((t>alarm_time), (t-alarm_time), 1)
-  v <- Volt[start:t, bus_name]
-
-  #print(v[ ((v[t]>=upper_limit) | (v[t]<=lower_limit)) ])
-
-  if(length(v[ ((v>=upper_limit) | (v<=lower_limit)) ]) > 0) {
-    state <- "2"
-  }
-  state
-}
-
-#Returns a voltage map indicating alarm state
-plot_bus_volt <- function(t, zoom, point){
-
-  print("here goes nothing")
-  if(zoom) {
-    print(point[2])
-}
-  #Add alarm column if it does not exist
-  if(!("alarm" %in% colnames(bus_locs))) {
-    bus_locs$alarm <<- "1"
-  }
-
-  print("added alarm column")
-
-  #Update alarm column
-  bus_locs$alarm <<- apply(as.matrix(bus_locs), 1, function(x) bus_alarm_status(t, x["Bus.Name"]))
-
-  print("updated alarm column")  
-
-  bus_locs <- update_volt(t)
-
-  #Get bus voltages
-  bus_volts <- subset(bus_locs, select=c("Bus.Name", "Longitude", "Latitude", "Voltage", "alarm"))
-
-  print("got bus volts")
-
-  #Set bus statuses
-  bus_volts$status <- "1"
-  bus_volts$status[bus_volts$Voltage>=upper_limit] <- "2"
-  bus_volts$status[bus_volts$Voltage<=lower_limit] <- "3" #Under-voltage is more common and typically more serious than over-voltage, hence it is indicated with red and rendered above normal & high points
-  bus_volts$status[((bus_volts$status=="1") & (bus_volts$alarm=="2"))] <- "4"
-
-  print("set bus statuses")
-
-  #Create status dataframes
-  bus_volts_high <- subset(bus_volts, status=="2", select=c("Bus.Name", "Longitude", "Latitude", "Voltage", "status"))
-  bus_volts_low <- subset(bus_volts, status=="3", select=c("Bus.Name", "Longitude", "Latitude", "Voltage", "status"))
-  bus_volts_nominal <- subset(bus_volts, status=="1", select=c("Bus.Name", "Longitude", "Latitude", "Voltage", "status"))
-  bus_volts_past <- subset(bus_volts, status=="4", select=c("Bus.Name", "Longitude", "Latitude", "Voltage", "status"))
-
-  print(bus_volts[bus_volts$alarm=="2",])
-
-  print("ready to plot")
-
-  #Get point size from zoom
-  point_size <- ifelse(zoom, 16, 8)
-  
-  #Plot points
-  f <- g +
-    geom_point(data = bus_volts_nominal, aes(x=Longitude, y=Latitude, fill=status), size = point_size, shape = 23, show.legend=FALSE) +
-    geom_point(data = bus_volts_high, aes(x=Longitude, y=Latitude, fill=status), size = point_size, shape = 23, show.legend=FALSE) +
-    geom_point(data = bus_volts_past, aes(x=Longitude, y=Latitude, fill=status), size = point_size, shape = 23, show.legend=FALSE) +
-    geom_point(data = bus_volts_low, aes(x=Longitude, y=Latitude, fill=status), size = point_size, shape = 23, show.legend=FALSE) +
-    scale_fill_manual(values = c("1"="green", "2"="blue", "3"="red", "4"="yellow"))
-
-  if(zoom==TRUE) {
-
-    xmin <- min(bus_locs$Longitude)
-    xmax <- max(bus_locs$Longitude)
-    ymin <- min(bus_locs$Latitude)
-    ymax <- max(bus_locs$Latitude)
-
-    ratio <- abs(xmax-xmin)/abs(ymax-ymin)
-
-    print(bus_locs$Latitude)
-
-    print(paste("(", xmin, ",", xmax, ")", ", (", ymin, ",", ymax, ")", sep=""))
-
-    xrange <- abs(xmax-xmin)/4
-    yrange <- abs(ymax-ymin)/4 #TODO: Zoom into the nearest cluster instead
-
-    xmin <- point[1]-xrange
-    xmax <- point[1]+xrange
-    ymin <- point[2]-yrange
-    ymax <- point[2]+yrange
-    
-    print(paste("(", xmin, ",", xmax, ")", ", (", ymin, ",", ymax, ")", sep=""))
-
-    f <- f +
-      scale_x_continuous(limits=c(xmin, xmax), expand=c(0,0)) + 
-      scale_y_continuous(limits=c(ymin, ymax), expand=c(0,0))
-  }
-  f
 }

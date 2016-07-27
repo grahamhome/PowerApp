@@ -556,6 +556,11 @@ plot_heatmapvolt_alarms<- function(t){
   } else{
     v_cols <-c("red","yellow","green","blue","black")
   }
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
   
   bus_locs$alarm <-apply(bus_locs,1, function(x) update_alarmstatus_volt(t, x))
   bv_high <- subset(bus_locs, (alarm==2 & Voltage > upper_vlimit))
@@ -580,22 +585,22 @@ plot_heatmapvolt_alarms<- function(t){
   if(nrow(bv_normal) > 0L){
     alarm_labs <- c(alarm_labs,paste(lower_vlimit," < Voltage < ",upper_vlimit,sep=""))
     alarm_vals <- c(alarm_vals,"1"="green")
-    g <- g+geom_point(data = bv_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bv_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bv_high) > 0L){
     alarm_labs <- c(alarm_labs,paste("Voltage > ",upper_vlimit,sep=""))
     alarm_vals <- c(alarm_vals,"2"="red")
-    g <- g+geom_point(data = bv_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bv_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bv_past) > 0L){
     alarm_labs <- c(alarm_labs,"Voltage Previously outside of Limits")
     alarm_vals <- c(alarm_vals,"3"="yellow")
-    g <- g+geom_point(data = bv_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bv_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bv_low) > 0L){
     alarm_labs <- c(alarm_labs,paste("Voltage < ",lower_vlimit,sep=""))
     alarm_vals <- c(alarm_vals,"4"="blue")
-    g <- g+geom_point(data = bv_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bv_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   g <- g+scale_colour_manual("Alarm Status", values = alarm_vals,labels=alarm_labs) +
     #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
@@ -715,7 +720,11 @@ plot_heatmapangle_alarms<- function(t){
     amax <- 40
     # a_lab <- c(-40,-20,0,20,40)
   }
-  
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
   bus_locs$alarm <-apply(bus_locs,1, function(x) update_alarmstatus_angle(t, x))
   ba_high <- subset(bus_locs, (alarm==2 & Angle > upper_alimit))
   if(nrow(ba_high) > 0L){ba_high$color <- 2} #above limit = red
@@ -739,22 +748,22 @@ plot_heatmapangle_alarms<- function(t){
   if(nrow(ba_normal) > 0L){
     alarm_labs <- c(alarm_labs,paste(lower_alimit," < Angle < ",upper_alimit,sep=""))
     alarm_vals <- c(alarm_vals,"1"="green")
-    g <- g+geom_point(data = ba_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)
+    g <- g+geom_point(data = ba_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)
   }
   if(nrow(ba_high) > 0L){
     alarm_labs <- c(alarm_labs,paste("Angle > ",upper_alimit,sep=""))
     alarm_vals <- c(alarm_vals,"2"="red")
-    g <- g+geom_point(data = ba_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = ba_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(ba_past) > 0L){
     alarm_labs <- c(alarm_labs,"Angle Previously outside of Limits")
     alarm_vals <- c(alarm_vals,"3"="yellow")
-    g <- g+geom_point(data = ba_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = ba_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(ba_low) > 0L){
     alarm_labs <- c(alarm_labs,paste("Angle < ",lower_alimit,sep=""))
     alarm_vals <- c(alarm_vals,"4"="blue")
-    g <- g+geom_point(data = ba_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 5, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = ba_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   g <- g+  
     scale_colour_manual("Alarm Status",values = alarm_vals,# c("1"="blue", "2"="green", "3"="red", "4"="yellow"),
@@ -863,7 +872,11 @@ plot_heatmapfreq_alarms<- function(t){
   } else{
     f_cols <-c("red","yellow","green","blue","black")
   }
-  
+  if(is_zoom){
+    bus_size <- 10
+  } else{
+    bus_size <- 5
+  }
   bus_locs$alarm <-apply(bus_locs,1, function(x) update_alarmstatus_freq(t, x))
   bf_high <- subset(bus_locs, (alarm==2 & Frequency > upper_flimit))
   if(nrow(bf_high) > 0L){bf_high$color <- 2} #above limit = red
@@ -887,22 +900,22 @@ plot_heatmapfreq_alarms<- function(t){
   if(nrow(bf_normal) > 0L){
     alarm_labs <- c(alarm_labs,paste(lower_flimit," < Frequency < ",upper_flimit,sep=""))
     alarm_vals <- c(alarm_vals,"1"="green")
-    g <- g+geom_point(data = bf_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 3, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_normal, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bf_high) > 0L){
     alarm_labs <- c(alarm_labs,paste("Frequency > ",upper_flimit,sep=""))
     alarm_vals <- c(alarm_vals,"2"="red")
-    g <- g+geom_point(data = bf_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 3, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_high, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bf_past) > 0L){
     alarm_labs <- c(alarm_labs,"Frequency Previously outside of Limits")
     alarm_vals <- c(alarm_vals,"3"="yellow")
-    g <- g+geom_point(data = bf_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 3, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_past, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   if(nrow(bf_low) > 0L){
     alarm_labs <- c(alarm_labs,paste("Frequency <",lower_flimit,sep=""))
     alarm_vals <- c(alarm_vals,"4"="blue")
-    g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = 3, shape = 16)#, show.legend=FALSE)
+    g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   g <- g+scale_colour_manual("Alarm Status",values = alarm_vals,labels=alarm_labs) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
@@ -960,8 +973,8 @@ plot_heatmapfreq<- function(t){
                         aes(x = long, y = lat, group = group, fill = layer), 
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=Frequency,group=Sub.Name),size=5,alpha=0.7,shape=16) +
-    scale_colour_gradientn("Bus Frequency",colours = c("green","blue","orange","yellow"),limits=c(fmin,fmax)) +
+    #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=Frequency,group=Sub.Name),size=5,alpha=0.7,shape=16) +
+    #scale_colour_gradientn("Bus Frequency",colours = c("green","blue","orange","yellow"),limits=c(fmin,fmax)) +
     #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
     scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax))+
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
