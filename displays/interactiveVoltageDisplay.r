@@ -173,7 +173,9 @@ interactiveVoltageDisplay <- function(input, output, session) {
 	#Image display
 	showImage <- function() {
 		output$display <- renderUI({
-			imageOutput(ns("image"), height="auto", width="90%")
+			div(style="position:relative;float:left;margin-left:10%;width:80%", 
+				imageOutput(ns("image"), height="auto", width="100%")
+			)
 		})
 	}
 
