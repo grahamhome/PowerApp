@@ -1,4 +1,5 @@
 #A Shiny plugin which creates a window for displaying time series plots, using parallel processing to generate plot images.
+#Supports interaction with plots including zooming in and viewing a single bus on a map.
 #Created by Graham Home <grahamhome333@gmail.com>
 
 #Dependencies for parallel processing
@@ -7,34 +8,41 @@ library(doParallel)
 
 #Proper Name
 dispName <- function() {
-	"Time Series Display"
+	"Interactive Time Series Display"
 }
 
 #Compatible plot plugins
 use_plots <- function() {
-	list('map.R','heatmap.R', 'bar.R')
+	list('map.R','heatmap.R')
 }
 
 #UI
-timeSeriesDisplayParallelUI <- function(id) {
+timeSeriesDisplayInteractiveUI <- function(id) {
 	#Create namespace function from id
 	ns <- NS(id)
 	#Enclose UI contents in a tagList
 	tagList(
 		fixedPanel(class="mainwindow",
 			fluidRow(
-				column(2,
+				column(1,
 					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
 					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())])),
 					br(),
 					checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
 				),
-				column(8, 
+				column(10, 
 					h2(name()),
-					imageOutput(ns("image"), height="auto", width="100%")
+					div(style="width:100%; height:auto; position:relative; float:left",
+						uiOutput(ns("display"))
+					)
 				),
-				column(2, 
+				column(1, 
 					div(class="helpiconbox", actionLink(ns("help"), "", icon=icon("question", "fa-2x"), class="icon"))
+				)
+			),
+			fluidRow(
+				column(2, offset=5, 
+					uiOutput(ns("zoomBtnBox"))
 				)
 			),
 			fluidRow(
@@ -48,38 +56,14 @@ timeSeriesDisplayParallelUI <- function(id) {
 					div(class="iconbox", actionLink(ns("frameFwd"), "", icon=icon("step-forward", "fa-2x"), class="icon"))
 				) 
 			),
-			fluidRow(
-				column(2, offset=1, style="padding-top:2%;text-align:right",
-					p("Sample range to animate:", style="font-weight:bold")
-				),
-				column(2,
-					uiOutput(ns("startContainer"))
-				),
-				column(2, 
-					uiOutput(ns("stopContainer"))
-				),
-				column(2,
-					selectInput(ns("speed"), "Animation Speed:", choices=list("Slow"=0.1, "Normal Speed"=1, "Double Speed"=2), selected=1)
-				)
-			),
-			fluidRow(
-				column(12,
-					div(style="width:100%;color:red;text-align:center", textOutput(ns("result")))
-				)
-			),
-			fluidRow(
-				column(4, offset=4,
-					br(),
-					div(class="backiconbox", uiOutput(ns("toggle")))
-				)
-			)
+			uiOutput(ns("lowerDisplay"))
 		),
 		uiOutput(ns("helpbox"))
 	)
 }
 
 #Server logic
-timeSeriesDisplayParallel <- function(input, output, session) {
+timeSeriesDisplayInteractive <- function(input, output, session) {
 	#Get namespace function
 	ns <- session$ns
 
@@ -116,17 +100,11 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 	observeEvent(c(input$time, input$activeMethod, input$rescale), priority=1, {
 		#If an animation is not currently playing
 		if (!state$playing) {
-			#Generate image for selected frame
-			makeFiles(input$time, input$time, input$activeMethod)
-			if (input$rescale) {
-				scale = "autoScale"
-			} else {
-				scale = "defaultScale"
-			}
-			#Display generated image
-			output$image <- renderImage({
-				list(src = paste("plots/img/", scale, "/", input$activeMethod, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
-			}, deleteFile=FALSE)
+			#Display plot
+			showPlot()
+			output$plot <- renderPlot({
+				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+			})
 		}	
 	})
 
@@ -154,38 +132,37 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 				#Clear any displayed message and play animation
 				output$result <- renderText("")
 				state$playing <- !state$playing
+				if (input$rescale) {
+					scale = "autoScale"
+				} else {
+					scale = "defaultScale"
+				}
+				#Show image instead of plot
+				showImage()
+				method <- isolate(input$activeMethod)
+				#Display image for current frame and update current frame
+				output$image <- renderImage({
+					if(state$playing) {	#This is needed because invalidateLater() causes this function to be called even after the pause button is pushed.
+						invalidateLater(100/state$speed)
+						updateSliderInput(session, "time", value=state$start+counter)
+						if ((state$start+counter) == state$stop) {
+							counter <<- 0 #This will restart the animation
+						} else {
+							counter <<- counter + 1
+						}
+					}
+					list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				}, deleteFile=FALSE)
 			}
 		} else {
-			#Stop the currently plahying animation
+			#Show plot
+			showPlot()
+			#Stop the currently playing animation
 			state$playing <- !state$playing
 			#Show "play" icon
 			output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
 		}
 		
-	})
-
-	#Play animation
-	observeEvent(state$playing, {
-		#If an animation is playing
-		if (state$playing) {
-			if (input$rescale) {
-				scale = "autoScale"
-			} else {
-				scale = "defaultScale"
-			}
-			method <- isolate(input$activeMethod)
-			#Display image for current frame and update current frame
-			output$image <- renderImage({
-				invalidateLater(100/state$speed)
-				updateSliderInput(session, "time", value=state$start+counter)
-				if ((state$start+counter) == state$stop) {
-					counter <<- 0 #This will restart the animation
-				} else {
-					counter <<- counter + 1
-				}
-				list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
-			}, deleteFile=FALSE)
-		}
 	})
 
 	#Seek backward one frame
@@ -236,6 +213,97 @@ timeSeriesDisplayParallel <- function(input, output, session) {
 	#Scale adjustment
 	observeEvent(input$rescale, priority=0, {
 		autoscale()
+	})
+
+	#Image display
+	showImage <- function() {
+		output$display <- renderUI({
+			div(style="padding-left:12%",
+				imageOutput(ns("image"), height="auto", width="87%")
+			)
+		})
+	}
+
+	#Plot display
+	showPlot <- function() {
+		output$display <- renderUI({
+			plotOutput(ns("plot"), click=ns("pltClk"))
+		})
+	}
+
+	#Animation controls
+	showControls <- function() {
+		output$lowerDisplay <- renderUI({
+			tagList(
+				fluidRow(
+					column(2, offset=1, style="padding-top:2%;text-align:right",
+						p("Sample range to animate:", style="font-weight:bold")
+					),
+					column(2,
+						uiOutput(ns("startContainer"))
+					),
+					column(2, 
+						uiOutput(ns("stopContainer"))
+					),
+					column(2,
+						selectInput(ns("speed"), "Animation Speed:", choices=list("Slow"=0.1, "Normal Speed"=1, "Double Speed"=2), selected=1)
+					)
+				),
+				fluidRow(
+					column(12,
+						div(style="width:100%;color:red;text-align:center", textOutput(ns("result")))
+					)
+				),
+				fluidRow(
+					column(4, offset=4,
+						br(),
+						div(class="backiconbox", uiOutput(ns("toggle")))
+					)
+				)
+			)
+		})
+	}
+
+	#Show animation controls by default
+	showControls()
+
+	#Show zoom button
+	showZoom <- function() {
+		output$zoomBtnBox <- renderUI({
+			actionButton(ns("resetPlot"), "Zoom Out")
+		})
+	}
+
+	#Hide zoom button
+	hideZoom <- function() {
+		output$zoomBtnBox <- renderUI({
+		})
+	}
+
+	#Click detection
+	observeEvent(input$pltClk, {
+
+		#Get x and y values of click
+		point <- c(input$pltClk$x, input$pltClk$y)
+
+		#Zoom
+		output$plot <- renderPlot ({
+			zoom_map(point)
+			output$plot <- renderPlot({
+				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+			})
+		})
+	 	showZoom()
+	})
+
+	#Zoom out function
+	observeEvent(input$resetPlot, {
+		hideZoom()
+		output$plot <- renderPlot({
+			zoom_map(point)
+			eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+		})
+		showControls()
 	})
 
 	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.

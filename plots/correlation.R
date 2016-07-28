@@ -1,3 +1,4 @@
+#Note: This plotting method is no longer in use. Correlation data can be viewed in the Map plot.
 library(ggplot2)
 library(corrplot)
 #Function that returns a list that maps the plot functions with the name we want for the display
