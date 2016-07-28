@@ -645,6 +645,7 @@ plot_mapvolt_singlebus <- function(t,near_bus){
   bus_locs <- update_volt(t)
  # linesb <- get_busline_voltcov(t)
  # linesb$Correlation[is.nan(linesb$Correlation)] <- 1
+  near_bus <- bus_locs[near_bus,]
   bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
   if(autosc == TRUE){
     # vmin <- min(Volt[t,-1])
