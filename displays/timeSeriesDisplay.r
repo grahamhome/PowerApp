@@ -154,9 +154,28 @@ timeSeriesDisplay <- function(input, output, session) {
 				#Clear any displayed message and play animation
 				output$result <- renderText("")
 				state$playing <- !state$playing
+				if (input$rescale) {
+					scale = "autoScale"
+				} else {
+					scale = "defaultScale"
+				}
+				method <- isolate(input$activeMethod)
+				#Display image for current frame and update current frame
+				output$image <- renderImage({
+					if(state$playing) {	#This is needed because invalidateLater() causes this function to be called even after the pause button is pushed.
+						invalidateLater(100/state$speed)
+						updateSliderInput(session, "time", value=state$start+counter)
+						if ((state$start+counter) == state$stop) {
+							counter <<- 0 #This will restart the animation
+						} else {
+							counter <<- counter + 1
+						}
+					}
+					list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				}, deleteFile=FALSE)
 			}
 		} else {
-			#Stop the currently plahying animation
+			#Stop the currently playing animation
 			state$playing <- !state$playing
 			#Show "play" icon
 			output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
@@ -167,27 +186,7 @@ timeSeriesDisplay <- function(input, output, session) {
 	#Play animation
 	observeEvent(state$playing, {
 		#If an animation is playing
-		if (state$playing) {
-			if (input$rescale) {
-				scale = "autoScale"
-			} else {
-				scale = "defaultScale"
-			}
-			method <- isolate(input$activeMethod)
-			#Display image for current frame and update current frame
-			output$image <- renderImage({
-				if(state$playing) {	#This is needed because invalidateLater() causes this function to be called even after the pause button is pushed.
-					invalidateLater(100/state$speed)
-					updateSliderInput(session, "time", value=state$start+counter)
-					if ((state$start+counter) == state$stop) {
-						counter <<- 0 #This will restart the animation
-					} else {
-						counter <<- counter + 1
-					}
-				}
-				list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
-			}, deleteFile=FALSE)
-		}
+		
 	})
 
 	#Seek backward one frame

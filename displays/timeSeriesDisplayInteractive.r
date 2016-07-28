@@ -105,7 +105,6 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 			output$plot <- renderPlot({
 				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
 			})
-			print("Just re-rendered plot")
 		}	
 	})
 
@@ -165,32 +164,6 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 		}
 		
 	})
-
-	#Play animation
-	# observeEvent(state$playing, {
-	# 	#If an animation is playing
-	# 	if (state$playing) {
-	# 		if (input$rescale) {
-	# 			scale = "autoScale"
-	# 		} else {
-	# 			scale = "defaultScale"
-	# 		}
-	# 		#Show image instead of plot
-	# 		showImage()
-	# 		method <- isolate(input$activeMethod)
-	# 		#Display image for current frame and update current frame
-	# 		output$image <- renderImage({
-	# 			invalidateLater(100/state$speed)
-	# 			updateSliderInput(session, "time", value=state$start+counter)
-	# 			if ((state$start+counter) == state$stop) {
-	# 				counter <<- 0 #This will restart the animation
-	# 			} else {
-	# 				counter <<- counter + 1
-	# 			}
-	# 			list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
-	# 		}, deleteFile=FALSE)
-	# 	}
-	# })
 
 	#Seek backward one frame
 	observeEvent(input$frameBwd, {
