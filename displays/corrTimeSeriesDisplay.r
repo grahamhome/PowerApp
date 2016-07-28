@@ -1,5 +1,9 @@
-#A Shiny plugin which creates a window for displaying time series plots.
+#A Shiny plugin which creates a window for displaying correlation plots.
 #Created by Graham Home <grahamhome333@gmail.com>
+
+#Note: This display is no longer in use due to the fact that the correlation plotting
+#method is no longer used. It's only included in the final release of PowerViewer
+#in case someone wants to re-enable the correlation plot at some point.
 
 #Proper Name
 dispName <- function() {

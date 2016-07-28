@@ -286,24 +286,39 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 		#Get x and y values of click
 		point <- c(input$pltClk$x, input$pltClk$y)
 
-		#Zoom
-		output$plot <- renderPlot ({
-			zoom_map(point)
-			output$plot <- renderPlot({
-				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+		#Check if plot is already zoomed in
+		if (!is_zoom) {
+			#Zoom
+			withProgress(message="Zooming Plot, Please Wait...", detail="", value=0, {
+				output$plot <- renderPlot ({
+					zoom_map(point)
+					eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+				})
+				showZoom()
+				incProgress(1)
 			})
-		})
-	 	showZoom()
+		} else {
+			selected_bus <- nearPoints(bus_locs, input$pltClk, threshold=10, maxpoints=1, xvar="Longitude", yvar="Latitude")
+			print(rownames(selected_bus))
+			if (NROW(selected_bus) > 0) {
+				output$plot <- renderPlot ({
+					eval(parse(text=paste(isolate(input$activeMethod), "_singlebus", "(", input$time, ",", selected_bus, ")", sep="")))
+				})
+			}
+		}
 	})
 
 	#Zoom out function
 	observeEvent(input$resetPlot, {
 		hideZoom()
-		output$plot <- renderPlot({
-			zoom_map(point)
-			eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+		withProgress(message="Zooming Plot, Please Wait...", detail="", value=0, {
+			output$plot <- renderPlot({
+				zoom_map(point)
+				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+			})
+			showControls()
+			incProgress(1)
 		})
-		showControls()
 	})
 
 	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
