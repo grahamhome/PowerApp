@@ -176,12 +176,14 @@ timeSeriesDisplay <- function(input, output, session) {
 			method <- isolate(input$activeMethod)
 			#Display image for current frame and update current frame
 			output$image <- renderImage({
-				invalidateLater(100/state$speed)
-				updateSliderInput(session, "time", value=state$start+counter)
-				if ((state$start+counter) == state$stop) {
-					counter <<- 0 #This will restart the animation
-				} else {
-					counter <<- counter + 1
+				if(state$playing) {	#This is needed because invalidateLater() causes this function to be called even after the pause button is pushed.
+					invalidateLater(100/state$speed)
+					updateSliderInput(session, "time", value=state$start+counter)
+					if ((state$start+counter) == state$stop) {
+						counter <<- 0 #This will restart the animation
+					} else {
+						counter <<- counter + 1
+					}
 				}
 				list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
 			}, deleteFile=FALSE)

@@ -24,21 +24,22 @@ timeSeriesDisplayInteractiveUI <- function(id) {
 	tagList(
 		fixedPanel(class="mainwindow",
 			fluidRow(
-				column(2,
+				column(1,
 					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
 					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())])),
 					br(),
 					checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
 				),
-				column(8, 
+				column(10, 
 					h2(name()),
-					imageOutput(ns("image"), height="auto", width="100%")
+					div(style="width:100%; height:auto; position:relative; float:left",
+						uiOutput(ns("display"))
+					)
 				),
-				column(2, 
+				column(1, 
 					div(class="helpiconbox", actionLink(ns("help"), "", icon=icon("question", "fa-2x"), class="icon"))
 				)
 			),
-			uiOutput(ns("display")),
 			fluidRow(
 				column(2, offset=5, 
 					uiOutput(ns("zoomBtnBox"))
@@ -104,6 +105,7 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 			output$plot <- renderPlot({
 				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
 			})
+			print("Just re-rendered plot")
 		}	
 	})
 
@@ -131,9 +133,32 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 				#Clear any displayed message and play animation
 				output$result <- renderText("")
 				state$playing <- !state$playing
+				if (input$rescale) {
+					scale = "autoScale"
+				} else {
+					scale = "defaultScale"
+				}
+				#Show image instead of plot
+				showImage()
+				method <- isolate(input$activeMethod)
+				#Display image for current frame and update current frame
+				output$image <- renderImage({
+					if(state$playing) {	#This is needed because invalidateLater() causes this function to be called even after the pause button is pushed.
+						invalidateLater(100/state$speed)
+						updateSliderInput(session, "time", value=state$start+counter)
+						if ((state$start+counter) == state$stop) {
+							counter <<- 0 #This will restart the animation
+						} else {
+							counter <<- counter + 1
+						}
+					}
+					list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+				}, deleteFile=FALSE)
 			}
 		} else {
-			#Stop the currently plahying animation
+			#Show plot
+			showPlot()
+			#Stop the currently playing animation
 			state$playing <- !state$playing
 			#Show "play" icon
 			output$toggle <- renderUI({ actionLink(ns("play"), "", icon=icon("play", "fa-2x"), class="icon") })
@@ -142,30 +167,30 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 	})
 
 	#Play animation
-	observeEvent(state$playing, {
-		#If an animation is playing
-		if (state$playing) {
-			if (input$rescale) {
-				scale = "autoScale"
-			} else {
-				scale = "defaultScale"
-			}
-			#Show image instead of plot
-			showImage()
-			method <- isolate(input$activeMethod)
-			#Display image for current frame and update current frame
-			output$image <- renderImage({
-				invalidateLater(100/state$speed)
-				updateSliderInput(session, "time", value=state$start+counter)
-				if ((state$start+counter) == state$stop) {
-					counter <<- 0 #This will restart the animation
-				} else {
-					counter <<- counter + 1
-				}
-				list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
-			}, deleteFile=FALSE)
-		}
-	})
+	# observeEvent(state$playing, {
+	# 	#If an animation is playing
+	# 	if (state$playing) {
+	# 		if (input$rescale) {
+	# 			scale = "autoScale"
+	# 		} else {
+	# 			scale = "defaultScale"
+	# 		}
+	# 		#Show image instead of plot
+	# 		showImage()
+	# 		method <- isolate(input$activeMethod)
+	# 		#Display image for current frame and update current frame
+	# 		output$image <- renderImage({
+	# 			invalidateLater(100/state$speed)
+	# 			updateSliderInput(session, "time", value=state$start+counter)
+	# 			if ((state$start+counter) == state$stop) {
+	# 				counter <<- 0 #This will restart the animation
+	# 			} else {
+	# 				counter <<- counter + 1
+	# 			}
+	# 			list(src = paste("plots/img/", scale, "/", method, "/", name(), "/", input$time, ".png", sep=""), height="100%", width="100%")
+	# 		}, deleteFile=FALSE)
+	# 	}
+	# })
 
 	#Seek backward one frame
 	observeEvent(input$frameBwd, {
@@ -220,8 +245,8 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 	#Image display
 	showImage <- function() {
 		output$display <- renderUI({
-			div(style="position:relative;float:left;margin-left:10%;width:80%", 
-				imageOutput(ns("image"), height="auto", width="100%")
+			div(style="padding-left:12%",
+				imageOutput(ns("image"), height="auto", width="87%")
 			)
 		})
 	}
@@ -229,9 +254,7 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 	#Plot display
 	showPlot <- function() {
 		output$display <- renderUI({
-			div(style="width:100%; height:auto; position:relative; float:left",
-				plotOutput(ns("plot"), click=ns("pltClk"))
-			)
+			plotOutput(ns("plot"), click=ns("pltClk"))
 		})
 	}
 
@@ -297,8 +320,6 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
 			})
 		})
-
-		showDetails()
 	 	showZoom()
 	})
 
