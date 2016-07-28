@@ -231,7 +231,7 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 		})
 	}
 
-	#Animation controls
+	#Show animation controls
 	showControls <- function() {
 		output$lowerDisplay <- renderUI({
 			tagList(
@@ -267,6 +267,11 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 	#Show animation controls by default
 	showControls()
 
+	#Hide animation controls
+	hideControls <- function() {
+		output$lowerDisplay <- renderUI({})
+	}
+
 	#Show zoom button
 	showZoom <- function() {
 		output$zoomBtnBox <- renderUI({
@@ -288,6 +293,8 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 
 		#Check if plot is already zoomed in
 		if (!is_zoom) {
+			#Hide animation controls
+			hideControls()
 			#Zoom
 			withProgress(message="Zooming Plot, Please Wait...", detail="", value=0, {
 				output$plot <- renderPlot ({
@@ -299,10 +306,13 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 			})
 		} else {
 			selected_bus <- nearPoints(bus_locs, input$pltClk, threshold=10, maxpoints=1, xvar="Longitude", yvar="Latitude")
-			print(rownames(selected_bus))
+			print(selected_bus)
 			if (NROW(selected_bus) > 0) {
-				output$plot <- renderPlot ({
-					eval(parse(text=paste(isolate(input$activeMethod), "_singlebus", "(", input$time, ",", selected_bus, ")", sep="")))
+				withProgress(message="Zooming Plot, Please Wait...", detail="", value=0, {
+					output$plot <- renderPlot ({
+						eval(parse(text=paste(isolate(input$activeMethod), "_singlebus", "(", input$time, ",", selected_bus, ")", sep="")))
+					})
+					incProgress(1)
 				})
 			}
 		}
