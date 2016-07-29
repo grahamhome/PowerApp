@@ -239,9 +239,9 @@ timeSeriesDisplay <- function(input, output, session) {
 					"Longer animations may have longer rendering times before they can be played. To change the ", br(), 
 					"animation parameters, first pause the currently playing animation, then click the play icon ", br(),
 					"again after changing the start, stop, or speed values. ", br(), br(),
-					"Use the radio buttons on the left side of the graph display to change the plotting method used ", br(),
+					"Use the drop-down menu above the graph display to change the plotting method used ", br(),
 					"to create the graph.", br(), br(),
-					"Clicking 'Re-Scale Plot' will adjust the range of potential values to match the values of the current sample.", br(), br(),
+					"Clicking 'Auto-Scale Plot' will adjust the range of potential values to match the values of the current sample.", br(), br(),
 					"Use the back button in the top left corner of the display to choose a different plot type or data set.")
 			)
 		}
