@@ -475,6 +475,7 @@ update_alarmstatus_angle <- function(t,b){
 #given a point that the user clicked on (<point>, from the shiny app), sets <is_zoom> to FALSE if it was TRUE, or TRUE if it was FALSE (or didn't exist)
 # if it is changed to TRUE, the ggplot that is used for plotting, <g> has its limits changed to 1/4 of the previous size.
 # If it is changed to FALSE, <g> is reset to its original size using the map_lims list (created in the import_data() function)
+# if 
 zoom_map <- function(point){
   if(!exists("is_zoom")){
     is_zoom <<- FALSE
@@ -605,8 +606,8 @@ plot_heatmapvolt_alarms<- function(t){
   g <- g+scale_colour_manual("Alarm Status", values = alarm_vals,labels=alarm_labs) +
     #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
   #  scale_colour_gradientn("Alarm Status",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  #  ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
 #Plot the heatmap of the voltages of the buses at time <t>
@@ -671,8 +672,8 @@ plot_heatmapvolt<- function(t){
     #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
     #  scale_colour_gradientn("Alarm Status",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax))+
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+  #  ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
 #Plot the heatmap of the angles of the buses at time <t>, and add points representing each bus over that heatmap, colored by their alarm state
@@ -768,8 +769,8 @@ plot_heatmapangle_alarms<- function(t){
   g <- g+  
     scale_colour_manual("Alarm Status",values = alarm_vals,# c("1"="blue", "2"="green", "3"="red", "4"="yellow"),
                         labels=alarm_labs) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  #ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
 #Plot the heatmap of the angles of the buses at time <t>
@@ -822,8 +823,8 @@ plot_heatmapangle<- function(t){
                         alpha = 0.5, 
                         size = 0) +  ## size = 0 to remove the polygon outlines
     scale_fill_gradientn("Angle",colours = c("red","yellow","green","blue","black"),limits=c(amin,amax))+
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+  #   ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
 #Plot the heatmap of the frequency of the buses at time <t>, and add points representing each bus over that heatmap, colored by their alarm state
@@ -918,8 +919,8 @@ plot_heatmapfreq_alarms<- function(t){
     g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   g <- g+scale_colour_manual("Alarm Status",values = alarm_vals,labels=alarm_labs) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  # ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
 #Plot the heatmap of the frequency of the buses at time <t>
@@ -977,8 +978,8 @@ plot_heatmapfreq<- function(t){
     #scale_colour_gradientn("Bus Frequency",colours = c("green","blue","orange","yellow"),limits=c(fmin,fmax)) +
     #scale_fill_gradientn("Frequency",colours = topo.colors(255))+
     scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax))+
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  #   ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
 
@@ -1078,8 +1079,8 @@ plot_heatmapfreq_alarms_singlebus<- function(t,near_bus){
     g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=1, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   g <- g+scale_colour_manual("Alarm Status",values = alarm_vals,labels=alarm_labs) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  #    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
 
@@ -1179,8 +1180,8 @@ plot_heatmapangle_alarms_singlebus<- function(t,near_bus){
   g <- g+  
     scale_colour_manual("Alarm Status",values = alarm_vals,# c("1"="blue", "2"="green", "3"="red", "4"="yellow"),
                         labels=alarm_labs) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  # ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
 
@@ -1286,8 +1287,8 @@ plot_heatmapvolt_alarms_singlebus<- function(t,near_bus){
   g <- g+scale_colour_manual("Alarm Status", values = alarm_vals,labels=alarm_labs) +
     #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
     #  scale_colour_gradientn("Alarm Status",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+  #  ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
 

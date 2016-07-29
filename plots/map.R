@@ -266,20 +266,21 @@ update_alarmstatus_angle <- function(t,b){
   state
 }
 
-#given a point that the user clicked on (<point>, from the shiny app), sets <is_zoom> to FALSE if it was TRUE, or TRUE if it was FALSE (or didn't exist)
-# if it is changed to TRUE, the ggplot that is used for plotting, <g> has its limits changed to 1/4 of the previous size.
-# If it is changed to FALSE, <g> is reset to its original size using the map_lims list (created in the import_data() function)
+#given a point that the user clicked on (<point>, from the shiny app), sets <is_zoom> to 1 if it was 0 before,
+# and the ggplot that is used for plotting, <g> has its limits changed to 1/4 of the previous size.
+# If it was 1 or 2, <g> is reset to its original size using the map_lims list (created in the import_data() function)
+# <is_zoom> will be 0 if the map is not zoomed in, 1 if zoomed in, and 2 if we are looking at a single bus.
 zoom_map <- function(point){
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
-  if(is_zoom == TRUE){
-    is_zoom <<- FALSE
+  if(is_zoom == 1 | is_zoom == 2){
+    is_zoom <<- 0
     g <<- ggmap(mapten) +
       scale_x_continuous(limits=c(map_lims[1], map_lims[2]), expand=c(0,0)) + 
       scale_y_continuous(limits=c(map_lims[3], map_lims[4]), expand=c(0,0))
   } else{
-    is_zoom <<- TRUE
+    is_zoom <<- 1
     xmin <- min(bus_locs$Longitude)
     xmax <- max(bus_locs$Longitude)
     ymin <- min(bus_locs$Latitude)
@@ -315,7 +316,7 @@ autoscale <- function(){
 #Plot the power factor of each bus - power factor is the absolute value of the cosign of the bus angle
 plot_mappowfactor <- function(t){
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_pangle(t)
   pf <- subset(bus_locs,select = c("Bus.Name","Longitude","Latitude","Angle"))
@@ -326,7 +327,7 @@ plot_mappowfactor <- function(t){
   linesb <- get_busline_panglecov(t)
   linesb$Correlation[is.nan(linesb$Correlation)] <- 1
   #pf$group[pf$PowFact < 90] <- 
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -340,8 +341,8 @@ plot_mappowfactor <- function(t){
                         labels=c("Power Factor<90%","95%>Power Factor>90%","Power Factor>95%"),
                         name="") +
     labs(x = "Longitude", y = "Latitude") +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Power Factor at Time",atop(.(Pangle[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+   # ggtitle(bquote(atop("Power Factor at Time",atop(.(Pangle[t,1]),""))))
   g
 }
 
@@ -351,7 +352,7 @@ plot_mapangle <- function(t){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_pangle(t)
   if(autosc == TRUE){
@@ -366,7 +367,7 @@ plot_mapangle <- function(t){
     amax <- 20
     # a_lab <- c(-40,-20,0,20,40)
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -375,8 +376,8 @@ plot_mapangle <- function(t){
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=bus_size,alpha=0.5,shape=16) +
     scale_colour_gradientn("Bus Angle",colours = c("red","yellow","green","blue","black"),limits=c(amin,amax)) +
     labs(x = "Longitude", y = "Latitude") +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+   # ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
 
@@ -386,7 +387,7 @@ plot_mapangle_singlebus <- function(t,near_bus){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_pangle(t)
   bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
@@ -403,7 +404,7 @@ plot_mapangle_singlebus <- function(t,near_bus){
     # a_lab <- c(-40,-20,0,20,40)
   }
   
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -412,8 +413,8 @@ plot_mapangle_singlebus <- function(t,near_bus){
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=bus_size,alpha=0.5,shape=16) +
     scale_colour_gradientn("Bus Angle",colours = c("red","yellow","green","blue","black"),limits=c(amin,amax)) +
     labs(x = "Longitude", y = "Latitude") +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+   # ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
 
@@ -424,9 +425,9 @@ plot_mapangle_lines <- function(t){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -440,8 +441,8 @@ plot_mapangle_lines <- function(t){
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,fill=Angle),size=bus_size,shape=21) +
     scale_fill_gradientn("Angle",colours = c("red","yellow","green","blue","black"),limits=c(min(Pangle[,-1]),max(Pangle[,-1]))) +
     labs(x = "Longitude", y = "Latitude") +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  #  ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
 
@@ -453,7 +454,7 @@ plot_mapangle_alarms<- function(t){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_pangle(t)
   if(autosc == TRUE){
@@ -468,7 +469,7 @@ plot_mapangle_alarms<- function(t){
     amax <- 40
     # a_lab <- c(-40,-20,0,20,40)
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -510,8 +511,8 @@ plot_mapangle_alarms<- function(t){
   g <- g+  
     scale_colour_manual("Alarm Status",values = alarm_vals,# c("1"="blue", "2"="green", "3"="red", "4"="yellow"),
                         labels=alarm_labs) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+    #ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
 
@@ -523,7 +524,7 @@ plot_mapangle_alarms_singlebus<- function(t,near_bus){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_pangle(t)
   bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
@@ -539,7 +540,7 @@ plot_mapangle_alarms_singlebus<- function(t,near_bus){
     amax <- 40
     # a_lab <- c(-40,-20,0,20,40)
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -581,8 +582,8 @@ plot_mapangle_alarms_singlebus<- function(t,near_bus){
   g <- g+  
     scale_colour_manual("Alarm Status",values = alarm_vals,# c("1"="blue", "2"="green", "3"="red", "4"="yellow"),
                         labels=alarm_labs) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+   # ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
 
@@ -594,7 +595,7 @@ plot_mapvolt <- function(t){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   # g <- ggmap(mapten)+
   #  scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +
@@ -619,7 +620,7 @@ plot_mapvolt <- function(t){
   } else{
     v_cols <-c("red","orange","yellow","green","blue")
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -628,8 +629,8 @@ plot_mapvolt <- function(t){
     scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21) +
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+#    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
 
@@ -640,14 +641,21 @@ plot_mapvolt_singlebus <- function(t,near_bus){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_volt(t)
  # linesb <- get_busline_voltcov(t)
  # linesb$Correlation[is.nan(linesb$Correlation)] <- 1
-  near_bus <- bus_locs[near_bus,]
-  bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
-  if(autosc == TRUE){
+ # print(typeof(near_bus))
+  b <- bus_locs[near_bus,]
+  print(b)
+#  print(paste("b: ",b,sep = ""))
+ # bus_locs <- b#bus_locs[((bus_locs$Latitude %in% b$Latitude) & (bus_locs$Longitude%in%b$Longitude)),]
+#  print(paste("bus_locs: ",bus_locs,sep = ""))
+  if (autosc == TRUE & is_zoom==2) {
+    vmin <- 0.95
+    vmax <- 1.05
+  } else if(autosc == TRUE){
     # vmin <- min(Volt[t,-1])
     #vmax <- max(Volt[t,-1])
     vmin <- ifelse(min(bus_locs$Voltage)<0.95,min(bus_locs$Voltage),0.95)
@@ -663,17 +671,17 @@ plot_mapvolt_singlebus <- function(t,near_bus){
   } else{
     v_cols <-c("red","orange","yellow","green","blue")
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
   }
   g <- g + #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),alpha=0.4,show.legend = FALSE) +
   #  scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
-    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21) +
+    geom_point(data = as.data.frame(b), aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21) +
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+   # ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
 
@@ -685,7 +693,7 @@ plot_mapvolt_alarms<- function(t){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_volt(t)
   if(autosc == TRUE){
@@ -704,7 +712,7 @@ plot_mapvolt_alarms<- function(t){
   } else{
     v_cols <-c("red","yellow","green","blue","black")
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -746,8 +754,8 @@ plot_mapvolt_alarms<- function(t){
   g <- g+scale_colour_manual("Alarm Status", values = alarm_vals,labels=alarm_labs) +
     #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
     #  scale_colour_gradientn("Alarm Status",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  #ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
 
@@ -759,7 +767,7 @@ plot_mapvolt_alarms_singlebus<- function(t, near_bus){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_volt(t)
   bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
@@ -779,7 +787,7 @@ plot_mapvolt_alarms_singlebus<- function(t, near_bus){
   } else{
     v_cols <-c("red","yellow","green","blue","black")
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -821,8 +829,8 @@ plot_mapvolt_alarms_singlebus<- function(t, near_bus){
   g <- g+scale_colour_manual("Alarm Status", values = alarm_vals,labels=alarm_labs) +
     #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
     #  scale_colour_gradientn("Alarm Status",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  #  ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
 
@@ -833,7 +841,7 @@ plot_mapfreq <- function(t){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_freq(t)
   if(autosc == TRUE){
@@ -852,7 +860,7 @@ plot_mapfreq <- function(t){
   } else{
     f_cols <-c("red","yellow","green","blue","black")
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -867,8 +875,8 @@ plot_mapfreq <- function(t){
     scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = bus_size, shape = 21) +
     scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  #    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
 
@@ -880,7 +888,7 @@ plot_mapfreq_singlebus <- function(t, near_bus){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_freq(t)
   bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
@@ -900,7 +908,7 @@ plot_mapfreq_singlebus <- function(t, near_bus){
   } else{
     f_cols <-c("red","yellow","green","blue","black")
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -915,8 +923,8 @@ plot_mapfreq_singlebus <- function(t, near_bus){
     #scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = bus_size, shape = 21) +
     scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+  #ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
 
@@ -928,7 +936,7 @@ plot_mapfreq_alarms<- function(t){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_freq(t)
   if(autosc == TRUE){
@@ -946,7 +954,7 @@ plot_mapfreq_alarms<- function(t){
   } else{
     f_cols <-c("red","yellow","green","blue","black")
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -987,8 +995,8 @@ plot_mapfreq_alarms<- function(t){
     g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=0.9, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   g <- g+scale_colour_manual("Alarm Status",values = alarm_vals,labels=alarm_labs) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+  # ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
 
@@ -1001,7 +1009,7 @@ plot_mapfreq_alarms_singlebus<- function(t){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   bus_locs <- update_freq(t)
   bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
@@ -1020,7 +1028,7 @@ plot_mapfreq_alarms_singlebus<- function(t){
   } else{
     f_cols <-c("red","yellow","green","blue","black")
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 10
   } else{
     bus_size <- 5
@@ -1061,8 +1069,8 @@ plot_mapfreq_alarms_singlebus<- function(t){
     g <- g+geom_point(data = bf_low, aes(x=Longitude, y=Latitude, colour=factor(color)),alpha=0.9, size = bus_size, shape = 16)#, show.legend=FALSE)
   }
   g <- g+scale_colour_manual("Alarm Status",values = alarm_vals,labels=alarm_labs) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  #  ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
 
@@ -1070,7 +1078,7 @@ plot_mapfreq_alarms_singlebus<- function(t){
 # voltage at time t; each point is a large semi-transparent circle rather than a small solid circle
 plot_mapvolt_large <- function(t){
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -1093,7 +1101,7 @@ plot_mapvolt_large <- function(t){
   } else{
     v_cols <-c("red","yellow","green","blue","black")
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 25
   } else{
     bus_size <- 10
@@ -1103,17 +1111,17 @@ plot_mapvolt_large <- function(t){
     #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,alpha=Variance),show.legend = TRUE) +
     scale_color_gradientn("Bus Voltage",colors = v_cols,limits=c(vmin,vmax)) +
     labs(x = "Longitude", y = "Latitude") +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+  #  ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
 #return g (a ggmap object) with each point (representing each bus) colored according to the 
 # frequency at time t; each point is a large semi-transparent circle rather than a small solid circle
 plot_mapfreq_large <- function(t){
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
-  if(is_zoom){
+  if(is_zoom==1 | is_zoom==2){
     bus_size <- 25
   } else{
     bus_size <- 10
@@ -1131,8 +1139,8 @@ plot_mapfreq_large <- function(t){
     #scale_fill_gradientn("Variance",colours = c("green","blue","red","orange","yellow"),breaks=color_vals_freq,limits=c(0,maxcovf)) +
     #geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = 2, shape = 21) +
     #scale_fill_gradientn("Frequency",colours = c("blue","white","red"),limits=c(min(Freq[,-1]),max(Freq[,-1]))) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+  # ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
   g
 }
 
@@ -1144,7 +1152,7 @@ plot_mapvolt_230 <- function(t){
     autosc <<- FALSE
   }
   if(!exists("is_zoom")){
-    is_zoom <<- FALSE
+    is_zoom <<- 0
   }
   # g <- ggmap(mapten)+
   #  scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +
@@ -1175,7 +1183,7 @@ plot_mapvolt_230 <- function(t){
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
     geom_segment(data = lb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),alpha=0.4,show.legend = FALSE) +
     scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") +
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+  # ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
