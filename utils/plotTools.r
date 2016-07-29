@@ -19,22 +19,3 @@ plotCorr2png <- function(functionCall, fileName) {
 	eval(parse(text=functionCall))
 	dev.off()
 }
-
-#Returns the given plot zoomed to the given parameters.
-zoomPlot <- function(p, xmin, ymin, xmax, ymax) {
-	print(par())
-	q <- p + scale_x_continuous(limits=c(xmin, xmax), expand=c(0,0)) + 
-		scale_y_continuous(limits=c(ymin, ymax), expand=c(0,0))
-
-	print(par())
-	q
-}
-
-#Resets the current plot to its original zoom level
-resetPlotZoom <- function() {
-	buffer <- 2
-	g <<- g + scale_x_continuous(limits = c(-90.6, -81.3)) +
-		scale_y_continuous(limits = c(34.5, 37))
-	# g <<- g + scale_x_continuous(limits=c(min(bus_locs$longitude)-buffer, max(bus_locs$longitude)+buffer)) +
-	# 	scale_y_continuous(limits=c(min(bus_locs$latitude)-buffer, max(bus_locs$latitude)+buffer))
-}

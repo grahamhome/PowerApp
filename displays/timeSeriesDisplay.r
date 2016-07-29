@@ -23,18 +23,31 @@ timeSeriesDisplayUI <- function(id) {
 	tagList(
 		fixedPanel(class="mainwindow",
 			fluidRow(
-				column(2,
-					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
-					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())])),
-					br(),
-					checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
+				column(1,
+					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon")
 				),
-				column(8, 
-					h2(name()),
-					imageOutput(ns("image"), height="auto", width="100%")
-				),
-				column(2, 
+				column(1, offset=10,
 					div(class="helpiconbox", actionLink(ns("help"), "", icon=icon("question", "fa-2x"), class="icon"))
+				)
+			),
+			fluidRow(
+				column(2, offset=1,
+					h2(name())
+				),
+				column(2, offset=1,
+						selectInput(ns("activeMethod"), "Function:", fnames()[2:length(fnames())])
+				),
+				column(2,
+					div(style="padding-top:23px",
+						checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
+					)
+				)
+			),
+			fluidRow(
+				column(10, offset=1,
+					div(style="padding-left:10%",
+						imageOutput(ns("image"), height="auto", width="90%")
+					)
 				)
 			),
 			fluidRow(
