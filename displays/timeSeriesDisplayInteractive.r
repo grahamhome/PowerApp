@@ -292,7 +292,7 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 		point <- c(input$pltClk$x, input$pltClk$y)
 
 		#Check if plot is already zoomed in
-		if (!is_zoom) {
+		if (is_zoom == 0) {
 			#Hide animation controls
 			hideControls()
 			#Zoom
@@ -304,16 +304,20 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 				showZoom()
 				incProgress(1)
 			})
-		} else {
-			selected_bus <- nearPoints(bus_locs, input$pltClk, threshold=10, maxpoints=1, xvar="Longitude", yvar="Latitude")
-			print(selected_bus)
+		} else if (is_zoom == 1){
+		  print(paste("clicked x: ",round(input$pltClk$x,digits = 2),sep = ""))
+		  print(paste("clicked y: ",round(input$pltClk$y,digits = 2),sep = ""))
+			selected_bus <- nearPoints(bus_locs, input$pltClk, threshold=30, maxpoints=1, xvar="Longitude", yvar="Latitude")
 			if (NROW(selected_bus) > 0) {
 				withProgress(message="Zooming Plot, Please Wait...", detail="", value=0, {
 					output$plot <- renderPlot ({
-						eval(parse(text=paste(isolate(input$activeMethod), "_singlebus", "(", input$time, ",", selected_bus, ")", sep="")))
-					})
+					  eval(parse(text=paste((input$activeMethod), "_singlebus", "(", input$time, ",",paste("list(",paste(selected_bus$Longitude,selected_bus$Latitude,sep = ","),")",sep = ""),')',sep = "")))
+				})
 					incProgress(1)
 				})
+			} else{
+			  #print(paste("click: ",input$pltClk,sep = ""))
+			  #print(paste("point: ",point,sep = ""))
 			}
 		}
 	})

@@ -647,8 +647,10 @@ plot_mapvolt_singlebus <- function(t,near_bus){
  # linesb <- get_busline_voltcov(t)
  # linesb$Correlation[is.nan(linesb$Correlation)] <- 1
  # print(typeof(near_bus))
-  b <- bus_locs[near_bus,]
-  print(b)
+ # print(paste("near_bus[1]: ",near_bus[1],sep = ""))
+ # print(paste("near_bus[2]: ",near_bus[2],sep = ""))
+  b <- bus_locs[((bus_locs$Latitude == near_bus[2]) & (bus_locs$Longitude == near_bus[1])),]
+#  print(b)
 #  print(paste("b: ",b,sep = ""))
  # bus_locs <- b#bus_locs[((bus_locs$Latitude %in% b$Latitude) & (bus_locs$Longitude%in%b$Longitude)),]
 #  print(paste("bus_locs: ",bus_locs,sep = ""))
@@ -678,7 +680,7 @@ plot_mapvolt_singlebus <- function(t,near_bus){
   }
   g <- g + #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),alpha=0.4,show.legend = FALSE) +
   #  scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
-    geom_point(data = as.data.frame(b), aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21) +
+    geom_jitter(data = b, aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21) +
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
    # ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
