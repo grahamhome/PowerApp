@@ -390,7 +390,7 @@ plot_mapangle_singlebus <- function(t,near_bus){
     is_zoom <<- 0
   }
   bus_locs <- update_pangle(t)
-  bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
+  bus_locs <- bus_locs[((bus_locs$Latitude == near_bus[2]) & (bus_locs$Longitude == near_bus[1])),]
   if(autosc == TRUE){
     # amin <- min(b$Angle)
     # amax <- max(b$Angle)
@@ -527,7 +527,7 @@ plot_mapangle_alarms_singlebus<- function(t,near_bus){
     is_zoom <<- 0
   }
   bus_locs <- update_pangle(t)
-  bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
+  bus_locs <- bus_locs[((bus_locs$Latitude == near_bus[2]) & (bus_locs$Longitude == near_bus[1])),]
   if(autosc == TRUE){
     # amin <- min(b$Angle)
     # amax <- max(b$Angle)
@@ -634,8 +634,8 @@ plot_mapvolt <- function(t){
   g
 }
 
-#return g (a ggmap object) with a point (representing a bus, <near_bus>) colored according to the 
-# voltage at time t
+#return g (a ggmap object) with a point (<near_bus>, a list containing the (x,y) of the bus closest to the clicked point)
+# colored according to the voltage at time t
 plot_mapvolt_singlebus <- function(t,near_bus){
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -646,14 +646,7 @@ plot_mapvolt_singlebus <- function(t,near_bus){
   bus_locs <- update_volt(t)
  # linesb <- get_busline_voltcov(t)
  # linesb$Correlation[is.nan(linesb$Correlation)] <- 1
- # print(typeof(near_bus))
- # print(paste("near_bus[1]: ",near_bus[1],sep = ""))
- # print(paste("near_bus[2]: ",near_bus[2],sep = ""))
   b <- bus_locs[((bus_locs$Latitude == near_bus[2]) & (bus_locs$Longitude == near_bus[1])),]
-#  print(b)
-#  print(paste("b: ",b,sep = ""))
- # bus_locs <- b#bus_locs[((bus_locs$Latitude %in% b$Latitude) & (bus_locs$Longitude%in%b$Longitude)),]
-#  print(paste("bus_locs: ",bus_locs,sep = ""))
   if (autosc == TRUE & is_zoom==2) {
     vmin <- 0.95
     vmax <- 1.05
@@ -673,17 +666,16 @@ plot_mapvolt_singlebus <- function(t,near_bus){
   } else{
     v_cols <-c("red","orange","yellow","green","blue")
   }
-  if(is_zoom==1 | is_zoom==2){
-    bus_size <- 10
+
+  bus_size <- 10
+  if(NROW(b) > 1){
+    g <- g + geom_jitter(data = b, aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21)
   } else{
-    bus_size <- 5
+    g <- g + geom_point(data = b, aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21)
   }
-  g <- g + #geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),alpha=0.4,show.legend = FALSE) +
-  #  scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
-    geom_jitter(data = b, aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21) +
+  g <- g+
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
-   # ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")
   g
 }
 
@@ -772,7 +764,7 @@ plot_mapvolt_alarms_singlebus<- function(t, near_bus){
     is_zoom <<- 0
   }
   bus_locs <- update_volt(t)
-  bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
+  bus_locs <- bus_locs[((bus_locs$Latitude == near_bus[2]) & (bus_locs$Longitude == near_bus[1])),]
   if(autosc == TRUE){
     vmin <- min(bus_locs$Voltage)
     vmax <- max(bus_locs$Voltage)
@@ -893,7 +885,7 @@ plot_mapfreq_singlebus <- function(t, near_bus){
     is_zoom <<- 0
   }
   bus_locs <- update_freq(t)
-  bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
+  bus_locs <- bus_locs[((bus_locs$Latitude == near_bus[2]) & (bus_locs$Longitude == near_bus[1])),]
   if(autosc == TRUE){
     fmin <- ifelse(min(bus_locs$Frequency)<59.8,min(bus_locs$Frequency),59.8)
     fmax <- ifelse(max(bus_locs$Frequency)>60.2,max(bus_locs$Frequency),60.2)
@@ -1014,7 +1006,7 @@ plot_mapfreq_alarms_singlebus<- function(t){
     is_zoom <<- 0
   }
   bus_locs <- update_freq(t)
-  bus_locs <- bus_locs[(bus_locs$Latitude==near_bus$Latitude & bus_locs$Longitude == near_bus$Longitude),]
+  bus_locs <- bus_locs[((bus_locs$Latitude == near_bus[2]) & (bus_locs$Longitude == near_bus[1])),]
   if(autosc == TRUE){
     fmin <- ifelse(min(bus_locs$Frequency)<59.8,min(bus_locs$Frequency),59.8)
     fmax <- ifelse(max(bus_locs$Frequency)>60.2,max(bus_locs$Frequency),60.2)
