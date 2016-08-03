@@ -319,8 +319,6 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 				incProgress(1)
 			})
 		} else if (is_zoom == 1){
-		  print(paste("clicked x: ",round(input$pltClk$x,digits = 2),sep = ""))
-		  print(paste("clicked y: ",round(input$pltClk$y,digits = 2),sep = ""))
 			selected_bus <- nearPoints(bus_locs, input$pltClk, threshold=30, maxpoints=1, xvar="Longitude", yvar="Latitude")
 			if (NROW(selected_bus) > 0) {
 				withProgress(message="Zooming Plot, Please Wait...", detail="", value=0, {
