@@ -1,4 +1,9 @@
-#Utility functions for loading modules and UI panes in Power Viewer.
+#Utility functions for loading modules and UI panes in Power Viewer. 
+#Modules and UI panes are ways of encapsulating different activities
+#of the main application into separate files in order to keep the 
+#code from becoming a big plate of spaghetti.
+
+#Author: Graham Home <grahamhome333@gmail.com>
 
 #Launches the Shiny module contained in the named file.
 launchDisplayModule <- function(moduleFilename) {

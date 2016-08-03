@@ -1,5 +1,6 @@
 #A Shiny plugin which creates a window for displaying static plots.
-#Created by Graham Home <grahamhome333@gmail.com>
+
+#Author: Graham Home <grahamhome333@gmail.com>
 
 #Proper Names
 dispName <- function() {

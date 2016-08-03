@@ -1,6 +1,7 @@
 #A Shiny plugin which creates a window for displaying time series plots, using parallel processing to generate plot images.
 #Supports interaction with plots including zooming in and viewing a single bus on a map.
-#Created by Graham Home <grahamhome333@gmail.com>
+
+#Author: Graham Home <grahamhome333@gmail.com>
 
 #Dependencies for parallel processing
 library(foreach)
