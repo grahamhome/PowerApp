@@ -1,4 +1,7 @@
-#Introduction screen module
+#Introduction screen module, Designed to be run from app.r,
+#not as a standalone Shiny application.
+
+#Author: Graham Home <grahamhome333@gmail.com>
 
 #Introduction screen UI
 intro <- function() {

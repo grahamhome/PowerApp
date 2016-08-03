@@ -1,0 +1,61 @@
+Frum Bus Num,From Bus Name,To Bus Num,To Bus Name,Circuit,Branch Device Type,R,X,B,Lim MVA
+144,Johnsonville_500.0,1,Johnsonville_g4,1,Transformer,0.00012,0.0049,0,2042.6
+8,MURFREESBORO_37130_230.0,102,MURFREESBORO_37130_500.0,1,Transformer,0.0002,0.016,0,1000
+11,CLARKSVILLE_37042_230.0,98,CLARKSVILLE_37042_500.0,1,Transformer,0.0002,0.016,0,1000
+14,CLARKSVILLE_37040_230.0,108,CLARKSVILLE_37040_500.0,1,Transformer,0.0002,0.016,0,1000
+22,NASHVILLE_37215_230.0,101,NASHVILLE_37215_500.0,1,Transformer,0.0002,0.016,0,1000
+22,NASHVILLE_37215_230.0,101,NASHVILLE_37215_500.0,2,Transformer,0.0002,0.016,0,1000
+23,MURFREESBORO_37129_230.0,96,MURFREESBORO_37129_500.0,1,Transformer,0.0002,0.016,0,1000
+27,TULLAHOMA_37388_230.0,106,TULLAHOMA_37388_500.0,1,Transformer,0.0002,0.016,0,1000
+33,ATHENS_37303_230.0,107,ATHENS_37303_500.0,1,Transformer,0.0002,0.016,0,1000
+40,HIXSON_37343_230.0,94,HIXSON_37343_500.0,1,Transformer,0.0002,0.016,0,1000
+43,JONESBOROUGH_37659_230.0,97,JONESBOROUGH_37659_500.0,1,Transformer,0.0002,0.016,0,1000
+45,ELIZABETHTON_37643_230.0,103,ELIZABETHTON_37643_500.0,1,Transformer,0.0002,0.016,0,1000
+49,MARYVILLE_37804_230.0,109,MARYVILLE_37804_500.0,1,Transformer,0.0002,0.016,0,1000
+54,JEFFERSON CITY_37760_230.0,93,JEFFERSON CITY_37760_500.0,1,Transformer,0.0002,0.016,0,1000
+63,KNOXVILLE_37921_230.0,92,KNOXVILLE_37921_500.0,1,Transformer,0.0002,0.016,0,1000
+64,KNOXVILLE_37919_230.0,100,KNOXVILLE_37919_500.0,1,Transformer,0.0002,0.016,0,1000
+71,CORDOVA_38016_230.0,104,CORDOVA_38016_500.0,1,Transformer,0.0002,0.016,0,1000
+79,MEMPHIS_38111_230.0,99,MEMPHIS_38111_500.0,1,Transformer,0.0002,0.016,0,1000
+79,MEMPHIS_38111_230.0,99,MEMPHIS_38111_500.0,2,Transformer,0.0002,0.016,0,1000
+86,JACKSON_38305_230.0,95,JACKSON_38305_500.0,1,Transformer,0.0002,0.016,0,1000
+90,COOKEVILLE_38501_230.0,105,COOKEVILLE_38501_500.0,1,Transformer,0.0002,0.016,0,1000
+142,Gallatin (TN)_500.0,110,Gallatin (TN)_g1,1,Transformer,0.00037,0.01464,0,683.1
+142,Gallatin (TN)_500.0,111,Gallatin (TN)_g2,1,Transformer,0.00055,0.02202,0,454.2
+142,Gallatin (TN)_500.0,112,Gallatin (TN)_g3,1,Transformer,0.00019,0.00776,0,1289.2
+150,John Sevier_500.0,113,John Sevier_g1,1,Transformer,0.00039,0.01579,0,633.4
+150,John Sevier_500.0,114,John Sevier_g2,1,Transformer,0.00039,0.01579,0,633.4
+150,John Sevier_500.0,115,John Sevier_g3,1,Transformer,0.00091,0.03634,0,275.2
+144,Johnsonville_500.0,116,Johnsonville_g1,1,Transformer,0.00037,0.01472,0,679.2
+144,Johnsonville_500.0,117,Johnsonville_g2,1,Transformer,0.00037,0.01472,0,679.2
+144,Johnsonville_500.0,118,Johnsonville_g3,1,Transformer,0.00037,0.01472,0,679.2
+144,Johnsonville_500.0,119,Johnsonville_g5,1,Transformer,0.00012,0.0049,0,2042.6
+139,Kingston_500.0,120,Kingston_g1,1,Transformer,0.00056,0.02254,0,443.8
+139,Kingston_500.0,121,Kingston_g2,1,Transformer,0.00056,0.02254,0,443.8
+139,Kingston_500.0,122,Kingston_g3,1,Transformer,0.00019,0.00755,0,1325
+139,Kingston_500.0,123,Kingston_g4,1,Transformer,0.00019,0.00755,0,1325
+137,Lagoon Creek_500.0,124,Lagoon Creek_g1,1,Transformer,0.00037,0.01476,0,677.5
+137,Lagoon Creek_500.0,125,Lagoon Creek_g2,1,Transformer,0.00037,0.01476,0,677.5
+137,Lagoon Creek_500.0,126,Lagoon Creek_g3,1,Transformer,0.00037,0.01476,0,677.5
+137,Lagoon Creek_500.0,127,Lagoon Creek_g4,1,Transformer,0.00037,0.01476,0,677.5
+137,Lagoon Creek_500.0,128,Lagoon Creek_g5,1,Transformer,0.00025,0.00985,0,1015
+148,Pickwick Landing Dam_500.0,129,Pickwick Landing Dam_g1,1,Transformer,0.00073,0.02906,0,344.1
+146,Sequoyah_500.0,130,Sequoyah_g1,1,Transformer,0.00031,0.01255,0,797
+146,Sequoyah_500.0,131,Sequoyah_g2,1,Transformer,0.00031,0.01255,0,797
+146,Sequoyah_500.0,132,Sequoyah_g3,1,Transformer,0.00031,0.01255,0,797
+146,Sequoyah_500.0,133,Sequoyah_g4,1,Transformer,0.00013,0.00539,0,1855.5
+146,Sequoyah_500.0,134,Sequoyah_g5,1,Transformer,0.00013,0.00539,0,1855.5
+140,Tims Ford_230.0,135,Tims Ford_g1,1,Transformer,0.00547,0.21882,0,45.7
+136,Lagoon Creek_230.0,137,Lagoon Creek_500.0,1,Transformer,0.0002,0.016,0,1000
+136,Lagoon Creek_230.0,137,Lagoon Creek_500.0,2,Transformer,0.0002,0.016,0,1000
+138,Kingston_230.0,139,Kingston_500.0,1,Transformer,0.0002,0.016,0,1000
+138,Kingston_230.0,139,Kingston_500.0,2,Transformer,0.0002,0.016,0,1000
+141,Gallatin (TN)_230.0,142,Gallatin (TN)_500.0,1,Transformer,0.0002,0.016,0,1000
+141,Gallatin (TN)_230.0,142,Gallatin (TN)_500.0,2,Transformer,0.0002,0.016,0,1000
+143,Johnsonville_230.0,144,Johnsonville_500.0,1,Transformer,0.0002,0.016,0,1000
+143,Johnsonville_230.0,144,Johnsonville_500.0,2,Transformer,0.0002,0.016,0,1000
+145,Sequoyah_230.0,146,Sequoyah_500.0,1,Transformer,0.0002,0.016,0,1000
+145,Sequoyah_230.0,146,Sequoyah_500.0,2,Transformer,0.0002,0.016,0,1000
+147,Pickwick Landing Dam_230.0,148,Pickwick Landing Dam_500.0,1,Transformer,0.0002,0.016,0,1000
+149,John Sevier_230.0,150,John Sevier_500.0,1,Transformer,0.0002,0.016,0,1000
+149,John Sevier_230.0,150,John Sevier_500.0,2,Transformer,0.0002,0.016,0,1000
