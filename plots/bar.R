@@ -83,8 +83,8 @@ plot_barpangle <- function(time){
     theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 4))+
     #ylim((min(b$Voltage)-1),(max(b$Voltage)-1))+
     ylim(amin,amax)+
-    ylab("Angle")+
-    ggtitle(bquote(atop("Angle at Time",atop(.(Pangle[time,1]),""))))
+    ylab("Angle")#+
+  #  ggtitle(bquote(atop("Angle at Time",atop(.(Pangle[time,1]),""))))
   if(unique(b$group)==0 & length(unique(b$group))==1){
     bar_vals <- c("0"="grey50")
     bar_labs <- c("Angle = 0")
@@ -137,7 +137,7 @@ plot_barvolt <- function(time){
   p <- ggplot(b, aes(x=Bus.Name,y=(Voltage-1),fill=factor(group))) +
     geom_bar(stat = "identity",position='identity')+
     #scale_fill_gradient2(low="red",mid = 'black',high = 'blue',midpoint = 0)+
-    theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 4))+
+    #   theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 4))+
     #ylim((min(b$Voltage)-1),(max(b$Voltage)-1))+
     #ylim(-1,1)+
     scale_y_continuous("Voltage", labels=v_lab, limits=c((vmin-1),(vmax-1)))+
@@ -238,9 +238,9 @@ plot_barfreq <- function(time){
     theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 4))+
     #ylim((min(b$Frequency)-60),(max(b$Frequency)-60))+
     #ylim(-1,1)+
-    scale_y_continuous("Frequency",labels = f_lab,breaks = (f_lab-60), limits=c((fmin-60),(fmax-60)))+
+    scale_y_continuous("Frequency",labels = f_lab,breaks = (f_lab-60), limits=c((fmin-60),(fmax-60)))# +
     # ylab("Frequency difference from 60")+
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[time,1]),""))))
+    #  ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[time,1]),""))))
   p
 }
 

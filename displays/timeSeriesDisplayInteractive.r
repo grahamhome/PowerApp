@@ -25,23 +25,34 @@ timeSeriesDisplayInteractiveUI <- function(id) {
 		fixedPanel(class="mainwindow",
 			fluidRow(
 				column(1,
-					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
-					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())])),
-					br(),
-					checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
+					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon")
 				),
-				column(10, 
-					h2(name()),
-					div(style="width:100%; height:auto; position:relative; float:left",
-						uiOutput(ns("display"))
-					)
-				),
-				column(1, 
+				column(1, offset=10,
 					div(class="helpiconbox", actionLink(ns("help"), "", icon=icon("question", "fa-2x"), class="icon"))
 				)
 			),
 			fluidRow(
-				column(2, offset=5, 
+				column(2, offset=1,
+					h2(name())
+				),
+				column(2, offset=1,
+						selectInput(ns("activeMethod"), "Function:", fnames()[2:length(fnames())])
+				),
+				column(2,
+					div(style="padding-top:23px",
+						checkboxInput(ns("rescale"), "Auto-Scale Plot", TRUE)
+					)
+				)
+			),
+			fluidRow(
+				column(10, offset=1,
+					div(style="width:100%; height:auto; position:relative; float:left",
+						uiOutput(ns("display"))
+					)
+				)
+			),
+			fluidRow(
+				column(2, offset=5,
 					uiOutput(ns("zoomBtnBox"))
 				)
 			),
@@ -202,10 +213,13 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 					"Longer animations may have longer rendering times before they can be played. To change the ", br(), 
 					"animation parameters, first pause the currently playing animation, then click the play icon ", br(),
 					"again after changing the start, stop, or speed values. ", br(), br(),
-					"Use the radio buttons on the left side of the graph display to change the plotting method used ", br(),
+					"Use the drop-down menu above the graph display to change the plotting method used ", br(),
 					"to create the graph.", br(), br(),
-					"Clicking 'Re-Scale Plot' will adjust the range of potential values to match the values of the current sample.", br(), br(),
-					"Use the back button in the top left corner of the display to choose a different plot type or data set.")
+					"Clicking 'Auto-Scale Plot' will adjust the range of potential values to match the values of the current sample.", br(), br(),
+					"Use the back button in the top left corner of the display to choose a different plot type or data set.", br(), br(),
+					"To zoom in on the plot, click the region you would like to zoom in on. When the plot is zoomed,", br(),
+					"clicking on a bus will show details for that bus, including the status of all co-located buses.", br(),
+					"Click 'Zoom Out' to return to the normal view.")
 			)
 		}
 	})
@@ -218,8 +232,8 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 	#Image display
 	showImage <- function() {
 		output$display <- renderUI({
-			div(style="padding-left:12%",
-				imageOutput(ns("image"), height="auto", width="87%")
+			div(style="padding-left:18%",
+				imageOutput(ns("image"), height="auto", width="73%")
 			)
 		})
 	}
@@ -227,11 +241,11 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 	#Plot display
 	showPlot <- function() {
 		output$display <- renderUI({
-			plotOutput(ns("plot"), click=ns("pltClk"))
+			plotOutput(ns("plot"), click=ns("pltClk"), width="100%")
 		})
 	}
 
-	#Animation controls
+	#Show animation controls
 	showControls <- function() {
 		output$lowerDisplay <- renderUI({
 			tagList(
@@ -267,10 +281,15 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 	#Show animation controls by default
 	showControls()
 
+	#Hide animation controls
+	hideControls <- function() {
+		output$lowerDisplay <- renderUI({})
+	}
+
 	#Show zoom button
 	showZoom <- function() {
 		output$zoomBtnBox <- renderUI({
-			actionButton(ns("resetPlot"), "Zoom Out")
+			actionButton(ns("resetPlot"), "Zoom Out", width="100%")
 		})
 	}
 
@@ -286,24 +305,46 @@ timeSeriesDisplayInteractive <- function(input, output, session) {
 		#Get x and y values of click
 		point <- c(input$pltClk$x, input$pltClk$y)
 
-		#Zoom
-		output$plot <- renderPlot ({
-			zoom_map(point)
-			output$plot <- renderPlot({
-				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+		#Check if plot is already zoomed in
+		if (is_zoom == 0) {
+			#Hide animation controls
+			hideControls()
+			#Zoom
+			withProgress(message="Zooming Plot, Please Wait...", detail="", value=0, {
+				output$plot <- renderPlot ({
+					zoom_map(point)
+					eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+				})
+				showZoom()
+				incProgress(1)
 			})
-		})
-	 	showZoom()
+		} else if (is_zoom == 1){
+			selected_bus <- nearPoints(bus_locs, input$pltClk, threshold=30, maxpoints=1, xvar="Longitude", yvar="Latitude")
+			if (NROW(selected_bus) > 0) {
+				withProgress(message="Zooming Plot, Please Wait...", detail="", value=0, {
+					output$plot <- renderPlot ({
+					  eval(parse(text=paste((input$activeMethod), "_singlebus", "(", input$time, ",",paste("list(",paste(selected_bus$Longitude,selected_bus$Latitude,sep = ","),")",sep = ""),')',sep = "")))
+				})
+					incProgress(1)
+				})
+			} else{
+			  #print(paste("click: ",input$pltClk,sep = ""))
+			  #print(paste("point: ",point,sep = ""))
+			}
+		}
 	})
 
 	#Zoom out function
 	observeEvent(input$resetPlot, {
 		hideZoom()
-		output$plot <- renderPlot({
-			zoom_map(point)
-			eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+		withProgress(message="Zooming Plot, Please Wait...", detail="", value=0, {
+			output$plot <- renderPlot({
+				zoom_map(point)
+				eval(parse(text=paste(isolate(input$activeMethod), "(", input$time, ")", sep="")))
+			})
+			showControls()
+			incProgress(1)
 		})
-		showControls()
 	})
 
 	#Uses parallel processing to create a set of plot images for the given method in the given directory over the given range.
