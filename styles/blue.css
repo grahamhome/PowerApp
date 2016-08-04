@@ -1,3 +1,7 @@
+/*
+Style definitions for Power Viewer application.
+Author: Graham Home <grahamhome333@gmail.com> 
+*/
 body {
 	background-color:#004080;
 }
@@ -56,11 +60,13 @@ body {
 	height:10px;
 }
 .shiny-progress .progress-text {
-	width:100px;
+	width:200px;
 	position:relative;
 	margin-left:auto;
 	margin-right:auto;
 	text-align:center;
+	background-color:black;
+	color:white;
 }
 .helpiconbox {
 	float:right;

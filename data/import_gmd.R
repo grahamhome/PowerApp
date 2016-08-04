@@ -69,7 +69,14 @@ get_map_data_gmd <- function(){
   #Create the map to use as the background for the ggplot
   mapten <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), 
                     zoom = 6, maptype = "roadmap", scale = 2)
-  g <<- ggmap(mapten)+ scale_x_continuous(limits = c(-90.6, -81.3), expand = c(0, 0)) + scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
+  map_lims <<- c(-90.6, -81.3,34.5, 37) #xmin,xmax,ymin,ymax
+  m_ratio <<- abs(map_lims[2]-map_lims[1])/abs(map_lims[4]-map_lims[3])
+  print(paste0("ratio: ",m_ratio))
+  g <<- ggmap(mapten)+ 
+  #  coord_cartesian()+
+   # coord_fixed(xlim = c(map_lims[1], map_lims[2]),ylim = c(map_lims[3], map_lims[4]),ratio = 1)
+    scale_x_continuous(limits = c(-90.6, -81.3), expand = c(0, 0)) +
+    scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
   
 }
 #Set up the various data structures for the covariance matrix stuff
@@ -98,7 +105,7 @@ import_data <- function(){
 }
 #Returns a list of the plots that this data can be used to create
 use_plots <- function(){
-  list('linear.R','map.R','heatmap.R','correlation.R','bar.R')
+  list('linear.R','map.R','heatmap.R','bar.R')
 }
 
 name <- function(){

@@ -1,4 +1,8 @@
-#Display selection activity 
+#Display selection activity. Designed to be run from app.r,
+#not as a standalone Shiny application.
+
+#Author: Graham Home <grahamhome333@gmail.com>
+
 displayPicker <- function() {
 	fixedPanel(class="mainwindow_inactive",
 		fixedPanel(class="popup",

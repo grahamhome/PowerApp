@@ -1,4 +1,5 @@
 
+#Function that returns a list that maps the plot functions with the name we want for the display
 fnames <- function(){
   n <- list(Linear="linear",
             Voltage="plot_voltage",
@@ -9,6 +10,7 @@ fnames <- function(){
   n
 }
 
+#Plot the bus angles of all buses from <start> to <stop>
 plot_pangle <- function(start,stop){
   #Vmelt <- melt(Volt[1:1000,], id="Time")
   #p <- ggplot(Vmelt,aes(x=Time,y=value,colour=variable,group=variable)) +
@@ -20,8 +22,8 @@ plot_pangle <- function(start,stop){
   #stop <- ifelse(missing(stop),nrow(Volt),stop)
   xrange <- range(Pangle[start:stop,1])
   yrange <- c(-50,50) # range(Pangle[start:stop,-1])
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Phase Angle",
-       main=paste("Phase Angle at time",start,"to",stop,sep = " "),yaxt="n")
+  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Phase Angle",yaxt="n")
+     #  main=paste("Phase Angle at time",start,"to",stop,sep = " "),yaxt="n")
   axis(2, at = seq(-50, 50, by = 10), las=2)
   num_sig_bus <- 0
   n <- ncol(Pangle)-1
@@ -47,8 +49,8 @@ plot_voltage <- function(start,stop){
   #stop <- ifelse(missing(stop),nrow(Volt),stop)
   xrange <- range(Volt[start:stop,1])
   yrange <- range(Volt[start:stop,-1])
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Voltage",
-       main=paste("Voltage at time",start,"to",stop,sep = " "))
+  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Voltage")
+      #main=paste("Voltage at time",start,"to",stop,sep = " "))
   num_sig_bus <- 0
   n <- ncol(Volt)-1
   colors <- rainbow(n)
@@ -67,8 +69,8 @@ plot_frequency <- function(start,stop){
   #stop <- ifelse(missing(stop),nrow(Freq),stop)
   xrange <- range(Freq[start:stop,1])
   yrange <- range(Freq[start:stop,-1])
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Frequency",
-       main=paste("Frequency at time",Freq[start,1],"to",Freq[stop,1],sep = " "))
+  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Frequency")
+      # main=paste("Frequency at time",Freq[start,1],"to",Freq[stop,1],sep = " "))
   num_sig_bus <- 0
   n <- ncol(Freq)-1
   colors <- rainbow(n)

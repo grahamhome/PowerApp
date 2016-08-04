@@ -46,11 +46,8 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-#Image directories
-img/
-
-#Data directory
-rawdata/
+# All files & folders in img/ directory
+plots/img/*
 
 #That stupid Rplots file
 Rplots.pdf

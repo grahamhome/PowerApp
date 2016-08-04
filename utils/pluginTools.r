@@ -1,5 +1,6 @@
 #Tools for loading "plugins" (scripts) into PowerViewer.
-#Created by Graham Home <grahamhome333@gmail.com>
+
+#Author: Graham Home <grahamhome333@gmail.com>
 
 #Load all data import plugins into memory
 loadDataPlugins <- function() {
@@ -83,7 +84,7 @@ loadDisplayPlugins <- function() {
 	}
 }
 
-#Load all data, plot, and display plugins into memory efficiently
+#Load all data, plot, and display plugins into memory
 loadplugins <- function() {
 	loadDataPlugins()
 	loadDisplayPlugins()
