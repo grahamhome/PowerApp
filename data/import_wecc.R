@@ -149,7 +149,9 @@ get_map_data_wecc  <- function(){
   #                                 max(bus_locs$Longitude),max(bus_locs$Latitude)),
  #                     maptype = "roadmap")
   map_lims <<- c(-124, -104,31, 50) #xmin,xmax,ymin,ymax
+  m_ratio <<- abs(map_lims[2]-map_lims[1])/abs(map_lims[4]-map_lims[3])
   g <<- ggmap(mapten) +
+   # coord_fixed(xlim = c(map_lims[1], map_lims[2]),ylim = c(map_lims[3], map_lims[4]),expand = FALSE)
     scale_x_continuous(limits = c(-124, -104), expand = c(0, 0)) +
     scale_y_continuous(limits = c(31, 50), expand = c(0, 0))
 }

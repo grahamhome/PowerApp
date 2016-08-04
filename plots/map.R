@@ -274,9 +274,12 @@ zoom_map <- function(point){
   if(!exists("is_zoom")){
     is_zoom <<- 0
   }
+  
   if(is_zoom == 1 | is_zoom == 2){
     is_zoom <<- 0
+    #m_ratio <- abs(map_lims[2]-map_lims[1])/abs(map_lims[4]-map_lims[3])
     g <<- ggmap(mapten) +
+     # coord_fixed(xlim = c(map_lims[1], map_lims[2]),ylim = c(map_lims[3], map_lims[4]))
       scale_x_continuous(limits=c(map_lims[1], map_lims[2]), expand=c(0,0)) + 
       scale_y_continuous(limits=c(map_lims[3], map_lims[4]), expand=c(0,0))
   } else{
@@ -286,19 +289,20 @@ zoom_map <- function(point){
     ymin <- min(bus_locs$Latitude)
     ymax <- max(bus_locs$Latitude)
     
-    ratio <- abs(xmax-xmin)/abs(ymax-ymin)
-    
+   # ratio <- abs(xmax-xmin)/abs(ymax-ymin)
+   # m_ratio <- abs(map_lims[2]-map_lims[1])/abs(map_lims[4]-map_lims[3])
     xrange <- abs(xmax-xmin)/4
     yrange <- abs(ymax-ymin)/4 #TODO: Zoom into the nearest cluster instead
     
-    xmin <- point[1]-xrange
-    xmax <- point[1]+xrange
-    ymin <- point[2]-yrange
-    ymax <- point[2]+yrange
+    z_xmin <- point[1]-xrange
+    z_xmax <- point[1]+xrange
+    z_ymin <- point[2]-yrange
+    z_ymax <- point[2]+yrange
     
     g <<- ggmap(mapten) +
-      scale_x_continuous(limits=c(xmin, xmax), expand=c(0,0)) + 
-      scale_y_continuous(limits=c(ymin, ymax), expand=c(0,0))
+    # scale_x_continuous(limits=c(xmin, xmax), expand=c(0,0)) + 
+    #  scale_y_continuous(limits=c(ymin, ymax), expand=c(0,0))
+      coord_fixed(xlim = c(z_xmin, z_xmax),ylim = c(z_ymin, z_ymax))
   }
 }
 #When called, change the autosc boolean from TRUE to FALSE or FALSE to TRUE
@@ -629,7 +633,8 @@ plot_mapvolt <- function(t){
     scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21) +
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")#+
+   #coord_cartesian()
 #    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
@@ -675,7 +680,8 @@ plot_mapvolt_singlebus <- function(t,near_bus){
   }
   g <- g+
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")#+
+    #coord_cartesian()
   g
 }
 
@@ -748,7 +754,8 @@ plot_mapvolt_alarms<- function(t){
   g <- g+scale_colour_manual("Alarm Status", values = alarm_vals,labels=alarm_labs) +
     #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
     #  scale_colour_gradientn("Alarm Status",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
-    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+    theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
+  #  coord_cartesian()
   #ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }
@@ -824,6 +831,7 @@ plot_mapvolt_alarms_singlebus<- function(t, near_bus){
     #geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=alarm,group=Sub.Name),size=5,alpha=0.7,shape=16) +
     #  scale_colour_gradientn("Alarm Status",colours = c("green","blue","orange","yellow"),limits=c(vmin,vmax)) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
+   # coord_cartesian()
   #  ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
 }

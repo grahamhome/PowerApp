@@ -485,6 +485,7 @@ zoom_map <- function(point){
     g <<- ggmap(mapten) +
       scale_x_continuous(limits=c(map_lims[1], map_lims[2]), expand=c(0,0)) + 
       scale_y_continuous(limits=c(map_lims[3], map_lims[4]), expand=c(0,0))
+      #coord_fixed(xlim = c(map_lims[1], map_lims[2]),ylim = c(map_lims[3], map_lims[4]),expand = FALSE)
   } else{
     is_zoom <<- 1
     xmin <- min(bus_locs$Longitude)
@@ -503,8 +504,9 @@ zoom_map <- function(point){
     z_ymax <<- point[2]+yrange
     
     g <<- ggmap(mapten) +
-      scale_x_continuous(limits=c(z_xmin, z_xmax), expand=c(0,0)) + 
-      scale_y_continuous(limits=c(z_ymin, z_ymax), expand=c(0,0))
+      coord_fixed(xlim = c(z_xmin, z_xmax),ylim = c(z_ymin, z_ymax))
+    #  scale_x_continuous(limits=c(z_xmin, z_xmax), expand=c(0,0)) + 
+    #  scale_y_continuous(limits=c(z_ymin, z_ymax), expand=c(0,0))
   }
 }
 
