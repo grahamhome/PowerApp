@@ -70,7 +70,9 @@ get_map_data_ts  <- function(){
   mapten <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), 
                      zoom = 6, maptype = "roadmap", scale = 2)
   map_lims <<- c(-90.6, -81.3,34.5, 37) #xmin,xmax,ymin,ymax
+  m_ratio <<- abs(map_lims[2]-map_lims[1])/abs(map_lims[4]-map_lims[3])
   g <<- ggmap(mapten)+ 
+  #  coord_fixed(xlim = c(map_lims[1], map_lims[2]),ylim = c(map_lims[3], map_lims[4]),ratio = m_ratio)
     scale_x_continuous(limits = c(-90.6, -81.3), expand = c(0, 0)) + 
     scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
   
