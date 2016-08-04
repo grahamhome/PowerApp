@@ -1,6 +1,7 @@
 library(ggplot2)
 library(reshape)
 library(data.table)
+#Function that returns a list that maps the plot functions with the name we want for the display
 fnames <- function(){
   n <- list(Boxplot="boxplot",
             Voltage="plot_boxvolt",
@@ -26,7 +27,7 @@ update_volt <- function(time){
   assign("bus_locs",bus_locs,envir = .GlobalEnv)
 } 
 
-
+#Plot a boxplot of the frequencies for all the buses at <time> 
 plot_boxfreq <- function(time){
   update_freq(time)
   cf <- as.data.frame(t(Freq[time,-1]))
@@ -39,7 +40,7 @@ plot_boxfreq <- function(time){
     ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[time,1]),""))))
   p
 }
-
+#Plot a boxplot of the voltages for all the buses at <time> 
 plot_boxvolt <- function(time){
   update_volt(time)
   #cv <- melt(Volt[1:time,],id="Time")

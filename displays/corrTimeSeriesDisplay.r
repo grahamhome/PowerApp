@@ -1,5 +1,10 @@
-#A Shiny plugin which creates a window for displaying time series plots.
-#Created by Graham Home <grahamhome333@gmail.com>
+#A Shiny plugin which creates a window for displaying correlation plots.
+
+#Note: This display is no longer in use due to the fact that the correlation plotting
+#method is no longer used. It is only included in the final release of PowerViewer
+#in case someone wants to re-enable the correlation plot at some point.
+
+#Author: Graham Home <grahamhome333@gmail.com>
 
 #Proper Name
 dispName <- function() {
@@ -19,15 +24,15 @@ corrTimeSeriesDisplayUI <- function(id) {
 	tagList(
 		fixedPanel(class="mainwindow",
 			fluidRow(
-				column(2,
+				column(4,
 					actionLink(ns("back"), "", icon=icon("arrow-left", "fa-2x"), class="icon"),
 					div(style="padding-top:40%;padding-left:10%", radioButtons(ns("activeMethod"), "Function:", fnames()[2:length(fnames())]))
 				),
-				column(8, 
+				column(4,
 					h2(name()),
 					imageOutput(ns("image"), height="auto", width="100%")
 				),
-				column(2, 
+				column(4, 
 					div(class="helpiconbox", actionLink(ns("help"), "", icon=icon("question", "fa-2x"), class="icon"))
 				)
 			),
@@ -54,16 +59,13 @@ corrTimeSeriesDisplayUI <- function(id) {
 				),
 				column(2,
 					selectInput(ns("speed"), "Animation Speed:", choices=list("Slow"=0.1, "Normal Speed"=1, "Double Speed"=2), selected=1)
-				)
-			),
-			fluidRow(
-				column(12,
-					div(style="width:100%;color:red;text-align:center", textOutput(ns("result")))
+				),
+				column(2,
+					div(style="color:red;padding-top:30px", textOutput(ns("result")))
 				)
 			),
 			fluidRow(
 				column(4, offset=4,
-					br(),
 					div(class="backiconbox", uiOutput(ns("toggle")))
 				)
 			)

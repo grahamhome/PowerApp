@@ -1,4 +1,7 @@
 #PowerViewer: A tool for visualizing power grid data.
+#This is the starting point for the application. Please see the README file
+#located in the same directory as this file for more information.
+
 #Author: Graham Home <grahamhome333@gmail.com>
 
 #Dependencies
@@ -18,7 +21,6 @@ baseImports <- function() {
 	source("utils/pluginTools.r")
 	source("utils/moduleTools.r")
 	source("utils/plotTools.r")
-	source("utils/fileTools.r")
 }
 baseImports()
 
@@ -53,7 +55,7 @@ server <- function(input, output, session) {
 	#Run the current UI function
 	output$content <- renderUI({ eval(parse(text=window$content)) })
 
-	#Respond to button presses by changing UI function
+	#Respond to button presses by running a different UI function
 
 	#"Next" button
 	observeEvent(input$forward, {
@@ -102,10 +104,12 @@ server <- function(input, output, session) {
 			launchUI("intro()")
 		} else if (window$content == "plotPicker()") {
 			launchUI("dataPicker()") 
+		} else if (window$content == "displayPicker()") {
+			launchUI("plotPicker()")
 		}
 	})
 }
 
-#Start the app
+#Start the app at runtime
 mainApp <- shinyApp(ui=ui, server=server)
 runApp(mainApp, port=5678)
