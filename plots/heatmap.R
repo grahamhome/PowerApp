@@ -144,282 +144,6 @@ autoscale <- function(){
   }
 }
 
-#Unused
-get_corr_neighbors_volt <- function(time){
-  linesb <-get_busline_voltcov(time)
-  for (x in 1:nrow(bus_locs)) {
-    curr_row <- bus_locs[x,]
-    
-  }
-}
-#Unused
-init_volt_heatgrid <- function(){
-  bus_locs <- update_volt(1)
-  b <- subset(bus_locs,select=c("Latitude","Longitude","Voltage"))
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
-  
-  longs <- seq(from=xmn,to=xmx,by=0.1)
-  lats <- seq(from=ymn,to=ymx,by=0.1)
-  #points_df <- data.frame("Longitude","Latitude")
-  points_mat <- matrix(data=0,nrow = (length(lats)*length(longs)),ncol = 4)
-  colnames(points_mat) <- c("Longitude","Latitude","vvNom","vvDen")
-  for (x in 1:length(longs)) {
-    for (y in 1:length(lats)) {
-      points_mat[(((x-1)*length(lats))+y),1] <- longs[x]
-      points_mat[(((x-1)*length(lats))+y),2] <- lats[y]
-      points_mat[(((x-1)*length(lats))+y),3] <- 0
-      points_mat[(((x-1)*length(lats))+y),4] <- 0
-    }
-  }
-  pm <<- merge(as.data.frame(points_mat),b,by=c("Longitude","Latitude"),all=TRUE)
-  pm$pmu <<- ifelse(is.na(pm$Voltage),0,1)
-}
-#Unused
-get_surrounding_points <- function(nbus){
-  grid_locs <- matrix(0,nrow = 2592, ncol=2)
-  vj <- bus_locs[nbus,"Voltage"]
-  x1 <- bus_locs[nbus,"Longitude"]
-  y1 <- bus_locs[nbus,"Latitude"]
-  dinf <- 4
-  curr_point <- 0
-  for (x in seq(from = (-dinf+x1),to = (dinf+x1),by=0.1)) {
-    for (y in seq(from = (Arg(-sqrt(as.complex((dinf^2)-(x^2))))+y1),to = (Arg((sqrt(as.complex((dinf^2)-(x^2)))))+y1),by=0.1)) {
-      grid_locs[curr_point,] <- c(round(x,digits = 2),round(y,digits = 2))
-      curr_point <- curr_point+1
-    }
-  }
-  grid_locs
-}
-#Unused
-init_grid_points <- function(){
-  allgp_mat <- matrix(ncol = 2,nrow = 0)
-  colnames(all_grid_points) <- c("Bus.Name","Surrounding.Points")
-  for (n in 1:nrow(bus_locs)) {
-    allgp_mat <- rbind(allgp_mat,get_surrounding_points(n))
-  }
-  allgp_mat <- unique(allgp_mat)
-  colnames(allgp_mat) <- c("Longitude","Latitude")
-  allgp <- data.frame(allgp_mat)
-  allgp <- allgp[!(allgp$Longitude==0 & allgp$Latitude==0),]
-  allgp$Sum.Distance <- as.numeric(0)
-  allgp <- merge(allgp,bus_locs,by=c("Latitude","Longitude"),all=TRUE)
-  allgp$Sum.Distance <- apply(allgp,1,function(x) {ifelse(is.na(x["Sum.Distance"]),as.numeric(0),as.numeric(x["Sum.Distance"]))})
-  allgp$Frequency <- apply(allgp,1,function(x) {ifelse(is.na(x["Frequency"]),as.numeric(0),as.numeric(x["Frequency"]))})
-  allgp$Angle <- apply(allgp,1,function(x) {ifelse(is.na(x["Angle"]),as.numeric(0),as.numeric(x["Angle"]))})
-  allgp$Voltage <- apply(allgp,1,function(x) {ifelse(is.na(x["Voltage"]),as.numeric(0),as.numeric(x["Voltage"]))})
-  allgp
-}
-#Unused
-make_sppolys_volt <- function(t){
-  library(gputools)
-  bus_locs <- update_volt(t)
-  
-  #bus_locs[with(bus_locs, (Latitude < 50 & Latitude > 45) & (Voltage > 1.05 & Voltage < 0.95) &(Longitude < 80 & Longitude > 75)),]
-  
-  
-  dist_bl <- gpuDist(points = bus_locs[,c("Latitude","Longitude")],method = "euclidean")
-  cd_bl <- gpuDistClust(bus_locs[,c("Latitude","Longitude")])
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
-  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
-                        xo=seq(xmn,xmx, by=0.04),
-                        yo=seq(ymn,ymx, by=0.05))
-  ic_df <- interp2xyz(intp_coords,data.frame = TRUE)
-  ggplot(ic_df)+aes(x=x,y=y,z=z,fill=z)+geom_tile()+coord_equal()
-  r <- raster(intp_coords)
-  
-  rtp <- rasterToPolygons(r)
-}
-#Update the matrix of values/distances for the contour mapping algorithm for the given point (x,y)
-#Unused
-update_virtualvalue <- function(x,y,x1,y1,vj){
-
- # td <- pointDistance(c(x1,y1),c(x,y),lonlat = FALSE) #distance between (tx,ty) and (x1,y1)
-  td <- sqrt(((x-x1)^2) + ((y-y1)^2))
-  curr_index <- rtpFort$id[which((rtpFort$lat<(y+0.03))&(rtpFort$lat>(y-0.03))&(rtpFort$long<(x+0.03))&(rtpFort$long>(x-0.03)))]
-#  curr_index <-  which(((rtpFort$lat<(y+0.03))&(rtpFort$lat>(y-0.03))&(rtpFort$long<(x+0.03))&(rtpFort$long>(x-0.03))),arr.ind = TRUE)
-  # print(length(curr_index))
-  if (length(curr_index) > 0) {
-    #print(curr_index)
-    for (n in 1:length(curr_index)) {
-      curr_id <- as.numeric(curr_index[n])
-      curr_row <- new_voltvals[curr_id,]
-      c_valsum <- curr_row$valsum
-      c_distsum <- curr_row$distsum
-      curr_row$valsum <- c_valsum+ (as.numeric(vj)*(1/((td)^2)))
-      curr_row$distsum <- c_distsum+ (1/((td)^2))
-      new_voltvals[curr_id,] <- curr_row
-      assign("new_voltvals",new_voltvals,envir = .GlobalEnv)
-     # c_valsum <-as.numeric(new_voltvals[curr_id,][["valsum"]])
-      #c_diststum <- as.numeric(new_voltvals[curr_id,][["distsum"]])
-      #new_voltvals[curr_id,][["valsum"]] <<- c_valsum+ as.numeric((vj*(1/((td)^2))))
-      #new_voltvals[curr_id,][["distsum"]] <<- c_diststum +as.numeric((1/((td)^2)))
-    }
-  }
-  
-  #Old attempts at making this function; keeping just in case I need it
-  # curr_index <- rtpFortMer_test[((round(rtpFortMer_test$long,digits=2) == tx)&(round(rtpFortMer_test$lat,digits=2)==ty)),]
-  # ci <- which((((round(rtpFortMer_test$long,digits=2)==tx)&(round(rtpFortMer_test$lat,digits=2)==ty))))
-  # curr_yind <- match(y,intp_coords[["y"]])
-  # curr_xind <- match(x,intp_coords[["x"]])
-  #c_valsum <- zc_vals[curr_xind,curr_yind] #as.numeric(curr_vals[[1]][2]) #Value sum
-  #  c_distsum <- zc_dists[curr_xind,curr_yind] #as.numeric(curr_vals[[1]][1]) #Distance sum value
-  #Update value sum
-  #  c_valsum <- c_valsum+(vj*(1/((td)^2)))
-  # c_distsum <- c_distsum+(1/((td)^2))
-  # new_vals <- paste(c_distsum,c_valsum,sep = ",")
-  # coords_z[curr_xind,curr_yind] <<- new_vals
-  # zc_vals[curr_xind,curr_yind] <<- I(list(c_valsum,c(td,vj)))#c_valsum+ vj#(vj*(1/((td)^2)))
-  # zc_dists[curr_xind,curr_yind] <<- #c_distsum+ td#(1/((td)^2))
-  # zc_dists <<- zc_dists
-  #zc_vals <<- zc_vals
-  
-  
-}
-
-#Go through every point within a circle for a given bus (with long/lat location) and updates the values there
-# nval = name of value to be updating the matrix with ("Voltage","Frequency","Angle")
-#Unused
-update_neighbor_points <- function(nbus,nval){
-  vj <- bus_locs[nbus,nval]
-  x1 <- bus_locs[nbus,"Longitude"]
-  y1 <- bus_locs[nbus,"Latitude"]
- # ty <- round(y,digits = 2) #Latitude
-  #tx <- round(x,digits = 2) #Longitude
-  dinf <- 2
-  for (x in seq(from = (-dinf+x1),to = (dinf+x1),by=0.01)) {
-    tx <- round(x,digits = 2) #Longitude
-    if(tx %in% round(rtpFortMer_test$long,digits=2)){
-     # print(paste("x:",tx,sep = ""))
-      for (y in seq(from = (Arg(-sqrt(as.complex((dinf^2)-(x^2))))+y1),to = (Arg((sqrt(as.complex((dinf^2)-(x^2)))))+y1),by=0.01)) {
-        ty <- round(y,digits = 2) #Latitude
-       # if ((tx %in% intp_coords[["x"]])&(ty %in% intp_coords[["y"]])) {
-        if(ty %in% round(rtpFortMer_test$lat,digits=2)) {
-          update_virtualvalue(tx,ty,x1,y1,vj)
-         # print(paste("y:",ty,sep = ""))
-        }
-      }
-    }
-  }
-}
-#new_voltvals$new.layer <- ifelse(new_voltvals$distsum!=0,(new_voltvals$valsum/new_voltvals$distsum),0)
-
-#updated_voltvals <- new_voltvals[(new_voltvals$distsum != 0),]
-#updated_voltvals$new.layer <- updated_voltvals$valsum/updated_voltvals$distsum
-#Unused
-get_containing_poly <- function(x){ 
-  p <- rtp@polygons
-#  pts <- lapply(p, function(x) )
-  pts <- p[with(p,function(i) ((x %in% i@Polygons[[1]]@coords) & (y %in% i@Polygons[[1]]@coords)))]
-  cp <-  which.min(abs())
-  I(rtp_test@polygons[[x]]@Polygons[[1]]@coords)
-}
-#Initialize grid using the nval type specified; Unused
-initialize_grid <- function(nval){
-  bus_locs <- update_volt(1)
-  bus_locs <- update_freq(1)
-  bus_locs <- update_pangle(1)
-  xmn <- min(bus_locs$Longitude)
-  xmx <- max(bus_locs$Longitude)
-  ymn <- min(bus_locs$Latitude)
-  ymx <- max(bus_locs$Latitude)
-  if (nval == "Angle") {
-    intp_coords <<- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Angle, duplicate = "mean",
-                           xo=seq(xmn,xmx, by=0.05),
-                           yo=seq(ymn,ymx, by=0.05))
-  } else if (nval == "Frequency") {
-    intp_coords <<- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
-                           xo=seq(xmn,xmx, by=0.05),
-                           yo=seq(ymn,ymx, by=0.05))
-  } else {
-    intp_coords <<- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
-                           xo=seq(xmn,xmx, by=0.05),
-                           yo=seq(ymn,ymx, by=0.05))
-  }
-  r <- raster(intp_coords)
-  
-  rtp <- rasterToPolygons(r)
-  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
-  rtpFort <- fortify(rtp, data = rtp@data)
-
-  #Add the layer column of the rtp@data dataframe to the rtpFort dataframe
-  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
-  
-  new_voltvals <- rtp@data
-  new_voltvals$valsum <- 0 
-  new_voltvals$distsum <- 0 
-  
-  
-  rtp_test <- rtp
-  rtpFort_test <- rtpFort
-  rtpFortMer_test <- rtpFortMer
-  #rtp_test@data$locpolys <- I(rtp_test@polygons[[x]]@Polygons[[1]]@coords@Polygons[[1]]@coords)
-  #I(rtp_test@polygons[[x]]@Polygons[[1]]@coords@Polygons[[1]]@coords)
- # get_full_coords = function(x) {round(as.vector(seq(min(rtp_test@polygons[[x]]@Polygons[[1]]@coords))),digits = 2)}
-  get_full_coords = function(x) {
-    c(as.vector(seq(round(min(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,1]),digits = 2),round(max(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,1]),digits = 2),by = 0.01)),
-    as.vector(seq(round(min(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,2]),digits = 2),round(max(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,2]),digits = 2),by = 0.01)))
-  }
-  
-  get_long_coords = function(x) {
-    as.vector(seq(round(min(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,1]),digits = 2),round(max(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,1]),digits = 2),by = 0.01))
-    #  as.vector(seq(round(min(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,2]),digits = 2),round(max(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,2]),digits = 2),by = 0.01)))
-  }
-  get_lat_coords = function(x) {
-    as.vector(seq(round(min(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,2]),digits = 2),round(max(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,2]),digits = 2),by = 0.01))
-    #  as.vector(seq(round(min(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,2]),digits = 2),round(max(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,2]),digits = 2),by = 0.01)))
-  }
-  
-  rtp_test@data$locpolys <- lapply(rtp_test@data$id, function(x)get_full_coords(x))
-  names(rtp_test@data$locpolys) <- 1:nrow(rtp@data)
-  locs_mat <- matrix(0,nrow = )
-  all_locs_lst <- as.vector(unlist(rtp_test@data$locpolys,use.names = TRUE))
-  longs_list <- as.vector(unlist(lapply(rtp_test@data$id, function(x)get_long_coords(x))))
-  lats_list <- as.vector(unlist(lapply(rtp_test@data$id, function(x)get_lat_coords(x))))
-  ulats <- unique(lats_list)
-  ulongs <- unique(longs_list)
-  
-  m <- t(as.matrix(c(tx,ty),nrow=1,ncol=2))
- # names(all_locs_lst) <- lapply(all_locs_lst,function(x) match())
-  
-  #Matrix that will hold the numerator for the virtual value
- # zc_vals <- matrix(intp_coords[["z"]],nrow = nrow(intp_coords[["z"]]),ncol = ncol(intp_coords[["z"]]))
- # zc_vals <<- structure(vapply(zc_vals, function(x) ifelse(is.na(x),0,x), numeric(1)), dim=dim(zc_vals))
-  #Matrix that will hold the denominator for the virtual value
- # zc_dists <<- matrix(0,nrow = nrow(intp_coords[["z"]]),ncol = ncol(intp_coords[["z"]]))
-}
-#Unused
-update_grid_volt <- function(time){
-  bus_locs <- update_volt(time)
-  for (n in 1:nrow(bus_locs)) {
-   update_neighbor_points(n,"Voltage")
-    }
-
-  # n_cores <- detectCores()-1
-  # cl<-makeCluster(n_cores)
-  # registerDoParallel(cl)
-  # foreach(n=1:(nrow(bus_locs)), .packages=c( "sp","raster"), 
-  #         .export=c("intp_coords","zc_dists","zc_vals","bus_locs","update_neighbor_points","update_virtualvalue")) %dopar% { 
-  #   update_neighbor_points(n)
-  # } 
-  for (x in 1:nrow(zc_vals)) {
-    for (y in 1:ncol(zc_vals)) {
-      if(zc_dists[x,y]!=0){
-        intp_coords[["z"]][x,y] <- (zc_vals[x,y]/zc_dists[x,y])
-      } else{
-        intp_coords[["z"]][x,y] <- 0
-      }
-    }
-  }
-#  stopCluster(cl)
-  assign("intp_coords",intp_coords,envir = .GlobalEnv)
-}
-
 #Values to use for the alarm status functio
 alarm_time <- (60*10) #sample/sec * seconds to check
 #Upper/lower limit for the voltage to be considered alarmed
@@ -1614,5 +1338,281 @@ create_voltvideo <- function(start,stop,vidtitle){
 #  scale_fill_gradient(low="white", high="black", space = "Lab") + 
 #  coord_fixed(ratio = 1)
 
+
+#Unused
+get_corr_neighbors_volt <- function(time){
+  linesb <-get_busline_voltcov(time)
+  for (x in 1:nrow(bus_locs)) {
+    curr_row <- bus_locs[x,]
+    
+  }
+}
+#Unused
+init_volt_heatgrid <- function(){
+  bus_locs <- update_volt(1)
+  b <- subset(bus_locs,select=c("Latitude","Longitude","Voltage"))
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  
+  longs <- seq(from=xmn,to=xmx,by=0.1)
+  lats <- seq(from=ymn,to=ymx,by=0.1)
+  #points_df <- data.frame("Longitude","Latitude")
+  points_mat <- matrix(data=0,nrow = (length(lats)*length(longs)),ncol = 4)
+  colnames(points_mat) <- c("Longitude","Latitude","vvNom","vvDen")
+  for (x in 1:length(longs)) {
+    for (y in 1:length(lats)) {
+      points_mat[(((x-1)*length(lats))+y),1] <- longs[x]
+      points_mat[(((x-1)*length(lats))+y),2] <- lats[y]
+      points_mat[(((x-1)*length(lats))+y),3] <- 0
+      points_mat[(((x-1)*length(lats))+y),4] <- 0
+    }
+  }
+  pm <<- merge(as.data.frame(points_mat),b,by=c("Longitude","Latitude"),all=TRUE)
+  pm$pmu <<- ifelse(is.na(pm$Voltage),0,1)
+}
+#Unused
+get_surrounding_points <- function(nbus){
+  grid_locs <- matrix(0,nrow = 2592, ncol=2)
+  vj <- bus_locs[nbus,"Voltage"]
+  x1 <- bus_locs[nbus,"Longitude"]
+  y1 <- bus_locs[nbus,"Latitude"]
+  dinf <- 4
+  curr_point <- 0
+  for (x in seq(from = (-dinf+x1),to = (dinf+x1),by=0.1)) {
+    for (y in seq(from = (Arg(-sqrt(as.complex((dinf^2)-(x^2))))+y1),to = (Arg((sqrt(as.complex((dinf^2)-(x^2)))))+y1),by=0.1)) {
+      grid_locs[curr_point,] <- c(round(x,digits = 2),round(y,digits = 2))
+      curr_point <- curr_point+1
+    }
+  }
+  grid_locs
+}
+#Unused
+init_grid_points <- function(){
+  allgp_mat <- matrix(ncol = 2,nrow = 0)
+  colnames(all_grid_points) <- c("Bus.Name","Surrounding.Points")
+  for (n in 1:nrow(bus_locs)) {
+    allgp_mat <- rbind(allgp_mat,get_surrounding_points(n))
+  }
+  allgp_mat <- unique(allgp_mat)
+  colnames(allgp_mat) <- c("Longitude","Latitude")
+  allgp <- data.frame(allgp_mat)
+  allgp <- allgp[!(allgp$Longitude==0 & allgp$Latitude==0),]
+  allgp$Sum.Distance <- as.numeric(0)
+  allgp <- merge(allgp,bus_locs,by=c("Latitude","Longitude"),all=TRUE)
+  allgp$Sum.Distance <- apply(allgp,1,function(x) {ifelse(is.na(x["Sum.Distance"]),as.numeric(0),as.numeric(x["Sum.Distance"]))})
+  allgp$Frequency <- apply(allgp,1,function(x) {ifelse(is.na(x["Frequency"]),as.numeric(0),as.numeric(x["Frequency"]))})
+  allgp$Angle <- apply(allgp,1,function(x) {ifelse(is.na(x["Angle"]),as.numeric(0),as.numeric(x["Angle"]))})
+  allgp$Voltage <- apply(allgp,1,function(x) {ifelse(is.na(x["Voltage"]),as.numeric(0),as.numeric(x["Voltage"]))})
+  allgp
+}
+#Unused
+make_sppolys_volt <- function(t){
+  library(gputools)
+  bus_locs <- update_volt(t)
+  
+  #bus_locs[with(bus_locs, (Latitude < 50 & Latitude > 45) & (Voltage > 1.05 & Voltage < 0.95) &(Longitude < 80 & Longitude > 75)),]
+  
+  
+  dist_bl <- gpuDist(points = bus_locs[,c("Latitude","Longitude")],method = "euclidean")
+  cd_bl <- gpuDistClust(bus_locs[,c("Latitude","Longitude")])
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  intp_coords <- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
+                        xo=seq(xmn,xmx, by=0.04),
+                        yo=seq(ymn,ymx, by=0.05))
+  ic_df <- interp2xyz(intp_coords,data.frame = TRUE)
+  ggplot(ic_df)+aes(x=x,y=y,z=z,fill=z)+geom_tile()+coord_equal()
+  r <- raster(intp_coords)
+  
+  rtp <- rasterToPolygons(r)
+}
+#Update the matrix of values/distances for the contour mapping algorithm for the given point (x,y)
+#Unused
+update_virtualvalue <- function(x,y,x1,y1,vj){
+  
+  # td <- pointDistance(c(x1,y1),c(x,y),lonlat = FALSE) #distance between (tx,ty) and (x1,y1)
+  td <- sqrt(((x-x1)^2) + ((y-y1)^2))
+  curr_index <- rtpFort$id[which((rtpFort$lat<(y+0.03))&(rtpFort$lat>(y-0.03))&(rtpFort$long<(x+0.03))&(rtpFort$long>(x-0.03)))]
+  #  curr_index <-  which(((rtpFort$lat<(y+0.03))&(rtpFort$lat>(y-0.03))&(rtpFort$long<(x+0.03))&(rtpFort$long>(x-0.03))),arr.ind = TRUE)
+  # print(length(curr_index))
+  if (length(curr_index) > 0) {
+    #print(curr_index)
+    for (n in 1:length(curr_index)) {
+      curr_id <- as.numeric(curr_index[n])
+      curr_row <- new_voltvals[curr_id,]
+      c_valsum <- curr_row$valsum
+      c_distsum <- curr_row$distsum
+      curr_row$valsum <- c_valsum+ (as.numeric(vj)*(1/((td)^2)))
+      curr_row$distsum <- c_distsum+ (1/((td)^2))
+      new_voltvals[curr_id,] <- curr_row
+      assign("new_voltvals",new_voltvals,envir = .GlobalEnv)
+      # c_valsum <-as.numeric(new_voltvals[curr_id,][["valsum"]])
+      #c_diststum <- as.numeric(new_voltvals[curr_id,][["distsum"]])
+      #new_voltvals[curr_id,][["valsum"]] <<- c_valsum+ as.numeric((vj*(1/((td)^2))))
+      #new_voltvals[curr_id,][["distsum"]] <<- c_diststum +as.numeric((1/((td)^2)))
+    }
+  }
+  
+  #Old attempts at making this function; keeping just in case I need it
+  # curr_index <- rtpFortMer_test[((round(rtpFortMer_test$long,digits=2) == tx)&(round(rtpFortMer_test$lat,digits=2)==ty)),]
+  # ci <- which((((round(rtpFortMer_test$long,digits=2)==tx)&(round(rtpFortMer_test$lat,digits=2)==ty))))
+  # curr_yind <- match(y,intp_coords[["y"]])
+  # curr_xind <- match(x,intp_coords[["x"]])
+  #c_valsum <- zc_vals[curr_xind,curr_yind] #as.numeric(curr_vals[[1]][2]) #Value sum
+  #  c_distsum <- zc_dists[curr_xind,curr_yind] #as.numeric(curr_vals[[1]][1]) #Distance sum value
+  #Update value sum
+  #  c_valsum <- c_valsum+(vj*(1/((td)^2)))
+  # c_distsum <- c_distsum+(1/((td)^2))
+  # new_vals <- paste(c_distsum,c_valsum,sep = ",")
+  # coords_z[curr_xind,curr_yind] <<- new_vals
+  # zc_vals[curr_xind,curr_yind] <<- I(list(c_valsum,c(td,vj)))#c_valsum+ vj#(vj*(1/((td)^2)))
+  # zc_dists[curr_xind,curr_yind] <<- #c_distsum+ td#(1/((td)^2))
+  # zc_dists <<- zc_dists
+  #zc_vals <<- zc_vals
+  
+  
+}
+
+#Go through every point within a circle for a given bus (with long/lat location) and updates the values there
+# nval = name of value to be updating the matrix with ("Voltage","Frequency","Angle")
+#Unused
+update_neighbor_points <- function(nbus,nval){
+  vj <- bus_locs[nbus,nval]
+  x1 <- bus_locs[nbus,"Longitude"]
+  y1 <- bus_locs[nbus,"Latitude"]
+  # ty <- round(y,digits = 2) #Latitude
+  #tx <- round(x,digits = 2) #Longitude
+  dinf <- 2
+  for (x in seq(from = (-dinf+x1),to = (dinf+x1),by=0.01)) {
+    tx <- round(x,digits = 2) #Longitude
+    if(tx %in% round(rtpFortMer_test$long,digits=2)){
+      # print(paste("x:",tx,sep = ""))
+      for (y in seq(from = (Arg(-sqrt(as.complex((dinf^2)-(x^2))))+y1),to = (Arg((sqrt(as.complex((dinf^2)-(x^2)))))+y1),by=0.01)) {
+        ty <- round(y,digits = 2) #Latitude
+        # if ((tx %in% intp_coords[["x"]])&(ty %in% intp_coords[["y"]])) {
+        if(ty %in% round(rtpFortMer_test$lat,digits=2)) {
+          update_virtualvalue(tx,ty,x1,y1,vj)
+          # print(paste("y:",ty,sep = ""))
+        }
+      }
+    }
+  }
+}
+#new_voltvals$new.layer <- ifelse(new_voltvals$distsum!=0,(new_voltvals$valsum/new_voltvals$distsum),0)
+
+#updated_voltvals <- new_voltvals[(new_voltvals$distsum != 0),]
+#updated_voltvals$new.layer <- updated_voltvals$valsum/updated_voltvals$distsum
+#Unused
+get_containing_poly <- function(x){ 
+  p <- rtp@polygons
+  #  pts <- lapply(p, function(x) )
+  pts <- p[with(p,function(i) ((x %in% i@Polygons[[1]]@coords) & (y %in% i@Polygons[[1]]@coords)))]
+  cp <-  which.min(abs())
+  I(rtp_test@polygons[[x]]@Polygons[[1]]@coords)
+}
+#Initialize grid using the nval type specified; Unused
+initialize_grid <- function(nval){
+  bus_locs <- update_volt(1)
+  bus_locs <- update_freq(1)
+  bus_locs <- update_pangle(1)
+  xmn <- min(bus_locs$Longitude)
+  xmx <- max(bus_locs$Longitude)
+  ymn <- min(bus_locs$Latitude)
+  ymx <- max(bus_locs$Latitude)
+  if (nval == "Angle") {
+    intp_coords <<- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Angle, duplicate = "mean",
+                           xo=seq(xmn,xmx, by=0.05),
+                           yo=seq(ymn,ymx, by=0.05))
+  } else if (nval == "Frequency") {
+    intp_coords <<- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Frequency, duplicate = "mean",
+                           xo=seq(xmn,xmx, by=0.05),
+                           yo=seq(ymn,ymx, by=0.05))
+  } else {
+    intp_coords <<- interp(bus_locs$Longitude, bus_locs$Latitude, bus_locs$Voltage, duplicate = "mean",
+                           xo=seq(xmn,xmx, by=0.05),
+                           yo=seq(ymn,ymx, by=0.05))
+  }
+  r <- raster(intp_coords)
+  
+  rtp <- rasterToPolygons(r)
+  rtp@data$id <- 1:nrow(rtp@data)   # add id column for join
+  rtpFort <- fortify(rtp, data = rtp@data)
+  
+  #Add the layer column of the rtp@data dataframe to the rtpFort dataframe
+  rtpFortMer <- merge(rtpFort, rtp@data, by.x = 'id', by.y = 'id')  # join data
+  
+  new_voltvals <- rtp@data
+  new_voltvals$valsum <- 0 
+  new_voltvals$distsum <- 0 
+  
+  
+  rtp_test <- rtp
+  rtpFort_test <- rtpFort
+  rtpFortMer_test <- rtpFortMer
+  #rtp_test@data$locpolys <- I(rtp_test@polygons[[x]]@Polygons[[1]]@coords@Polygons[[1]]@coords)
+  #I(rtp_test@polygons[[x]]@Polygons[[1]]@coords@Polygons[[1]]@coords)
+  # get_full_coords = function(x) {round(as.vector(seq(min(rtp_test@polygons[[x]]@Polygons[[1]]@coords))),digits = 2)}
+  get_full_coords = function(x) {
+    c(as.vector(seq(round(min(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,1]),digits = 2),round(max(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,1]),digits = 2),by = 0.01)),
+      as.vector(seq(round(min(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,2]),digits = 2),round(max(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,2]),digits = 2),by = 0.01)))
+  }
+  
+  get_long_coords = function(x) {
+    as.vector(seq(round(min(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,1]),digits = 2),round(max(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,1]),digits = 2),by = 0.01))
+    #  as.vector(seq(round(min(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,2]),digits = 2),round(max(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,2]),digits = 2),by = 0.01)))
+  }
+  get_lat_coords = function(x) {
+    as.vector(seq(round(min(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,2]),digits = 2),round(max(rtp_test@polygons[[x]]@Polygons[[1]]@coords[,2]),digits = 2),by = 0.01))
+    #  as.vector(seq(round(min(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,2]),digits = 2),round(max(rtp_test@polygons[[1]]@Polygons[[1]]@coords[,2]),digits = 2),by = 0.01)))
+  }
+  
+  rtp_test@data$locpolys <- lapply(rtp_test@data$id, function(x)get_full_coords(x))
+  names(rtp_test@data$locpolys) <- 1:nrow(rtp@data)
+  locs_mat <- matrix(0,nrow = )
+  all_locs_lst <- as.vector(unlist(rtp_test@data$locpolys,use.names = TRUE))
+  longs_list <- as.vector(unlist(lapply(rtp_test@data$id, function(x)get_long_coords(x))))
+  lats_list <- as.vector(unlist(lapply(rtp_test@data$id, function(x)get_lat_coords(x))))
+  ulats <- unique(lats_list)
+  ulongs <- unique(longs_list)
+  
+  m <- t(as.matrix(c(tx,ty),nrow=1,ncol=2))
+  # names(all_locs_lst) <- lapply(all_locs_lst,function(x) match())
+  
+  #Matrix that will hold the numerator for the virtual value
+  # zc_vals <- matrix(intp_coords[["z"]],nrow = nrow(intp_coords[["z"]]),ncol = ncol(intp_coords[["z"]]))
+  # zc_vals <<- structure(vapply(zc_vals, function(x) ifelse(is.na(x),0,x), numeric(1)), dim=dim(zc_vals))
+  #Matrix that will hold the denominator for the virtual value
+  # zc_dists <<- matrix(0,nrow = nrow(intp_coords[["z"]]),ncol = ncol(intp_coords[["z"]]))
+}
+#Unused
+update_grid_volt <- function(time){
+  bus_locs <- update_volt(time)
+  for (n in 1:nrow(bus_locs)) {
+    update_neighbor_points(n,"Voltage")
+  }
+  
+  # n_cores <- detectCores()-1
+  # cl<-makeCluster(n_cores)
+  # registerDoParallel(cl)
+  # foreach(n=1:(nrow(bus_locs)), .packages=c( "sp","raster"), 
+  #         .export=c("intp_coords","zc_dists","zc_vals","bus_locs","update_neighbor_points","update_virtualvalue")) %dopar% { 
+  #   update_neighbor_points(n)
+  # } 
+  for (x in 1:nrow(zc_vals)) {
+    for (y in 1:ncol(zc_vals)) {
+      if(zc_dists[x,y]!=0){
+        intp_coords[["z"]][x,y] <- (zc_vals[x,y]/zc_dists[x,y])
+      } else{
+        intp_coords[["z"]][x,y] <- 0
+      }
+    }
+  }
+  #  stopCluster(cl)
+  assign("intp_coords",intp_coords,envir = .GlobalEnv)
+}
 
 

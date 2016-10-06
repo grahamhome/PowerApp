@@ -72,9 +72,9 @@ get_merged_data_quake4 <- function(){
   }
   #bus_locs contains just the buses that have PMU readings
   bus_locs <<- bus_locs_full[bus_locs_full$Bus.Num %in% pmus$Bus.Number,]
- # bus_locs$Old.Bus.Name <<- bus_locs$Bus.Name
-#  bus_locs$Bus.Name <<- bus_locs$New.Bus.Name
- # bus_locs <<- subset(bus_locs,select=c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Nominal.kV","Frequency",
+  bus_locs$Old.Bus.Name <<- bus_locs$Bus.Name
+  bus_locs$Bus.Name <<- bus_locs$New.Bus.Name
+#  bus_locs <<- subset(bus_locs,select=c("Bus.Num","Bus.Name","Sub.Name","Latitude","Longitude","Frequency",
  #                                       "Voltage","Angle","Old.Bus.Name"))
  
 }
@@ -104,7 +104,7 @@ import_data <- function(){
 
 #Name of the data set
 name <- function(){
-  n <- "WECC Earthquake"
+  n <- "WECC Earthquake 4"
   n
 }
 #How many time points is the data
