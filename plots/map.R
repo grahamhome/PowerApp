@@ -186,32 +186,7 @@ update_pangle <- function(time){
   bus_locs
 }
 
-#Unusued
-get_volt_outliers <- function(time){
-  time <- 1205
-  curr_v <-Volt[time,-1]
-  cvo <- outlier(curr_v)
-}
-#Unusued
-make_sparklines_volt <- function(time){
-  curr_v <-Volt[1:time,-1]
-  distclust <- gpuDist(curr_v,method = "euclidean")
-  cvkm <- kmeans(x = curr_v,iter.max = 20,centers = 10)
-  cvkmt <- kmeans(x = t(curr_v),iter.max = 20,centers = 10)
-  #Choose number of clusters, kn, and small number, ep, for stopping the iterative process
-  
-  #QT algorithm
-  qual_thresh <- 0.1
-  numnode <- sample(1:150,1)
-  curr_node <- curr_v[numnode]
-  closest_node <- NULL
-  for (i in 1:150) {
-    curr_dist <- gpuDist(c(curr_node,curr_v[i]),method = "euclidean")
-    if (condition) {
-      
-    }
-  }
-}
+
 
 
 alarm_time <- (60*10) #sample/sec * seconds to check
@@ -606,8 +581,10 @@ plot_mapvolt <- function(t){
   #   scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
 
   bus_locs <- update_volt(t)
-  linesb <- get_busline_voltcov(t)
-  linesb$Correlation[is.nan(linesb$Correlation)] <- 1
+  if(exists("branches")){
+    linesb <- get_busline_voltcov(t)
+    linesb$Correlation[is.nan(linesb$Correlation)] <- 1
+  }
   if(autosc == TRUE){
     # vmin <- min(Volt[t,-1])
     #vmax <- max(Volt[t,-1])
@@ -629,13 +606,16 @@ plot_mapvolt <- function(t){
   } else{
     bus_size <- 5
   }
- g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),alpha=0.4,show.legend = FALSE) +
-    scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
+ g <- g + 
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21) +
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")#+
    #coord_cartesian()
 #    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
+ if(exists("branches")){
+   g <- g +geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=1),alpha=0.4,show.legend = FALSE) +
+     scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) 
+ }
   g
 }
 
@@ -853,8 +833,11 @@ plot_mapfreq <- function(t){
     fmin <- 59.8
     fmax <- 60.2
   }
-  linesb <- get_busline_freqcov(t)
-  linesb$Correlation[is.nan(linesb$Correlation)] <- 1
+  if(exists("branches")){
+    linesb <- get_busline_freqcov(t)
+    linesb$Correlation[is.nan(linesb$Correlation)] <- 1
+  }
+  
   if (fmin<59.8 & fmax <= 60.2) {
     f_cols <-c("red","yellow","orange","blue","green")
   } else if(fmax <60.2 & fmin >= 59.8){
@@ -873,12 +856,15 @@ plot_mapfreq <- function(t){
   #color_vals_freq <- as.numeric(sapply( c(mincovf,0.2,0.4,0.6,(maxcovf-0.08)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   #Below is for the GMD dataset
   #color_vals_freq <- as.numeric(sapply( c(mincovf,50,100,150,200,(maxcovf-5)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
-  g <- g + geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=0.1),alpha=0.4,show.legend = FALSE) +
-    scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1)) +
+  g <- g +
     geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = bus_size, shape = 21) +
     scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax)) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
   #    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
+  if(exists("branches")){
+    g <- g+geom_segment(data = linesb,aes(y=From.Latitude,yend=To.Latitude,x=From.Longitude,xend=To.Longitude,colour=Correlation,size=0.1),alpha=0.4,show.legend = FALSE) +
+      scale_colour_gradientn("Correlation",colours = c("red","white","blue"),limits=c(-1,1))
+  }
   g
 }
 
@@ -1130,7 +1116,7 @@ plot_mapfreq_large <- function(t){
   }
   #  g <- ggmap(mapten)+scale_x_continuous(limits = c(-90.6, -81), expand = c(0, 0)) +scale_y_continuous(limits = c(34.5, 37), expand = c(0, 0))
   bus_locs <- update_freq(t)
-  linesb <- get_busline_freqcov(t)
+ # linesb <- get_busline_freqcov(t)
  # color_vals_freq <- as.numeric(sapply( c((mincovf+0.1),(maxcovf/4),(maxcovf/2),(maxcovf-0.1)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g+ 
     geom_point(data=bus_locs,aes(x=Longitude,y=Latitude, colour=Frequency,group=Sub.Name),size=bus_size,alpha=0.25,shape=16) +
@@ -1188,4 +1174,31 @@ plot_mapvolt_230 <- function(t){
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")# +
   # ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[t,1]),""))))
   g
+}
+
+#Unusued
+get_volt_outliers <- function(time){
+  time <- 1205
+  curr_v <-Volt[time,-1]
+  cvo <- outlier(curr_v)
+}
+#Unusued
+make_sparklines_volt <- function(time){
+  curr_v <-Volt[1:time,-1]
+  distclust <- gpuDist(curr_v,method = "euclidean")
+  cvkm <- kmeans(x = curr_v,iter.max = 20,centers = 10)
+  cvkmt <- kmeans(x = t(curr_v),iter.max = 20,centers = 10)
+  #Choose number of clusters, kn, and small number, ep, for stopping the iterative process
+  
+  #QT algorithm
+  qual_thresh <- 0.1
+  numnode <- sample(1:150,1)
+  curr_node <- curr_v[numnode]
+  closest_node <- NULL
+  for (i in 1:150) {
+    curr_dist <- gpuDist(c(curr_node,curr_v[i]),method = "euclidean")
+    if (condition) {
+      
+    }
+  }
 }

@@ -2,7 +2,7 @@ library(ggmap)
 
 #Read in all of the csv data files
 get_csvdata_wecc <- function(dpath){
-  branches <<- read.csv(paste(dpath,"rawdata/wecc2000may2014_branch_percentloading.csv",sep = ""))
+  branch_loads <<- read.csv(paste(dpath,"rawdata/wecc2000may2014_branch_percentloading.csv",sep = ""))
   buses <<- read.csv(paste(dpath,"rawdata/wecc2000may2014_buses.csv",sep = ""))
   substations <<- read.csv(paste(dpath,"rawdata/wecc2000may2014_substations.csv",sep = ""))
   Freq <<- read.csv(paste(dpath,"rawdata/wecc2000may2014_bus_frequency.csv",sep = ""),stringsAsFactors = FALSE)
@@ -72,6 +72,28 @@ get_merged_data_wecc <- function(){
   
 }
 
+
+#Create the map and ggmap to be used by the plot functions (the map ones at least)
+get_map_data_wecc  <- function(){
+  #Create the map to use as the background for the ggplot
+  mapten <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), zoom = 4, maptype = "roadmap", scale = 2)
+  #maplocs <<- get_map(location = c(min(bus_locs$Longitude), min(bus_locs$Latitude),
+  #                                 max(bus_locs$Longitude),max(bus_locs$Latitude)),
+  #                     maptype = "roadmap")
+  map_lims <<- c(-124, -104,31, 50) #xmin,xmax,ymin,ymax
+  m_ratio <<- abs(map_lims[2]-map_lims[1])/abs(map_lims[4]-map_lims[3])
+  g <<- ggmap(mapten) +
+    # coord_fixed(xlim = c(map_lims[1], map_lims[2]),ylim = c(map_lims[3], map_lims[4]),expand = FALSE)
+    scale_x_continuous(limits = c(-124, -104), expand = c(0, 0)) +
+    scale_y_continuous(limits = c(31, 50), expand = c(0, 0))
+}
+
+import_data <- function(){
+  get_csvdata_wecc("data/")
+  clean_names_wecc()
+  get_merged_data_wecc()
+  get_map_data_wecc()
+}
 
 #Name of the data set
 name <- function(){
