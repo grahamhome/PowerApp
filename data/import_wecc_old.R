@@ -186,7 +186,7 @@ import_data <- function(){
 
 #Name of the data set
 name <- function(){
-  n <- "May 2014 Scenario"
+  n <- "May 2014 Scenario [OLD VERSION]"
   n
 }
 #How many time points is the data
