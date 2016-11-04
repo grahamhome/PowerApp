@@ -13,7 +13,7 @@ dispName <- function() {
 
 #Compatible plot plugins
 use_plots <- function() {
-	list('map.R','heatmap.R', 'bar.R')
+	list('map.R','heatmap.R', 'bar.R', 'histogram.R')
 }
 
 #UI

@@ -105,7 +105,7 @@ import_data <- function(){
 
 #Returns a list of the plots that this data can be used to create
 use_plots <- function(){
-  list('linear.R','map.R','heatmap.R','bar.R')
+  list('linear.R','map.R','heatmap.R','bar.R','histogram.R')
 }
 
 name <- function(){
