@@ -92,7 +92,7 @@ plot_histpangle <- function(time){
     #ylim((min(b$Voltage)-1),(max(b$Voltage)-1))+
     ggtitle(bquote(atop("Angle at Time",atop(.(Pangle[time,1]),""))))+
     xlim(-90,90)+
-    ylim(0,150)
+    ylim(0,ncol(Pangle))
   p
 }
 

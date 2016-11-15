@@ -3,11 +3,14 @@ library(ggmap)
 
 #Read in all of the csv data files
 get_csvdata_quake1 <- function(){
-  buses <<- read.csv("data/rawdata/weccbpaabove230_quake1_buses.csv")
-  substations <<- read.csv("data/rawdata/weccbpaabove230_quake1_subs.csv")
-  Freq <<- read.csv("data/rawdata/weccbpaabove230_quake1_bus_freq.csv",stringsAsFactors = FALSE)
-  Pangle <<- read.csv("data/rawdata/weccbpaabove230_quake1_bus_vang.csv",stringsAsFactors = FALSE)
-  Volt <<- read.csv("data/rawdata/weccbpaabove230_quake1_bus_vmag.csv",stringsAsFactors = FALSE)
+  buses <<- read.csv("data/rawdata/BPA_230kV_data/buses.csv")
+  substations <<- read.csv("data/rawdata/BPA_230kV_data/subs.csv")
+  bus_info <<- read.csv("data/rawdata/BPA_230kV_data/bus_info.csv")
+  pmus <<- read.csv("data/rawdata/BPA_230kV_data/pmu_buses.csv")
+  gens <<- read.csv("data/rawdata/BPA_230kV_data/gens.csv")
+  Freq <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_quake1_pmu_freq.csv")
+  Pangle <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_quake1_pmu_vang.csv",stringsAsFactors = FALSE)
+  Volt <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_quake1_pmu_vmag.csv",stringsAsFactors = FALSE)
 }
 
 
@@ -35,10 +38,10 @@ clean_names_quake1 <- function(){
 
 #Create all of the merged data frames that will be used by the plotting functions
 get_merged_data_quake1 <- function(){
-  sub_buses <<- merge(buses,substations,by = c("Sub.ID","Sub.Name"))
-  
-  bus_locs_full <<- data.frame(sub_buses$Bus.Number,sub_buses$Bus.Name,sub_buses$Sub.Name,sub_buses$Sub.ID,sub_buses$Latitude,sub_buses$Longitude,"Frequency","Voltage","Angle")
-  colnames(bus_locs_full) <<- c("Bus.Num","Bus.Name","Sub.Name","Sub.ID", "Latitude","Longitude","Frequency","Voltage","Angle")
+ # sub_buses <<- merge(buses,substations,by = c("Sub.ID","Sub.Name"))
+
+  bus_locs_full <<- data.frame(pmus$Bus.Number,pmus$Bus.Name,pmus$Sub.Name,pmus$Latitude,pmus$Longitude,"Frequency","Voltage","Angle")
+  colnames(bus_locs_full) <<- c("Bus.Name","Bus.Name.unused","Sub.Name", "Latitude","Longitude","Frequency","Voltage","Angle")
   bus_locs_full$Frequency <<- 0
   bus_locs_full$Voltage <<- 0 
   bus_locs_full$Angle <<- 0
@@ -49,30 +52,11 @@ get_merged_data_quake1 <- function(){
   
   
   
-  #missing_pmu <- colnames(Volt)[!colnames(Volt) %in% bus_locs_full$New.Bus.Name][-1]
-  #Removing these pmu columns because there is no bus corresponding to these
-  # Freq$`40598 (KEELER E)` <<- NULL
-  # Freq$`44284 (LONGHORN)` <<- NULL
-  # Volt$`40598 (KEELER E)` <<- NULL
-  # Volt$`44284 (LONGHORN)` <<- NULL
-  # Pangle$`40598 (KEELER E)` <<- NULL
-  # Pangle$`44284 (LONGHORN)` <<- NULL
-  
-  #Add new column with name formatted like it is in the Freq/Volt/Pangle tables
-  bus_locs_full$New.Bus.Name <<- ""
-  for (x in 1:nrow(bus_locs_full[,])) {
-    cr <- bus_locs_full[x,]
-    tn <- cr$Bus.Name
-    tn <- gsub(" ",".",tn)
-    #cr$Bus.Name <- as.character(paste(cr$Bus.Num,paste("(",cr$Bus.Name,")",sep = ""),sep = " "))
-    bus_locs_full[x,"New.Bus.Name"] <<- as.character(tn)
-    # pmu_buses <- rbind(pmu_buses[1:])
-  }
+ # missing_pmu <- colnames(Volt)[!colnames(Volt) %in% bus_locs_full$Bus.Num][-1]
+
   #bus_locs contains just the buses that have PMU readings
   #bus_locs <<- bus_locs_full[bus_locs_full$Bus.Num %in% pmus$Bus.Number,]
-  bus_locs <<- bus_locs_full[bus_locs_full$Bus.Num %in% colnames(Freq),]
-  bus_locs$Old.Bus.Name <<- bus_locs$Bus.Name
-  bus_locs$Bus.Name <<- bus_locs$Bus.Num
+  bus_locs <<- bus_locs_full[bus_locs_full$Bus.Name %in% colnames(Freq),]
   bus_locs$Longitude <<- as.numeric(as.character(bus_locs$Longitude))
   bus_locs$Latitude <<- as.numeric(as.character(bus_locs$Latitude))
   
