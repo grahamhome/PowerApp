@@ -147,14 +147,17 @@ plot_barvolt <- function(time){
     vmax <- max(b$Voltage)
   #  vmin <- ifelse(min(b$Voltage)<0.8,min(b$Voltage),0.8)
   #  vmax <- ifelse(max(b$Voltage)>1.2,max(b$Voltage),1.2)
-    vdiff <- (vmax-vmin)
-    v_lab <- c(vmin,(vmin+(vdiff/4)),(vmin+(vdiff/2)),(vmax-(vdiff/4)),vmax)
+    if(vmin>=0.8 & vmax<=1.2){
+      vdiff <- (vmax-vmin)
+      v_lab <- c(vmin,(vmin+(vdiff/4)),(vmin+(vdiff/2)),(vmax-(vdiff/4)),vmax)
+    }else{
+      v_lab <-c(vmin,1,vmax)
+    }
   } else{
     vmin <- 0.8
     vmax <- 1.2
     v_lab <-c(0.8,0.9,1,1.1,1.2) #c(-0.2,-0.1,0,0.1,0.2)#
   }
-
   bar_vals <- NULL
   bar_labs <- NULL
   bar_breaks <- NULL
@@ -173,40 +176,18 @@ plot_barvolt <- function(time){
     bar_labs <- c(bar_labs,"Voltage > 1")
     bar_breaks <- c(bar_breaks, 1)
   }
-  # if(unique(b$group)==0 & length(unique(b$group))==1){
-  #   bar_vals <- c("0"="grey50")
-  #   bar_labs <- c("Voltage = 1")
-  # } else if(unique(b$group)==1 & length(unique(b$group))==1){
-  #   bar_vals <- c("1"="red")
-  #   bar_labs <- c("Voltage > 1")
-  # } else if(unique(b$group)==-1 & length(unique(b$group))==1){
-  #   bar_vals <- c("-1"="blue")
-  #   bar_labs <- c("Voltage < 1")
-  # } else if((unique(b$group) ==c(-1,1) | unique(b$group) ==c(1,-1)) & length(unique(b$group))==2){
-  #   bar_vals <- c("-1"="blue","1"="red")
-  #   bar_labs <- c("Voltage < 1", "Voltage > 1")
-  # } else if((unique(b$group) ==c(-1,0)| unique(b$group) ==c(0,-1)) & length(unique(b$group))==2){
-  #   bar_vals <- c("-1"="blue","0"="grey50")
-  #   bar_labs <- c("Voltage < 1", "Voltage = 1")
-  # } else if((unique(b$group) ==c(0,1) | unique(b$group) ==c(1,0)) & length(unique(b$group))==2){
-  #   bar_vals <- c("0"="grey50","1"="red")
-  #   bar_labs <- c("Voltage = 1", "Voltage > 1")
-  # } else{
-  #   bar_vals <- c("-1"="blue","0"="grey50","1"="red")
-  #   bar_labs <- c("Voltage < 1","Voltage = 1", "Voltage > 1")
-  # }
-  
-  p <- ggplot(b, aes(x=Bus.Name,y=(Voltage-1),fill=factor(group))) +
+  print(bar_vals)
+  p <- ggplot(b, aes(x=as.character(Bus.Name),y=(Voltage-1),fill=factor(group))) +
     scale_fill_manual(values=bar_vals,labels=bar_labs,name="")+
     geom_bar(stat = "identity",position='identity')+
+   # ylab(c(0,0.25,0.5,0.75,1,1.25))+
     #scale_fill_gradient2(low="red",mid = 'black',high = 'blue',midpoint = 0)+
     #   theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 4))+
     #ylim((min(b$Voltage)-1),(max(b$Voltage)-1))+
-    #ylim(-1,1)+
-    #scale_y_continuous("Voltage", labels=v_lab, limits=c((vmin-1),(vmax-1)))+
-    ylab("Voltage")+
+   # ylim(-1,1)+
+    scale_y_continuous("Voltage", labels=c(-1,0,1), breaks = c(-1,0,1))+
+    xlab("Bus")+
     ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[time,1]),""))))
-
   p
 }
 plot_barfreq <- function(time){
