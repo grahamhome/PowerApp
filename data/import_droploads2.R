@@ -32,6 +32,7 @@ clean_names_droploads2  <- function(){
   #  vn  <- gsub("[.]V[.]pu","",vn)
   colnames(Volt) <<- vn
   
+  
   bus_locs <<- data.frame()
 }
 

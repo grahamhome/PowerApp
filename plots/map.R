@@ -1,6 +1,7 @@
 library(ggplot2)
 library(ggmap)
 library(outliers)
+library(animation)
 
 #Return the names of the functions for display purposes
 fnames <- function(){
@@ -588,12 +589,14 @@ plot_mapvolt <- function(t){
   if(autosc == TRUE){
     # vmin <- min(Volt[t,-1])
     #vmax <- max(Volt[t,-1])
-    vmin <- ifelse(min(bus_locs$Voltage)<0.95,min(bus_locs$Voltage),0.95)
-    vmax <- ifelse(max(bus_locs$Voltage)>1.05,max(bus_locs$Voltage),1.05)
+    vmin <- ifelse(min(bus_locs$Voltage,na.rm = TRUE)<0.95,min(bus_locs$Voltage,na.rm = TRUE),0.95)
+    vmax <- ifelse(max(bus_locs$Voltage,na.rm = TRUE)>1.05,max(bus_locs$Voltage,na.rm = TRUE),1.05)
   } else{
     vmin <- 0.95
     vmax <- 1.05
   }
+  print(vmin)
+  print(vmax)
   if (vmin<0.95 & vmax <= 1.05) {
     v_cols <-c("red","orange","yellow","blue","green")
   } else if(vmax <1.05 & vmin >= 0.95){
@@ -1202,3 +1205,35 @@ make_sparklines_volt <- function(time){
     }
   }
 }
+
+make_freq_video <- function(start,stop){
+  data_name <- gsub("[ ]","_",name())
+  vid_name <- paste("mapfreq",start,"to",stop,data_name,sep = "_")
+  saveVideo({
+    for (t in start:stop) {
+      suppressWarnings(print(plot_mapfreq(t)))
+      ani.options(interval = 0.045)
+    }
+  },video.name = paste(vid_name,".mp4",sep = ""))
+}
+make_volt_video <- function(start,stop){
+  data_name <- gsub("[ ]","_",name())
+  vid_name <- paste("mapvolt",start,"to",stop,data_name,sep = "_")
+  saveVideo({
+    for (t in start:stop) {
+      suppressWarnings(print(plot_mapvolt(t)))
+      ani.options(interval = 0.045)
+    }
+  },video.name = paste(vid_name,".mp4",sep = ""))
+}
+make_angle_video <- function(start,stop){
+  data_name <- gsub("[ ]","_",name())
+  vid_name <- paste("mapangle",start,"to",stop,data_name,sep = "_")
+  saveVideo({
+    for (t in start:stop) {
+      suppressWarnings(print(plot_mapangle(t)))
+      ani.options(interval = 0.045)
+    }
+  },video.name = paste(vid_name,".mp4",sep = ""))
+}
+

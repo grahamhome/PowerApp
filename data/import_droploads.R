@@ -2,24 +2,24 @@ library(ggmap)
 
 
 #Read in all of the csv data files
-get_csvdata_quake1 <- function(){
+get_csvdata_droploads <- function(){
   buses <<- read.csv("data/rawdata/BPA_230kV_data/buses.csv")
   substations <<- read.csv("data/rawdata/BPA_230kV_data/subs.csv")
   bus_info <<- read.csv("data/rawdata/BPA_230kV_data/bus_info.csv")
   pmus <<- read.csv("data/rawdata/BPA_230kV_data/pmu_buses.csv")
   gens <<- read.csv("data/rawdata/BPA_230kV_data/gens.csv")
-  Freq <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_quake1_pmu_freq.csv")
-  Pangle <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_quake1_pmu_vang.csv",stringsAsFactors = FALSE)
-  Volt <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_quake1_pmu_vmag.csv",stringsAsFactors = FALSE)
+  Freq <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_drop_load_pmu_freq.csv")
+  Pangle <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_drop_load_pmu_vang.csv")
+  Volt <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_drop_load_pmu_vmag.csv")
 }
 
 
 #Change up the names so that they all match
-clean_names_quake1 <- function(){
+clean_names_droploads  <- function(){
   
   fn <- colnames(Freq)
   fn <- gsub("X","",fn)
-#  fn <- gsub("[.]Frequency","",fn)
+  #  fn <- gsub("[.]Frequency","",fn)
   colnames(Freq) <<- fn
   
   pn <- colnames(Pangle)
@@ -29,7 +29,7 @@ clean_names_quake1 <- function(){
   
   vn <- colnames(Volt)
   vn  <- gsub("X","",vn)
-#  vn  <- gsub("[.]V[.]pu","",vn)
+  #  vn  <- gsub("[.]V[.]pu","",vn)
   colnames(Volt) <<- vn
   
   
@@ -38,9 +38,9 @@ clean_names_quake1 <- function(){
 
 
 #Create all of the merged data frames that will be used by the plotting functions
-get_merged_data_quake1 <- function(){
- # sub_buses <<- merge(buses,substations,by = c("Sub.ID","Sub.Name"))
-
+get_merged_data_droploads  <- function(){
+  # sub_buses <<- merge(buses,substations,by = c("Sub.ID","Sub.Name"))
+  
   bus_locs_full <<- data.frame(pmus$Bus.Number,pmus$Bus.Name,pmus$Sub.Name,pmus$Latitude,pmus$Longitude,"Frequency","Voltage","Angle")
   colnames(bus_locs_full) <<- c("Bus.Name","Bus.Name.unused","Sub.Name", "Latitude","Longitude","Frequency","Voltage","Angle")
   bus_locs_full$Frequency <<- 0
@@ -53,8 +53,8 @@ get_merged_data_quake1 <- function(){
   
   
   
- # missing_pmu <- colnames(Volt)[!colnames(Volt) %in% bus_locs_full$Bus.Num][-1]
-
+  # missing_pmu <- colnames(Volt)[!colnames(Volt) %in% bus_locs_full$Bus.Num][-1]
+  
   #bus_locs contains just the buses that have PMU readings
   #bus_locs <<- bus_locs_full[bus_locs_full$Bus.Num %in% pmus$Bus.Number,]
   bus_locs <<- bus_locs_full[bus_locs_full$Bus.Name %in% colnames(Freq),]
@@ -64,7 +64,7 @@ get_merged_data_quake1 <- function(){
 }
 
 #Create the map and ggmap to be used by the plot functions (the map ones at least)
-get_map_data_quake1  <- function(){
+get_map_data_droploads  <- function(){
   #Create the map to use as the background for the ggplot
   mapten <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), zoom = 4, maptype = "roadmap", scale = 2)
   #maplocs <<- get_map(location = c(min(bus_locs$Longitude), min(bus_locs$Latitude),
@@ -80,15 +80,15 @@ get_map_data_quake1  <- function(){
 
 #Call all the functions in order
 import_data <- function(){
-  get_csvdata_quake1()
-  clean_names_quake1()
-  get_merged_data_quake1()
-  get_map_data_quake1()
+  get_csvdata_droploads()
+  clean_names_droploads()
+  get_merged_data_droploads()
+  get_map_data_droploads()
 }
 
 #Name of the data set
 name <- function(){
-  n <- "WECC BPA Earthquake 1"
+  n <- "Dropped Load"
   n
 }
 #How many time points is the data
