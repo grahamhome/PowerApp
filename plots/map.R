@@ -353,7 +353,7 @@ plot_mapangle <- function(t){
     bus_size <- 5
   }
   g <- g+
-    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=bus_size,alpha=0.5,shape=16) +
+    geom_point(data=bus_locs,aes(x=Longitude,y=Latitude,colour=Angle,group=Sub.Name),size=bus_size,alpha=0.75,shape=16) +
     scale_colour_gradientn("Bus Angle",colours = c("red","yellow","green","blue","black"),limits=c(amin,amax)) +
     labs(x = "Longitude", y = "Latitude") +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
@@ -589,14 +589,12 @@ plot_mapvolt <- function(t){
   if(autosc == TRUE){
     # vmin <- min(Volt[t,-1])
     #vmax <- max(Volt[t,-1])
-    vmin <- ifelse(min(bus_locs$Voltage,na.rm = TRUE)<0.95,min(bus_locs$Voltage,na.rm = TRUE),0.95)
-    vmax <- ifelse(max(bus_locs$Voltage,na.rm = TRUE)>1.05,max(bus_locs$Voltage,na.rm = TRUE),1.05)
+    vmin <- ifelse(min(bus_locs$Voltage)<0.95,min(bus_locs$Voltage),0.95)
+    vmax <- ifelse(max(bus_locs$Voltage)>1.05,max(bus_locs$Voltage),1.05)
   } else{
     vmin <- 0.95
     vmax <- 1.05
   }
-  print(vmin)
-  print(vmax)
   if (vmin<0.95 & vmax <= 1.05) {
     v_cols <-c("red","orange","yellow","blue","green")
   } else if(vmax <1.05 & vmin >= 0.95){
@@ -610,7 +608,7 @@ plot_mapvolt <- function(t){
     bus_size <- 5
   }
  g <- g + 
-    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ), size = bus_size, shape = 21) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Voltage ),alpha=0.7, size = bus_size, shape = 21) +
     scale_fill_gradientn("Voltage",colours = v_cols,limits=c(vmin,vmax)) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal")#+
    #coord_cartesian()
@@ -860,7 +858,7 @@ plot_mapfreq <- function(t){
   #Below is for the GMD dataset
   #color_vals_freq <- as.numeric(sapply( c(mincovf,50,100,150,200,(maxcovf-5)), function(N) formatC(signif(N, digits=3), digits=3,format="fg", flag="#")))
   g <- g +
-    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), size = bus_size, shape = 21) +
+    geom_point(data = bus_locs, aes(x=Longitude,y=Latitude,fill = Frequency ), alpha=0.7, size = bus_size, shape = 21) +
     scale_fill_gradientn("Frequency",colours = f_cols,limits=c(fmin,fmax)) +
     theme(legend.position="right",legend.direction="vertical",legend.box="horizontal") #+
   #    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[t,1]),""))))
