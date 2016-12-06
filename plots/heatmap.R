@@ -1477,6 +1477,7 @@ update_virtualvalue <- function(x,y,x1,y1,vj){
   
 }
 
+
 #Go through every point within a circle for a given bus (with long/lat location) and updates the values there
 # nval = name of value to be updating the matrix with ("Voltage","Frequency","Angle")
 #Unused
@@ -1614,5 +1615,37 @@ update_grid_volt <- function(time){
   #  stopCluster(cl)
   assign("intp_coords",intp_coords,envir = .GlobalEnv)
 }
+
+make_freq_video <- function(start,stop){
+  data_name <- gsub("[ ]","_",name())
+  vid_name <- paste("heatmapfreq",start,"to",stop,data_name,sep = "_")
+  saveVideo({
+    for (t in start:stop) {
+      suppressWarnings(print(plot_heatmapfreq(t)))
+      ani.options(interval = 0.033)
+    }
+  },video.name = paste(vid_name,".mp4",sep = ""))
+}
+make_volt_video <- function(start,stop){
+  data_name <- gsub("[ ]","_",name())
+  vid_name <- paste("heatmapvolt",start,"to",stop,data_name,sep = "_")
+  saveVideo({
+    for (t in start:stop) {
+      suppressWarnings(print(plot_heatmapvolt(t)))
+      ani.options(interval = 0.033)
+    }
+  },video.name = paste(vid_name,".mp4",sep = ""))
+}
+make_angle_video <- function(start,stop){
+  data_name <- gsub("[ ]","_",name())
+  vid_name <- paste("heatmapangle",start,"to",stop,data_name,sep = "_")
+  saveVideo({
+    for (t in start:stop) {
+      suppressWarnings(print(plot_heatmapangle(t)))
+      ani.options(interval = 0.033)
+    }
+  },video.name = paste(vid_name,".mp4",sep = ""))
+}
+
 
 
