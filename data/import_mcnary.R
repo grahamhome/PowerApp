@@ -66,24 +66,35 @@ get_merged_data_mcnary  <- function(){
 #Create the map and ggmap to be used by the plot functions (the map ones at least)
 get_map_data_mcnary  <- function(){
   #Create the map to use as the background for the ggplot
-  mapten <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), zoom = 4, maptype = "roadmap", scale = 2)
-  #maplocs <<- get_map(location = c(min(bus_locs$Longitude), min(bus_locs$Latitude),
-  #                                 max(bus_locs$Longitude),max(bus_locs$Latitude)),
-  #                     maptype = "roadmap")
+  mapten <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), zoom = 4, source = "stamen",maptype = "toner", scale = 2)
   map_lims <<- c(-124, -104,31, 50) #xmin,xmax,ymin,ymax
   m_ratio <<- abs(map_lims[2]-map_lims[1])/abs(map_lims[4]-map_lims[3])
   g <<- ggmap(mapten) +
     # coord_fixed(xlim = c(map_lims[1], map_lims[2]),ylim = c(map_lims[3], map_lims[4]),expand = FALSE)
-    scale_x_continuous(limits = c(-124, -104), expand = c(0, 0)) +
-    scale_y_continuous(limits = c(31, 50), expand = c(0, 0))
+    scale_x_continuous(limits = c(-125, -104), expand = c(0, 0)) +
+    scale_y_continuous(limits = c(39, 50), expand = c(0, 0))
 }
 
+get_rocdata_mcnary <- function(){
+  Dv <<- as.matrix(Volt[,-1])
+  Cv <<- Volt[1,]
+  currt_voltdiff <<- 1
+  
+  Df <<- as.matrix(Freq[,-1])
+  Cf <<- Freq[1,]
+  currt_freqdiff <<- 1
+  
+  Da <<- as.matrix(Pangle[,-1])
+  Ca <<- Pangle[1,]
+  currt_anglediff <<- 1
+}
 #Call all the functions in order
 import_data <- function(){
   get_csvdata_mcnary()
   clean_names_mcnary()
   get_merged_data_mcnary()
   get_map_data_mcnary()
+  get_rocdata_mcnary()
 }
 
 #Name of the data set
