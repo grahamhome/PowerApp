@@ -11,6 +11,7 @@ get_csvdata_gmd2 <- function(){
   Freq <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_gmd2_pmu_freq.csv")
   Pangle <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_gmd2_pmu_vang.csv")
   Volt <<- read.csv("data/rawdata/BPA_230kV_data/weccbpaabove230_gmd2_pmu_vmag.csv")
+  pmus <<- pmus[!(pmus$Latitude < 40),]
 }
 
 
@@ -66,16 +67,14 @@ get_merged_data_gmd2  <- function(){
 #Create the map and ggmap to be used by the plot functions (the map ones at least)
 get_map_data_gmd2  <- function(){
   #Create the map to use as the background for the ggplot
-  mapten <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), zoom = 4, maptype = "roadmap", scale = 2)
-  #maplocs <<- get_map(location = c(min(bus_locs$Longitude), min(bus_locs$Latitude),
-  #                                 max(bus_locs$Longitude),max(bus_locs$Latitude)),
-  #                     maptype = "roadmap")
-  map_lims <<- c(-124, -104,31, 50) #xmin,xmax,ymin,ymax
+  mapten <<- get_map(location = c(lon = mean(bus_locs$Longitude), lat = mean(bus_locs$Latitude)), zoom = 4, maptype = "toner",source = "stamen", scale = 2)
+  
+  map_lims <<- c(-124, -112,40, 50) #xmin,xmax,ymin,ymax
   m_ratio <<- abs(map_lims[2]-map_lims[1])/abs(map_lims[4]-map_lims[3])
   g <<- ggmap(mapten) +
     # coord_fixed(xlim = c(map_lims[1], map_lims[2]),ylim = c(map_lims[3], map_lims[4]),expand = FALSE)
-    scale_x_continuous(limits = c(-124, -104), expand = c(0, 0)) +
-    scale_y_continuous(limits = c(31, 50), expand = c(0, 0))
+    scale_x_continuous(limits = c(-124, -112), expand = c(0, 0)) +
+    scale_y_continuous(limits = c(40, 50), expand = c(0, 0))
 }
 
 #Call all the functions in order

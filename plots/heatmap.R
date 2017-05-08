@@ -659,8 +659,8 @@ plot_heatmapfreq<- function(t){
     is_zoom <<- 0
   }
   if(autosc == TRUE){
-    fmin <- ifelse(min(bus_locs$Frequency)<59.8,min(bus_locs$Frequency),59.8)
-    fmax <- ifelse(max(bus_locs$Frequency)>60.2,max(bus_locs$Frequency),60.2)
+    fmin <- ifelse(min(bus_locs$Frequency)<59.9,min(bus_locs$Frequency),59.9)
+    fmax <- ifelse(max(bus_locs$Frequency)>60.1,max(bus_locs$Frequency),60.1)
     #  vdiff <- (vmax-vmin)
     #   v_lab <- c(vmin,(vmin+(vdiff/4)),(vmin+(vdiff/2)),(vmax-(vdiff/4)),vmax)
   } else{
