@@ -5,6 +5,9 @@ fnames <- function(){
   n <- list(Histogram="histogram",
             Voltage="plot_histvolt",
             Frequency="plot_histfreq")
+  if (exists("Pangle")) {
+    n <- c(n,Angle="plot_histpangle")
+  }
   n
 }
 
@@ -42,10 +45,27 @@ update_pangle <- function(time){
   bus_locs
 }
 
+autoscale <- function(){
+  if(!exists("autosc")){
+    autosc <<- FALSE
+  }
+  if(autosc == TRUE){
+    autosc <<-FALSE
+  } else{
+    autosc <<-TRUE
+  }
+}
+
+
 #plot a histogram of the voltages for all of the buses at <time>
 plot_histvolt <- function(time){
   bus_locs <- update_volt(time)
   b <- subset(bus_locs, select = c("Bus.Name","Voltage"))
+  y_size <- nsamples()
+  if(autosc==TRUE){
+    y_size <- max(hist.default(b$Voltage,plot = FALSE)$counts)
+    y_size <- ifelse(y_size >nsamples(), nsamples(),y_size)
+  }
  # b$group<-0
  # b$group[b$Voltage >1] <- 1
  # b$group[b$Voltage <1] <- -1
@@ -54,24 +74,47 @@ plot_histvolt <- function(time){
    # geom_histogram(stat = "bin",position='identity')+
     #scale_fill_gradient2(low="red",mid = 'black',high = 'blue',midpoint = 0)+
     theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 14))+
-    #ylim((min(b$Voltage)-1),(max(b$Voltage)-1))+
-    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[time,1]),""))))
-  xmn <- 0
-  if (min(b$Frequency)<xmn) {
-    xmn <- min(b$Frequency)
-  }
-  xmx <- 2
-  if (max(b$Frequency)>xmx){
-    xmx <- max(b$Frequency)
-  }
-  p <- p+xlim(xmn,xmx)
+    ylim(0,y_size)+
+    ggtitle(bquote(atop("Voltage at Time",atop(.(Volt[time,1]),""))))+
+    xlim(0,2)
   p
 }
+
+#plot a histogram of the frequency for all of the buses at <time>
+plot_histpangle <- function(time){
+  bus_locs <- update_pangle(time)
+  b <- subset(bus_locs, select = c("Bus.Name","Angle"))
+  y_size <- nsamples()
+  if(autosc==TRUE){
+    y_size <- max(hist.default(b$Angle,plot = FALSE)$counts)
+    y_size <- ifelse(y_size >nsamples(), nsamples(),y_size)
+    }
+  # b$group<-0
+  # b$group[b$Voltage >1] <- 1
+  # b$group[b$Voltage <1] <- -1
+  p <- ggplot(b, aes(x=Angle)) +
+    geom_histogram(binwidth = 1,aes(colour="black"),show.legend = FALSE)+
+    #stat_bin(aes(y=..count.., label=..count..), geom="text", vjust=-.5)+
+    # geom_histogram(stat = "bin",position='identity')+
+    #scale_fill_gradient2(low="red",mid = 'black',high = 'blue',midpoint = 0)+
+    theme(axis.text.x=element_text(vjust=0.5,size = 14))+
+    ylim(0,y_size)+
+    ggtitle(bquote(atop("Angle at Time",atop(.(Pangle[time,1]),""))))+
+    xlim(-90,90)+
+    ylim(0,ncol(Pangle))
+  p
+}
+
 
 #plot a histogram of the frequency for all of the buses at <time>
 plot_histfreq <- function(time){
   bus_locs <- update_freq(time)
   b <- subset(bus_locs, select = c("Bus.Name","Frequency"))
+  y_size <- nsamples()
+  if(autosc==TRUE){
+    y_size <- max(hist.default(b$Frequency,plot = FALSE)$counts)
+    y_size <- ifelse(y_size >nsamples(), nsamples(),y_size)
+  }
   # b$group<-0
   # b$group[b$Voltage >1] <- 1
   # b$group[b$Voltage <1] <- -1
@@ -82,17 +125,9 @@ plot_histfreq <- function(time){
     # geom_histogram(stat = "bin",position='identity')+
     #scale_fill_gradient2(low="red",mid = 'black',high = 'blue',midpoint = 0)+
     theme(axis.text.x=element_text(angle=-90, vjust=0.5,size = 14))+
-    #ylim((min(b$Voltage)-1),(max(b$Voltage)-1))+
-    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[time,1]),""))))
-  xmn <- 59
-  if (min(b$Frequency)<xmn) {
-    xmn <- min(b$Frequency)
-  }
-  xmx <- 61
-  if (max(b$Frequency)>xmx){
-    xmx <- max(b$Frequency)
-  }
-  p <- p+xlim(xmn,xmx)
+    ylim(0,y_size)+
+    ggtitle(bquote(atop("Frequency at Time",atop(.(Freq[time,1]),""))))+
+    xlim(59,61)
   p
 }
 
