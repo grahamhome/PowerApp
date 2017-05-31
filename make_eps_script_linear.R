@@ -7,8 +7,9 @@ library("scales")
 reverselog_trans <- function(base = exp(1)) {
   trans <- function(x) -log(x, base)
   inv <- function(x) base^(-x)
+ # print(log_breaks(base = base))
   trans_new(paste0("reverselog-", format(base)), trans, inv, 
-            log_breaks(base = base), 
+            log_breaks(base = base,n = 5), 
             domain = c(1e-100, Inf))
 }
 firstorder_diff <- function(data){
@@ -369,107 +370,109 @@ make_linear_plots_stacked_mulvar <- function(datafile){
                                                                                                                       axis.ticks.x=element_blank())#+scale_x_log10()
   
 
-  aplot <- ggplot(data = amelt,aes(x=Time,y=Angle,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")#,axis.title.x=element_blank(),
+  aplot <- ggplot(data = amelt,aes(x=Time,y=Angle,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ xlab("Time (s)")#,axis.title.x=element_blank(),
   #   axis.text.x=element_blank(),
   #   axis.ticks.x=element_blank())#+scale_x_log10()
-  arocplot <- ggplot(data = arocmelt,aes(x=Time,y=`Angle Rate Of Change`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")#,axis.title.x=element_blank(),
+  arocplot <- ggplot(data = arocmelt,aes(x=Time,y=`Angle Rate Of Change`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ xlab("Time (s)")#,axis.title.x=element_blank(),
   #   axis.text.x=element_blank(),
   #   axis.ticks.x=element_blank())#+scale_x_log10()
-  afdiffplot <- ggplot(data = afdiffmelt,aes(x=Time,y=`Angle First Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")#,axis.title.x=element_blank(),
+  afdiffplot <- ggplot(data = afdiffmelt,aes(x=Time,y=`Angle First Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ xlab("Time (s)")#,axis.title.x=element_blank(),
                                                                                                           #   axis.text.x=element_blank(),
                                                                                                           #   axis.ticks.x=element_blank())#+scale_x_log10()
-  asdiffplot <- ggplot(data = asdiffmelt,aes(x=Time,y=`Angle Second Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none") #+scale_x_log10()
+  asdiffplot <- ggplot(data = asdiffmelt,aes(x=Time,y=`Angle Second Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none") + xlab("Time (s)")
   # axis.text.y = element_text(angle=70))
   
- # postscript(file = paste(filename, 'raw_stacked.eps', sep=""))
-  png(paste(filename, 'raw_stacked.png', sep=""))
+ postscript(file = paste(filename, 'raw_stacked.eps', sep=""))
+  # png(paste(filename, 'raw_stacked.png', sep=""))
   multiplot(vplot,fplot,aplot)
   dev.off()
   
-  #postscript(file = paste(filename, 'firstorder_stacked.eps', sep=""))
-  png(paste(filename, 'firstorder_stacked.png', sep=""))
+  postscript(file = paste(filename, 'firstorder_stacked.eps', sep=""))
+  # png(paste(filename, 'firstorder_stacked.png', sep=""))
   multiplot(vfdiffplot,ffdiffplot,afdiffplot)
   dev.off()
   
-#  postscript(file = paste(filename, 'secondorder_stacked.eps', sep=""))
-  png(paste(filename, 'secondorder_stacked.png', sep=""))
+ postscript(file = paste(filename, 'secondorder_stacked.eps', sep=""))
+  # png(paste(filename, 'secondorder_stacked.png', sep=""))
   multiplot(vfdiffplot,ffdiffplot,afdiffplot)
   dev.off()
   
- # postscript(file = paste(filename, 'rateofchange_stacked.eps', sep=""))
-  png(paste(filename, 'rateofchange_stacked.png', sep=""))
+ postscript(file = paste(filename, 'rateofchange_stacked.eps', sep=""))
+  # png(paste(filename, 'rateofchange_stacked.png', sep=""))
   multiplot(vrocplot,frocplot,arocplot)
   dev.off()
   
+  xlog_breaks <- c(0.1,1,10)
+  xlog_labs <- c((max(fmelt$Time)-0.1),(max(fmelt$Time)-1),(max(fmelt$Time)-10))
   
-  fplot_xlog <- ggplot(data = fmelt,aes(x=Time,y=Frequency,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
+  fplot_xlog <- ggplot(data = fmelt,aes(x=rev(Time),y=Frequency,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
                                                                                                axis.text.x=element_blank(),
-                                                                                               axis.ticks.x=element_blank())+ scale_x_continuous(trans=reverselog_trans(10))
-  frocplot_xlog <- ggplot(data = frocmelt,aes(x=Time,y=`Frequency Rate Of Change`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
+                                                                                               axis.ticks.x=element_blank())+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)
+  frocplot_xlog <- ggplot(data = frocmelt,aes(x=rev(Time),y=`Frequency Rate Of Change`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
                                                                                                                       axis.text.x=element_blank(),
-                                                                                                                      axis.ticks.x=element_blank())+ scale_x_continuous(trans=reverselog_trans(10))
-  ffdiffplot_xlog <- ggplot(data = ffdiffmelt,aes(x=Time,y=`Frequency First Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
+                                                                                                                      axis.ticks.x=element_blank())+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)
+  ffdiffplot_xlog <- ggplot(data = ffdiffmelt,aes(x=rev(Time),y=`Frequency First Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
                                                                                                                        axis.text.x=element_blank(),
-                                                                                                                       axis.ticks.x=element_blank())+ scale_x_continuous(trans=reverselog_trans(10))
-  fsdiffplot_xlog <- ggplot(data = fsdiffmelt,aes(x=Time,y=`Frequency Second Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
+                                                                                                                       axis.ticks.x=element_blank())+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)
+  fsdiffplot_xlog <- ggplot(data = fsdiffmelt,aes(x=rev(Time),y=`Frequency Second Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
                                                                                                                         axis.text.x=element_blank(),
-                                                                                                                        axis.ticks.x=element_blank())+ scale_x_continuous(trans=reverselog_trans(10))
+                                                                                                                        axis.ticks.x=element_blank())+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)
 
   
-  vplot_xlog <- ggplot(data = vmelt,aes(x=Time,y=Voltage,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
+  vplot_xlog <- ggplot(data = vmelt,aes(x=rev(Time),y=Voltage,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
                                                                                              axis.text.x=element_blank(),
-                                                                                             axis.ticks.x=element_blank())+ scale_x_continuous(trans=reverselog_trans(10))
-  vrocplot_xlog <- ggplot(data = vrocmelt,aes(x=Time,y=`Voltage Rate Of Change`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
+                                                                                             axis.ticks.x=element_blank())+scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)
+  vrocplot_xlog <- ggplot(data = vrocmelt,aes(x=rev(Time),y=`Voltage Rate Of Change`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
                                                                                                                     axis.text.x=element_blank(),
-                                                                                                                    axis.ticks.x=element_blank())+ scale_x_continuous(trans=reverselog_trans(10))
-  vfdiffplot_xlog <- ggplot(data = vfdiffmelt,aes(x=Time,y=`Voltage First Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
+                                                                                                                    axis.ticks.x=element_blank())+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)
+  vfdiffplot_xlog <- ggplot(data = vfdiffmelt,aes(x=rev(Time),y=`Voltage First Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
                                                                                                                      axis.text.x=element_blank(),
-                                                                                                                     axis.ticks.x=element_blank())+ scale_x_continuous(trans=reverselog_trans(10))
-  vsdiffplot_xlog <- ggplot(data = vsdiffmelt,aes(x=Time,y=`Voltage Second Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
+                                                                                                                     axis.ticks.x=element_blank())+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)
+  vsdiffplot_xlog <- ggplot(data = vsdiffmelt,aes(x=rev(Time),y=`Voltage Second Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
                                                                                                                       axis.text.x=element_blank(),
-                                                                                                                      axis.ticks.x=element_blank())+ scale_x_continuous(trans=reverselog_trans(10))
+                                                                                                                      axis.ticks.x=element_blank())+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)
   
   
-  aplot_xlog <- ggplot(data = amelt,aes(x=Time,y=Angle,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ scale_x_continuous(trans=reverselog_trans(10))
+  aplot_xlog <- ggplot(data = amelt,aes(x=rev(Time),y=Angle,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)+ xlab("Time (s)")
   #,axis.title.x=element_blank(),
   #   axis.text.x=element_blank(),
   #   axis.ticks.x=element_blank())#
-  arocplot_xlog <- ggplot(data = arocmelt,aes(x=Time,y=`Angle Rate Of Change`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ scale_x_continuous(trans=reverselog_trans(10))
+  arocplot_xlog <- ggplot(data = arocmelt,aes(x=rev(Time),y=`Angle Rate Of Change`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)+ xlab("Time (s)")
   #,axis.title.x=element_blank(),
   #   axis.text.x=element_blank(),
   #   axis.ticks.x=element_blank())#+scale_x_log10()
-  afdiffplot_xlog <- ggplot(data = afdiffmelt,aes(x=Time,y=`Angle First Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ scale_x_continuous(trans=reverselog_trans(10))
+  afdiffplot_xlog <- ggplot(data = afdiffmelt,aes(x=rev(Time),y=`Angle First Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)+ xlab("Time (s)")
   #,axis.title.x=element_blank(),
   #   axis.text.x=element_blank(),
   #   axis.ticks.x=element_blank())#+scale_x_log10()
-  asdiffplot_xlog <- ggplot(data = asdiffmelt,aes(x=Time,y=`Angle Second Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ scale_x_continuous(trans=reverselog_trans(10))
+  asdiffplot_xlog <- ggplot(data = asdiffmelt,aes(x=rev(Time),y=`Angle Second Order`,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ scale_x_log10(breaks=xlog_breaks,labels=xlog_labs)+ xlab("Time (s)")
   #+scale_x_log10()
   # axis.text.y = element_text(angle=70))
   
- # postscript(file = paste(filename, 'raw_stacked_xlogrev.eps', sep=""))
-  png(paste(filename, 'raw_stacked_xlogrev.png', sep=""))
+ postscript(file = paste(filename, 'raw_stacked_xlogrev.eps', sep=""))
+  # png(paste(filename, 'raw_stacked_xlogrev.png', sep=""))
   multiplot(vplot_xlog,fplot_xlog,aplot_xlog)
   dev.off()
   
- # postscript(file = paste(filename, 'firstorder_stacked_xlogrev.eps', sep=""))
-  png(paste(filename, 'firstorder_stacked_xlogrev.png', sep=""))
+ postscript(file = paste(filename, 'firstorder_stacked_xlogrev.eps', sep=""))
+  # png(paste(filename, 'firstorder_stacked_xlogrev.png', sep=""))
   multiplot(vfdiffplot_xlog,ffdiffplot_xlog,afdiffplot_xlog)
   dev.off()
   
- # postscript(file = paste(filename, 'secondorder_stacked_xlogrev.eps', sep=""))
-  png(paste(filename, 'secondorder_stacked_xlogrev.png', sep=""))
+ postscript(file = paste(filename, 'secondorder_stacked_xlogrev.eps', sep=""))
+  # png(paste(filename, 'secondorder_stacked_xlogrev.png', sep=""))
   multiplot(vfdiffplot_xlog,ffdiffplot_xlog,afdiffplot_xlog)
   dev.off()
   
- # postscript(file = paste(filename, 'rateofchange_stacked_xlogrev.eps', sep=""))
-  png(paste(filename, 'rateofchange_stacked_xlogrev.png', sep=""))
+  postscript(file = paste(filename, 'rateofchange_stacked_xlogrev.eps', sep=""))
+  #png(paste(filename, 'rateofchange_stacked_xlogrev.png', sep=""))
   multiplot(vrocplot_xlog,frocplot_xlog,arocplot_xlog)
   dev.off()
   
   
 }
 
-
+# datafile -> "data/import_icestorm.R"
 
 make_linear_plots_stacked_mulvar("data/import_icestorm.R")
 make_linear_plots_stacked_mulvar("data/import_icestorm2.R")
@@ -485,5 +488,10 @@ make_linear_plots_stacked_mulvar("data/import_gmd.R")
 make_linear_plots_stacked_mulvar("data/import_gmd2.R")
 
 #Make X-axis logrithmic 
+# 
+# aplot_r_xlog <- ggplot(data = amelt,aes(x=rev(Time),y=Angle,group=Bus,colour=Bus))+geom_line()+scale_x_log10(labels=c(59.9,59,1), breaks=c(0.1,1,10))+
+#   theme(legend.position="none")
+# 
+# aplot_r_xlog <- ggplot(data = amelt,aes(x=rev(Time),y=Angle,group=Bus,colour=Bus))+geom_line()+scale_x_log10()+theme(legend.position="none")
 
 
