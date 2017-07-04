@@ -1,7 +1,13 @@
+#works in R 3.2.3
+
 library(TTR)
 library(grid)
 
-
+#Converts the data into the first order difference 
+#Input: data = data frame, where the first column is the time and each additional column is a bus with values for each time point
+#Returns a data frame of <data> 
+#Usage example:     firstdiff <<- firstorder_diff(Freq)
+#can run it again to get the second order data frame:  seconddiff <<- firstorder_diff(as.data.frame(firstdiff))
 firstorder_diff <- function(data){
   
   busmat <- apply(data[,!names(data)%in% c("Time")],2,diff)
@@ -9,6 +15,10 @@ firstorder_diff <- function(data){
   
 }
 
+#Converts a data frame to the rate of change
+#Input: data = data frame, where the first column is the time and each additional column is a bus with values for each time point
+#Returns a data frame of <data> 
+#Usage example: firstroc <<- firstorder_roc(Freq)
 firstorder_roc <- function(data){
   
   busmat <- data[,!names(data)%in%c("Time")]
@@ -63,6 +73,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
+#Plot the heatmap of the raw phase angle, at time <t>, and returns the ggplot object representing that plot
 plot_heatmapangle<- function(t){
   if(!exists("autosc")){
     autosc <<- FALSE
@@ -122,6 +133,7 @@ plot_heatmapangle<- function(t){
   #   ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
+#Plot the heatmap of the rate of change of the phase angle, at time <t>, and returns the ggplot object representing that plot
 plot_heatmapangle_firstroc<- function(t){
   tf <- t(t(firstroc[t,-1]))
   tf <- cbind(rownames(tf),tf)
@@ -177,6 +189,7 @@ plot_heatmapangle_firstroc<- function(t){
   #   ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
+#Plot the heatmap of the first order difference of the phase angle, at time <t>, and returns the ggplot object representing that plot
 plot_heatmapangle_firstod<- function(t){
   tf <- t(t(firstdiff[t,-1]))
   tf <- cbind(rownames(tf),tf)
@@ -239,6 +252,7 @@ plot_heatmapangle_firstod<- function(t){
   #   ggtitle(bquote(atop("Phase Angle at Time",atop(.(Pangle[t,1]),""))))
   g
 }
+#Plot the heatmap of the second order difference of the phase angle, at time <t>, and returns the ggplot object representing that plot
 plot_heatmapangle_secondod<- function(t){
   tf <- t(t(seconddiff[t,-1]))
   tf <- cbind(rownames(tf),tf)
