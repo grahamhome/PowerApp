@@ -493,179 +493,127 @@ make_linear_plots_clust_stackmulvar("DWT","data/import_mcnary.R")
 make_linear_plots_clust_stackmulvar("DTWARP","data/import_mcnary.R")
 
 
-testing_stuff <- function(){
+check_if_oob <- function(rowinfo){
+
+  chkfun <- function(x) ifelse((59.98 < x & 60.02 > x),-1,x)
+  #chkfun <- function(x) ifelse((59.9 >= x ),-1,x)
+  # oobs <- list()
+  oobs <- lapply(rowinfo, chkfun)
+  oob_buses <- list()
+  for (n in 1:length(oobs[])) {
+  #  print("checking")
+    if(oobs[[n]] != -1){ #&& !(oobs[n] %in% buses_oob)){
+     # print("adding")
+      oob_buses <- c(oob_buses, oobs[n])
+    }
+  }
+  
+  oob_buses
+}
+
+make_linear_ooblabel <- function(){
   
   source("data/import_mcnary.R")
   import_data()
+  filename <- paste(gsub(pattern = "\ ","",name()),clust_type,"",sep = "_")
+  lowlim <- 59.98
+  uplim <- 60.02
+  buses_oob <- list()
+  for (n in 1:nrow(Freq)) {
+  #for (n in 1:4) {
+    oob_list <- check_if_oob(Freq[n,-1])
+    if(length(oob_list) > 0){
+      buses_oob <- c(buses_oob, oob_list)
+    }
+  }
+  buses_oob<- buses_oob[!duplicated(names(buses_oob))]
+  buses_oob <- buses_oob[1:5]
+  # buses_oob_dec <- order(unlist(buses_oob),decreasing = TRUE)
+  # # problem_buses <- c(head(buses_oob_dec, n=3), tail(buses_oob_dec,n = 3))
+  # problem_buses <- head()
+  # 
+  # get_busname <- function(x){names(buses_oob[x])}
   
-  dissmat_f <- diss(SERIES =  Freq[,-1],METHOD = "DWT")
-  hc_freq <- as.dendrogram(hclust(dissmat_f,method = "average"))
-  postscript(file = paste('mcnary_DWT_raw_freq_dendrogram.eps', sep=""),horizontal = TRUE)
-  plot(hc_freq)
+  fmelt <- melt(data = Freq,id.vars = "Time",variable.name = "Bus",value.name = "Frequency")
+
+  fmelt$Oob <- lapply(fmelt$Bus, function(x) ifelse(x %in% names(buses_oob),as.character(x),"within bounds"))
+  fmelt$Oob <- unlist(fmelt$Oob)
+  fplot <- ggplot(data = fmelt,aes(x=Time,y=Frequency,group=Bus,colour=Oob))+geom_line()+
+    scale_fill_manual(c("red","green","blue","yellow","orange","black"))
+    # theme(legend.position="none",axis.title.x=element_blank(),
+    #       axis.text.x=element_blank(),
+    #       axis.ticks.x=element_blank())#+scale_x_log10()
+  
+ # png(paste(filename, 'raw_stacked_legend.png', sep=""))
+  postscript(file = paste(filename, 'raw_freq_ooblegend.eps', sep=""))
+  print(fplot)
   dev.off()
   
-  dissmat_v <- diss(SERIES =  Volt[,-1],METHOD = "DWT")
-  hc_volt <- as.dendrogram(hclust(dissmat_v,method = "average"))
-  postscript(file = paste('mcnary_DWT_raw_volt_dendrogram.eps', sep=""),horizontal = TRUE)
-  plot(hc_volt)
-  dev.off()
+  # vmelt <- melt(data = Volt,id.vars = "Time",variable.name = "Bus",value.name = "Voltage")
+  # 
+  # amelt <- melt(data = Pangle,id.vars = "Time",variable.name = "Bus",value.name = "Angle")
+  # vplot <- ggplot(data = vmelt,aes(x=Time,y=Voltage,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none",axis.title.x=element_blank(),
+  #                                                                                            axis.text.x=element_blank(),
+  #                                                                                            axis.ticks.x=element_blank())#+scale_x_log10()
+  # 
+  # 
+  # aplot <- ggplot(data = amelt,aes(x=Time,y=Angle,group=Bus,colour=Bus))+geom_line()+theme(legend.position="none")+ xlab("Time (s)")#,axis.title.x=element_blank(),
+  # 
+  # 
+  # 
+  # 
+  # 
+  # buses_oob <- rapply(Freq[,-1], check_if_oob)
   
-  dissmat_a <- diss(SERIES =  Pangle[,-1],METHOD = "DWT")
-  hc_angle <- as.dendrogram(hclust(dissmat_a,method = "average"))
-  postscript(file = paste('mcnary_DWT_raw_angle_dendrogram.eps', sep=""),horizontal = TRUE)
-  plot(hc_angle)
-  dev.off()
+  #postscript(file = paste(filename, 'raw_stacked_clustered.eps', sep=""))
+  # png(paste(filename, 'raw_stacked_legend.png', sep=""))
+  # multiplot(vplot_clust,fplot_clust,aplot_clust)
+  # dev.off()
+  # 
+  # dissmat_f <- diss(SERIES =  Freq[,-1],METHOD = "DWT")
+  # hc_freq <- as.dendrogram(hclust(dissmat_f,method = "average"))
+  # postscript(file = paste('mcnary_DWT_raw_freq_dendrogram.eps', sep=""),horizontal = TRUE)
+  # plot(hc_freq)
+  # dev.off()
+  # 
+  # dissmat_v <- diss(SERIES =  Volt[,-1],METHOD = "DWT")
+  # hc_volt <- as.dendrogram(hclust(dissmat_v,method = "average"))
+  # postscript(file = paste('mcnary_DWT_raw_volt_dendrogram.eps', sep=""),horizontal = TRUE)
+  # plot(hc_volt)
+  # dev.off()
+  # 
+  # dissmat_a <- diss(SERIES =  Pangle[,-1],METHOD = "DWT")
+  # hc_angle <- as.dendrogram(hclust(dissmat_a,method = "average"))
+  # postscript(file = paste('mcnary_DWT_raw_angle_dendrogram.eps', sep=""),horizontal = TRUE)
+  # plot(hc_angle)
+  # dev.off()
+  # 
+  # 
+  # #hc_freq[[1]][[1]] = dendrapply(hc_freq[[1]][[1]], colbranches, "red")
+  # # hc_freq[[1]][[2]] = dendrapply(hc_freq[[1]][[2]], colbranches, "orange")
+  # #hc_freq[[2]] = dendrapply(hc_freq[[2]], colbranches, "blue")
+  # hc_freq[[1]] = dendrapply(hc_freq[[1]], colbranches, "red")
+  # hc_freq[[2]] = dendrapply(hc_freq[[2]], colbranches, "blue")
+  # 
+  # 
+  # cut_hc_f <- cutree(hc_freq,k = 5)
+  # cut_namesf <- data.frame(cut_hc_f,names(cut_hc_f))
+  # colnames(cut_namesf) <- c("group","Name")
+  # g_1 <- cut_namesf[cut_namesf$group == 1,]
+  # g_2 <- cut_namesf[cut_namesf$group == 2,]
+  # g_3 <- cut_namesf[cut_namesf$group == 3,]
+  # g_4 <- cut_namesf[cut_namesf$group == 4,]
+  # g_5 <- cut_namesf[cut_namesf$group == 5,]
+  # 
+  # vplot_clust<- get_clustered_plot(clust_type,as.data.frame(Volt), "Voltage")
+  # fplot_clust<- get_clustered_plot(clust_type,as.data.frame(Freq), "Frequency")
+  # aplot_clust<- get_clustered_plot(clust_type,as.data.frame(Pangle), "Angle")
   
-  
-  #hc_freq[[1]][[1]] = dendrapply(hc_freq[[1]][[1]], colbranches, "red")
-  # hc_freq[[1]][[2]] = dendrapply(hc_freq[[1]][[2]], colbranches, "orange")
-  #hc_freq[[2]] = dendrapply(hc_freq[[2]], colbranches, "blue")
-  hc_freq[[1]] = dendrapply(hc_freq[[1]], colbranches, "red")
-  hc_freq[[2]] = dendrapply(hc_freq[[2]], colbranches, "blue")
-  
-  
-  cut_hc_f <- cutree(hc_freq,k = 5)
-  cut_namesf <- data.frame(cut_hc_f,names(cut_hc_f))
-  colnames(cut_namesf) <- c("group","Name")
-  g_1 <- cut_namesf[cut_namesf$group == 1,]
-  g_2 <- cut_namesf[cut_namesf$group == 2,]
-  g_3 <- cut_namesf[cut_namesf$group == 3,]
-  g_4 <- cut_namesf[cut_namesf$group == 4,]
-  g_5 <- cut_namesf[cut_namesf$group == 5,]
-  
-  vplot_clust<- get_clustered_plot(clust_type,as.data.frame(Volt), "Voltage")
-  fplot_clust<- get_clustered_plot(clust_type,as.data.frame(Freq), "Frequency")
-  aplot_clust<- get_clustered_plot(clust_type,as.data.frame(Pangle), "Angle")
-  
-  postscript(file = paste(filename, 'raw_stacked_clustered.eps', sep=""))
-  # png(paste(filename, 'raw_stacked_clustered.png', sep=""))
-  multiplot(vplot_clust,fplot_clust,aplot_clust)
-  dev.off()
+  # postscript(file = paste(filename, 'raw_stacked_clustered.eps', sep=""))
+  # # png(paste(filename, 'raw_stacked_clustered.png', sep=""))
+  # multiplot(vplot_clust,fplot_clust,aplot_clust)
+  # dev.off()
 }
 
-#All of these are unused, as the plots are done in ggplot within the make_linear_plots functions.
-#Plot the bus angles of all buses from <start> to <stop>
-plot_pangle <- function(start,stop){
-  #Vmelt <- melt(Volt[1:1000,], id="Time")
-  #p <- ggplot(Vmelt,aes(x=Time,y=value,colour=variable,group=variable)) +
-  #  geom_line() +
-  #  theme(legend.position="right")
-  #p
-  par(mar=c(5.1, 4.1, 4.1, 14.1), xpd=TRUE)
-  #start <- ifelse(missing(start),1,start)
-  #stop <- ifelse(missing(stop),nrow(Volt),stop)
-  xrange <- range(Pangle[start:stop,1])#,na.rm = TRUE)
-  yrange <- range(Pangle[start:stop,-1])#,na.rm = TRUE) #c(-50,50) 
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Phase Angle")#,yaxt="n")
-  #  main=paste("Phase Angle at time",start,"to",stop,sep = " "),yaxt="n")
-  # axis(2, at = seq(-50, 50, by = 10), las=2)
-  num_sig_bus <- 0
-  n <- ncol(Pangle)-1
-  colors <- rainbow(n)
-  linetype <- c(1:n)
-  plotchar <- colnames(Pangle[,-1])
-  for (z in 2:n){
-    bus <- Pangle[start:stop,z]
-    lines(y=bus,x=Pangle[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
-  }
-  # legend("right", inset=c(-0.2,-0.15),legend = colnames(Pangle[,-1]),col = colors, lty=linetype,cex=0.8)
-}
-#plot the a line graph of each bus from {start} to {stop} of the voltage
-plot_voltage <- function(start,stop){
-  par(mar=c(5.1, 4.1, 4.1, 14.1), xpd=TRUE)
-  xrange <- range(Volt[start:stop,1])#,na.rm = TRUE)
-  yrange <- range(Volt[start:stop,-1])#,na.rm = TRUE)
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Voltage")
-  #main=paste("Voltage at time",start,"to",stop,sep = " "))
-  num_sig_bus <- 0
-  n <- ncol(Volt)-1
-  colors <- rainbow(n)
-  linetype <- c(1:n)
-  plotchar <- colnames(Volt[,-1])
-  for (z in 2:n){
-    bus <- Volt[start:stop,z]
-    lines(y=bus,x=Volt[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
-  }
-  # legend("topright", inset=c(-0.2,-0.15),legend = colnames(Volt[,-1]),col = colors, lty=linetype,cex=0.8)
-}
-#plot the a line graph of each bus from {start} to {stop} of the voltage
-plot_frequency <- function(start,stop){
-  #par(mar=c(5.1, 4.1, 4.1, 14.1), xpd=TRUE)
-  xrange <- range(Freq[start:stop,1])#,na.rm = TRUE)
-  yrange <- range(Freq[start:stop,-1])#,na.rm = TRUE)
-  n <- ncol(Freq)-1
-  colors <- rainbow(n)
-  
-  fx <- Freq[,1]
-  fy <- as.data.frame(Freq[,-1])
-  fg <- colnames(fy)
-  fmelt <- melt(data = Freq,id.vars = "Time",variable.name = "Bus",value.name = "Frequency")
-  
-  ggplot(data = fmelt,aes(x=Time,y=Frequency,group=Bus,colour=Bus))+
-    geom_line()+theme(legend.position="none")
-  
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Frequency")
-  # main=paste("Frequency at time",Freq[start,1],"to",Freq[stop,1],sep = " "))
-  
-  linetype <- c(1:n)
-  for (z in 2:n){
-    bus <- Freq[start:stop,z]
-    lines(y=bus,x=Freq[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
-  }
-  # legend("topright", inset=c(-.30,-0.15),legend = colnames(Freq[,-1]),col = colors, lty=linetype,cex=0.8)
-}
-#plot the a line graph of each bus from {start} to {stop} of the voltage
-plot_frequency_roc <- function(start,stop){
-  par(mar=c(5.1, 4.1, 4.1, 14.1), xpd=TRUE)
-  xrange <- range(firstroc[start:stop,1])#,na.rm = TRUE)
-  yrange <- range(firstroc[start:stop,-1])#,na.rm = TRUE)
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Frequency")
-  # main=paste("Frequency at time",Freq[start,1],"to",Freq[stop,1],sep = " "))
-  num_sig_bus <- 0
-  n <- ncol(firstroc)-1
-  colors <- rainbow(n)
-  linetype <- c(1:n)
-  plotchar <- colnames(firstroc[,-1])
-  for (z in 2:n){
-    bus <- firstroc[start:stop,z]
-    lines(y=bus,x=firstroc[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
-  }
-  # legend("topright", inset=c(-.30,-0.15),legend = colnames(Freq[,-1]),col = colors, lty=linetype,cex=0.8)
-}
-#plot the a line graph of each bus from {start} to {stop} of the voltage
-plot_frequency_firstdif <- function(start,stop){
-  # par(mar=c(5.1, 4.1, 4.1, 14.1), xpd=TRUE)
-  xrange <- range(firstdiff[1:stop,1])#,na.rm = TRUE)
-  yrange <- range(firstdiff[1:stop,-1])#,na.rm = TRUE)
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Frequency")
-  # main=paste("Frequency at time",Freq[start,1],"to",Freq[stop,1],sep = " "))
-  num_sig_bus <- 0
-  n <- ncol(firstdiff)-1
-  colors <- rainbow(n)
-  linetype <- c(1:n)
-  plotchar <- colnames(firstdiff[,-1])
-  for (z in 2:n){
-    bus <- firstdiff[start:stop,z]
-    lines(y=bus,x=firstdiff[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
-  }
-  # legend("topright", inset=c(-.30,-0.15),legend = colnames(Freq[,-1]),col = colors, lty=linetype,cex=0.8)
-}
-plot_frequency_seconddif <- function(start,stop){
-  # par(mar=c(5.1, 4.1, 4.1, 14.1), xpd=TRUE)
-  xrange <- range(seconddiff[start:stop,1])#,na.rm = TRUE)
-  yrange <- range(seconddiff[start:stop,-1])#,na.rm = TRUE)
-  plot(xrange,yrange,type = "n",xlab = "Time (seconds)",ylab = "Frequency")
-  # main=paste("Frequency at time",Freq[start,1],"to",Freq[stop,1],sep = " "))
-  num_sig_bus <- 0
-  n <- ncol(seconddiff)-1
-  colors <- rainbow(n)
-  linetype <- c(1:n)
-  plotchar <- colnames(seconddiff[,-1])
-  for (z in 2:n){
-    bus <- seconddiff[start:stop,z]
-    lines(y=bus,x=seconddiff[start:stop,1],col=colors[z],type = "l",lty=linetype[z])
-  }
-  # legend("topright", inset=c(-.30,-0.15),legend = colnames(Freq[,-1]),col = colors, lty=linetype,cex=0.8)
-}
 
 
